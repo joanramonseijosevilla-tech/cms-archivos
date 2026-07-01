@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexautia | Mini CMS con GitHub Pages y Make</title>
+  <meta name="description" content="Mini CMS corporativo sin servidor: GitHub Pages, JSON y Make para publicar contenido desde un panel privado.">
+  <link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script defer src="assets/js/publicaciones.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Navegación principal">
+      <a class="brand" href="./" aria-label="Inicio Nexautia">
+        <img class="brand-logo" src="assets/img/logo.svg" alt="Nexautia">
+      </a>
+      <div class="nav-links">
+        <a href="#servicios">Sistema</a>
+        <a href="#publicaciones">Publicaciones</a>
+        <a class="button button-small" href="admin/">Panel</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Web corporativa editable sin servidor</p>
+          <h1>Mini CMS para publicar contenido sin tocar código.</h1>
+          <p class="hero-text">Una solución estática, económica y fácil de mantener: el cliente publica desde un panel privado, Make actualiza GitHub y la web se genera automáticamente desde un archivo JSON.</p>
+          <div class="hero-actions">
+            <a class="button" href="#publicaciones">Ver publicaciones</a>
+            <a class="button button-secondary" href="#servicios">Cómo funciona</a>
+          </div>
+        </div>
+        <div class="hero-card" aria-label="Resumen del sistema">
+          <span class="hero-card-label">Arquitectura</span>
+          <strong>GitHub Pages + JSON + Make</strong>
+          <p>Frontend estático, backend automatizado y token de GitHub protegido fuera del navegador.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="servicios" class="section section-light">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Sistema modular</p>
+          <h2>Diseñado para clientes no técnicos</h2>
+          <p>El cliente solo rellena un formulario. Make se encarga de subir imágenes, actualizar el JSON y dejar GitHub Pages listo para servir el contenido.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">01</span>
+            <h3>Contenido dinámico</h3>
+            <p>La web lee <code>data/publicaciones.json</code> y genera las tarjetas sin tocar HTML.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">02</span>
+            <h3>Token protegido</h3>
+            <p>El token de GitHub vive en Make. El panel nunca expone credenciales sensibles.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">03</span>
+            <h3>Bajo coste</h3>
+            <p>Ideal para clientes con 1 a 20 publicaciones mensuales y mantenimiento mínimo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="publicaciones" class="section section-dark">
+      <div class="container">
+        <div class="section-heading section-heading-row">
+          <div>
+            <p class="eyebrow">Últimas novedades</p>
+            <h2>Publicaciones</h2>
+          </div>
+          <p class="muted">Contenido generado automáticamente desde JSON.</p>
+        </div>
+        <div id="posts-status" class="status" role="status">Cargando publicaciones…</div>
+        <div id="posts-grid" class="posts-grid" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <a class="footer-logo" href="./" aria-label="Inicio Nexautia">
+        <img src="assets/img/logo.svg" alt="Nexautia">
+      </a>
+      <p>© <span id="year"></span> Nexautia. Mini CMS sobre GitHub Pages.</p>
+      <a href="admin/">Administración</a>
+    </div>
+  </footer>
+</body>
+</html>

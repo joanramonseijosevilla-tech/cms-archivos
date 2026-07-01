@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel privado | Mini CMS Nexautia</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script defer src="cms.config.js"></script>
+  <script defer src="admin.js"></script>
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <section id="login-view" class="admin-card login-card">
+      <div class="admin-logo-wrap">
+        <img class="admin-logo" src="../assets/img/logo.svg" alt="Nexautia">
+      </div>
+      <div class="admin-card-header">
+        <p class="eyebrow">Panel privado</p>
+        <h1>Acceso al mini CMS</h1>
+        <p>Modo demo: ahora puedes poner cualquier contraseña, por ejemplo <strong>1234</strong>. Cuando conectemos Make, Make será quien valide la contraseña real.</p>
+      </div>
+      <form id="login-form" class="form-grid">
+        <label>
+          Contraseña
+          <input id="login-password" type="password" autocomplete="current-password" required placeholder="Ej. 1234">
+        </label>
+        <button class="button" type="submit">Entrar</button>
+      </form>
+      <p class="form-note">Este panel no contiene el token de GitHub.</p>
+    </section>
+
+    <section id="admin-view" class="admin-layout hidden">
+      <header class="admin-topbar">
+        <div class="admin-topbar-brand">
+          <img class="admin-topbar-logo" src="../assets/img/logo.svg" alt="Nexautia">
+          <div>
+            <p class="eyebrow">Mini CMS</p>
+            <h1>Publicaciones</h1>
+          </div>
+        </div>
+        <div class="admin-actions">
+          <a class="button button-secondary" href="../">Ver web</a>
+          <button id="logout-button" class="button button-ghost" type="button">Salir</button>
+        </div>
+      </header>
+
+      <div id="admin-alert" class="admin-alert hidden" role="status"></div>
+
+      <div class="admin-grid">
+        <section class="admin-card">
+          <div class="admin-card-header">
+            <h2 id="form-title">Nueva publicación</h2>
+            <p>Sube una imagen, título y descripción. Make guardará el cambio en GitHub cuando esté conectado.</p>
+          </div>
+          <form id="post-form" class="form-grid">
+            <input id="post-id" type="hidden">
+            <input id="current-image-path" type="hidden">
+            <input id="current-image-src" type="hidden">
+
+            <label>
+              Título
+              <input id="post-title" type="text" maxlength="110" required placeholder="Ej. Nueva publicación corporativa">
+            </label>
+
+            <label>
+              Descripción
+              <textarea id="post-description" rows="6" maxlength="900" required placeholder="Describe la publicación…"></textarea>
+            </label>
+
+            <label>
+              Fotografía
+              <input id="post-image" type="file" accept="image/jpeg,image/png,image/webp">
+            </label>
+
+            <label>
+              Texto alternativo de la imagen
+              <input id="post-alt" type="text" maxlength="140" placeholder="Ej. Imagen descriptiva de la publicación">
+            </label>
+
+            <div id="image-preview" class="image-preview hidden"></div>
+
+            <div class="form-actions">
+              <button id="save-button" class="button" type="submit">Guardar publicación</button>
+              <button id="cancel-edit-button" class="button button-secondary hidden" type="button">Cancelar edición</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-card">
+          <div class="admin-card-header admin-card-header-row">
+            <div>
+              <h2>Contenido actual</h2>
+              <p>Listado leído directamente desde <code>publicaciones.json</code>.</p>
+            </div>
+            <button id="refresh-button" class="button button-small button-secondary" type="button">Actualizar</button>
+          </div>
+          <div id="admin-status" class="status" role="status">Cargando publicaciones…</div>
+          <div id="admin-posts" class="admin-posts"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
