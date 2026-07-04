@@ -64,24 +64,52 @@ function addAdminCacheBuster(src) {
 }
 
 function getAdminImageSrc(item) {
-  return item?._localPreviewSrc || addAdminCacheBuster(item?.image?.src);
+  return addAdminCacheBuster(item?.image?.src);
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function loadImageOnce(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(src);
+    img.onerror = () => reject(new Error('La imagen todavía no está disponible.'));
+    img.src = src;
+  });
+}
+
+async function waitForImageReady(imagePath, maxAttempts = 10, delayMs = 800) {
+  const imageUrl = normalizeSrc(imagePath);
+
+  if (!imageUrl || imageUrl.startsWith('blob:') || imageUrl.startsWith('data:')) {
+    throw new Error('No se ha podido comprobar la imagen subida.');
+  }
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const separator = imageUrl.includes('?') ? '&' : '?';
+    const cacheBustedUrl = `${imageUrl}${separator}v=${Date.now()}`;
+
+    try {
+      await loadImageOnce(cacheBustedUrl);
+      return cacheBustedUrl;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        throw new Error('Make confirmó la subida, pero la imagen todavía no está disponible en GitHub Pages. Espera unos segundos y pulsa Actualizar.');
+      }
+
+      await wait(delayMs);
+    }
+  }
+
+  throw new Error('No se ha podido comprobar la imagen subida.');
 }
 
 function stripPanelOnlyFields(item) {
   if (!item || typeof item !== 'object') return item;
   const { _localPreviewSrc, ...publicItem } = item;
   return publicItem;
-}
-
-function withPanelPreview(items, previewItemId, previewSrc) {
-  return items.map((item) => {
-    const previousItem = state.items.find((currentItem) => currentItem.id === item.id);
-    const localPreviewSrc = item.id === previewItemId && previewSrc
-      ? previewSrc
-      : previousItem?._localPreviewSrc;
-
-    return localPreviewSrc ? { ...item, _localPreviewSrc: localPreviewSrc } : item;
-  });
 }
 
 function truncate(text, max = 120) {
@@ -138,11 +166,6 @@ function renderAdminPosts() {
       img.src = getAdminImageSrc(item);
       img.alt = item.image?.alt || item.title || 'Imagen de publicación';
       img.loading = 'lazy';
-      img.onerror = () => {
-        if (item._localPreviewSrc && img.src !== item._localPreviewSrc) {
-          img.src = item._localPreviewSrc;
-        }
-      };
 
       const content = document.createElement('div');
 
@@ -404,8 +427,6 @@ async function savePost(event) {
     // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
     const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
     let nextPublicacionesJson;
-    let localPreviewSrc = '';
-
     const payload = {
       id: postId.value || undefined,
       title,
@@ -432,8 +453,6 @@ async function savePost(event) {
       };
 
       const imageBase64 = await fileToBase64(file);
-      localPreviewSrc = `data:${file.type};base64,${imageBase64}`;
-
       payload.id = newItem.id;
       payload.image = {
         fileName: imagePath.split('/').pop(),
@@ -454,9 +473,7 @@ async function savePost(event) {
       if (file) {
         const imagePath = buildFinalImagePath(file, now);
         const imageBase64 = await fileToBase64(file);
-        localPreviewSrc = `data:${file.type};base64,${imageBase64}`;
-
-        payload.image = {
+          payload.image = {
           fileName: imagePath.split('/').pop(),
           originalFileName: file.name,
           mimeType: file.type,
@@ -492,8 +509,13 @@ async function savePost(event) {
     attachPublicacionesPayload(payload, nextPublicacionesJson);
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
-    // _localPreviewSrc es solo una ayuda visual temporal del panel tras OK de Make.
-    state.items = withPanelPreview(nextPublicacionesJson.items, payload.id, localPreviewSrc);
+
+    if (payload.image?.path) {
+      saveButton.textContent = 'Guardando… esperando imagen…';
+      await waitForImageReady(payload.image.path);
+    }
+
+    state.items = nextPublicacionesJson.items;
     renderAdminPosts();
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
     resetForm();
@@ -524,7 +546,7 @@ async function deletePost(item) {
     }, nextPublicacionesJson);
 
     await sendToMake('delete', payload);
-    state.items = withPanelPreview(nextPublicacionesJson.items, null, '');
+    state.items = nextPublicacionesJson.items;
     renderAdminPosts();
     showAlert('Publicación eliminada correctamente.');
     if (postId.value === item.id) resetForm();
