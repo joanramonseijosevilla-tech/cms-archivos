@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T17:44:30.869Z",
+  "updatedAt": "2026-07-04T17:55:09.146Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -43,8 +43,8 @@
     },
     {
       "id": "pub_20260704194430",
-      "title": "Elemento 5",
-      "description": "ddddddddddddddddddd\ndddddd\nddddddddd",
+      "title": "Elemento 5 v2",
+      "description": "Esto es una pruueba de modificación",
       "image": {
         "src": "assets/uploads/20260704-194430-conexion-airtable.png",
         "path": "assets/uploads/20260704-194430-conexion-airtable.png",
@@ -52,7 +52,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T17:44:30.869Z",
-      "updatedAt": "2026-07-04T17:44:30.869Z"
+      "updatedAt": "2026-07-04T17:55:09.146Z"
     }
   ]
 }
