@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T20:01:26.802Z",
+  "updatedAt": "2026-07-04T20:03:31.261Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -144,6 +144,19 @@
       "status": "published",
       "createdAt": "2026-07-04T20:01:26.802Z",
       "updatedAt": "2026-07-04T20:01:26.802Z"
+    },
+    {
+      "id": "pub_20260704220331",
+      "title": "Elemento 14",
+      "description": "ddddddd",
+      "image": {
+        "src": "assets/uploads/20260704-220331-esquema-webhook.png",
+        "path": "assets/uploads/20260704-220331-esquema-webhook.png",
+        "alt": "Elemento 14"
+      },
+      "status": "published",
+      "createdAt": "2026-07-04T20:03:31.261Z",
+      "updatedAt": "2026-07-04T20:03:31.261Z"
     }
   ]
 }
