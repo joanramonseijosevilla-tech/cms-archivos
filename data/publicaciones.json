@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T20:03:31.261Z",
+  "updatedAt": "2026-07-04T20:05:59.137Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -118,19 +118,6 @@
       "status": "published",
       "createdAt": "2026-07-04T19:29:26.675Z",
       "updatedAt": "2026-07-04T19:29:26.675Z"
-    },
-    {
-      "id": "pub_20260704215954",
-      "title": "Elemento 12",
-      "description": "Elemento 12\nElemento 12\nElemento 12",
-      "image": {
-        "src": "assets/uploads/20260704-215954-sheduled-tally.png",
-        "path": "assets/uploads/20260704-215954-sheduled-tally.png",
-        "alt": "Elemento 12"
-      },
-      "status": "published",
-      "createdAt": "2026-07-04T19:59:54.337Z",
-      "updatedAt": "2026-07-04T19:59:54.337Z"
     },
     {
       "id": "pub_20260704220126",
