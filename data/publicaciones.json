@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T17:15:11.450Z",
+  "updatedAt": "2026-07-04T17:17:52.708Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -27,6 +27,19 @@
       "status": "published",
       "createdAt": "2026-07-04T17:15:11.450Z",
       "updatedAt": "2026-07-04T17:15:11.450Z"
+    },
+    {
+      "id": "pub_20260704191752",
+      "title": "Elemento 4",
+      "description": "Descripción Elemento 4",
+      "image": {
+        "src": "assets/uploads/20260704-191752-url-webhook.png",
+        "path": "assets/uploads/20260704-191752-url-webhook.png",
+        "alt": "Elemento 4"
+      },
+      "status": "published",
+      "createdAt": "2026-07-04T17:17:52.708Z",
+      "updatedAt": "2026-07-04T17:17:52.708Z"
     }
   ]
 }
