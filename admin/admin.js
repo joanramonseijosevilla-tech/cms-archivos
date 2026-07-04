@@ -510,15 +510,16 @@ async function savePost(event) {
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
 
-    if (payload.image?.path) {
-      saveButton.textContent = 'Guardando… esperando imagen…';
-      await waitForImageReady(payload.image.path);
-    }
-
     state.items = nextPublicacionesJson.items;
     renderAdminPosts();
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
     resetForm();
+
+    if (payload.image?.path) {
+      waitForImageReady(payload.image.path).catch((error) => {
+        console.warn('La imagen todavía no está disponible en GitHub Pages:', error);
+      });
+    }
   } catch (error) {
     showAlert(error.message, 'error');
     console.error(error);
