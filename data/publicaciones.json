@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T19:29:26.675Z",
+  "updatedAt": "2026-07-04T19:43:16.028Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -118,6 +118,19 @@
       "status": "published",
       "createdAt": "2026-07-04T19:29:26.675Z",
       "updatedAt": "2026-07-04T19:29:26.675Z"
+    },
+    {
+      "id": "pub_20260704214316",
+      "title": "Elemento 11",
+      "description": "Elemento 11\ndddddddd",
+      "image": {
+        "src": "assets/uploads/20260704-214316-rutas-filtros-logica.png",
+        "path": "assets/uploads/20260704-214316-rutas-filtros-logica.png",
+        "alt": "Elemento 11"
+      },
+      "status": "published",
+      "createdAt": "2026-07-04T19:43:16.028Z",
+      "updatedAt": "2026-07-04T19:43:16.028Z"
     }
   ]
 }
