@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T19:14:42.512Z",
+  "updatedAt": "2026-07-04T19:16:17.069Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -92,19 +92,6 @@
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
       "updatedAt": "2026-07-04T18:54:50.573Z"
-    },
-    {
-      "id": "pub_20260704211442",
-      "title": "Elemento 9",
-      "description": "Elemento 9\nElemento 9\nElemento 9",
-      "image": {
-        "src": "assets/uploads/20260704-211442-rutas-filtros-logica.png",
-        "path": "assets/uploads/20260704-211442-rutas-filtros-logica.png",
-        "alt": "Elemento 9"
-      },
-      "status": "published",
-      "createdAt": "2026-07-04T19:14:42.512Z",
-      "updatedAt": "2026-07-04T19:14:42.512Z"
     }
   ]
 }
