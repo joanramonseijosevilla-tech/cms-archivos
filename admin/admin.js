@@ -211,6 +211,113 @@ function validateImage(file, isEdit) {
   }
 }
 
+
+function padNumber(value) {
+  return String(value).padStart(2, '0');
+}
+
+function buildTimestamp(date, separator = '') {
+  const year = date.getFullYear();
+  const month = padNumber(date.getMonth() + 1);
+  const day = padNumber(date.getDate());
+  const hours = padNumber(date.getHours());
+  const minutes = padNumber(date.getMinutes());
+  const seconds = padNumber(date.getSeconds());
+  return `${year}${month}${day}${separator}${hours}${minutes}${seconds}`;
+}
+
+function slugifyFileName(name) {
+  const cleanName = String(name || 'imagen')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return cleanName || 'imagen';
+}
+
+function getImageExtension(file) {
+  const name = file?.name || '';
+  const dotIndex = name.lastIndexOf('.');
+
+  if (dotIndex > -1 && dotIndex < name.length - 1) {
+    return name.slice(dotIndex + 1).toLowerCase();
+  }
+
+  const mimeExtensions = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp'
+  };
+
+  return mimeExtensions[file?.type] || 'jpg';
+}
+
+function getImageBaseName(file) {
+  const name = file?.name || 'imagen';
+  const dotIndex = name.lastIndexOf('.');
+  const baseName = dotIndex > -1 ? name.slice(0, dotIndex) : name;
+  return slugifyFileName(baseName);
+}
+
+function buildFinalImageName(file, date) {
+  const datePart = buildTimestamp(date, '-');
+  const baseName = getImageBaseName(file);
+  const extension = getImageExtension(file);
+  return `${datePart}-${baseName}.${extension}`;
+}
+
+function buildFinalImagePath(file, date) {
+  return `assets/uploads/${buildFinalImageName(file, date)}`;
+}
+
+function normalizePublicacionesJson(data) {
+  return {
+    version: data?.version || 1,
+    updatedAt: data?.updatedAt || new Date().toISOString(),
+    items: Array.isArray(data?.items) ? data.items : []
+  };
+}
+
+async function loadPublicacionesJsonForMake() {
+  const response = await fetch(`${config.PUBLIC_JSON_URL}?v=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer data/publicaciones.json (${response.status}).`);
+  }
+
+  const data = await response.json();
+  return normalizePublicacionesJson(data);
+}
+
+function encodeJsonToBase64(data) {
+  const jsonString = JSON.stringify(data, null, 2);
+  const bytes = new TextEncoder().encode(jsonString);
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return {
+    jsonString,
+    base64: btoa(binary)
+  };
+}
+
+function attachPublicacionesPayload(payload, publicacionesJson) {
+  const encoded = encodeJsonToBase64(publicacionesJson);
+  payload.publicacionesJson = publicacionesJson;
+  payload.publicacionesBase64 = encoded.base64;
+  return payload;
+}
+
 async function sendToMake(action, payload) {
   if (!config.MAKE_WEBHOOK_URL || config.MAKE_WEBHOOK_URL.includes('PEGAR_AQUI')) {
     throw new Error('Falta configurar la URL del webhook de Make en admin/cms.config.js.');
@@ -250,22 +357,91 @@ async function savePost(event) {
     const file = postImage.files[0];
     validateImage(file, isEdit);
 
+    const title = postTitle.value.trim();
+    const description = postDescription.value.trim();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const publicacionesJson = await loadPublicacionesJsonForMake();
+    let nextPublicacionesJson;
+
     const payload = {
       id: postId.value || undefined,
-      title: postTitle.value.trim(),
-      description: postDescription.value.trim(),
+      title,
+      description,
       alt: postAlt.value.trim(),
       currentImagePath: currentImagePath.value || undefined,
       currentImageSrc: currentImageSrc.value || undefined
     };
 
-    if (file) {
+    if (!isEdit) {
+      const imagePath = buildFinalImagePath(file, now);
+      const newItem = {
+        id: `pub_${buildTimestamp(now)}`,
+        title,
+        description,
+        image: {
+          src: imagePath,
+          path: imagePath,
+          alt: title
+        },
+        status: 'published',
+        createdAt: nowIso,
+        updatedAt: nowIso
+      };
+
+      payload.id = newItem.id;
       payload.image = {
-        fileName: file.name,
+        fileName: imagePath.split('/').pop(),
+        originalFileName: file.name,
         mimeType: file.type,
-        base64: await fileToBase64(file)
+        base64: await fileToBase64(file),
+        path: imagePath
+      };
+
+      nextPublicacionesJson = {
+        ...publicacionesJson,
+        updatedAt: nowIso,
+        items: [...publicacionesJson.items, newItem]
+      };
+    } else {
+      let nextImage = null;
+
+      if (file) {
+        const imagePath = buildFinalImagePath(file, now);
+        payload.image = {
+          fileName: imagePath.split('/').pop(),
+          originalFileName: file.name,
+          mimeType: file.type,
+          base64: await fileToBase64(file),
+          path: imagePath
+        };
+        nextImage = {
+          src: imagePath,
+          path: imagePath,
+          alt: postAlt.value.trim() || title
+        };
+      }
+
+      nextPublicacionesJson = {
+        ...publicacionesJson,
+        updatedAt: nowIso,
+        items: publicacionesJson.items.map((item) => {
+          if (item.id !== postId.value) return item;
+          return {
+            ...item,
+            title,
+            description,
+            image: nextImage || {
+              ...item.image,
+              alt: postAlt.value.trim() || item.image?.alt || title
+            },
+            updatedAt: nowIso
+          };
+        })
       };
     }
+
+    attachPublicacionesPayload(payload, nextPublicacionesJson);
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
@@ -284,10 +460,19 @@ async function deletePost(item) {
   if (!confirmed) return;
 
   try {
-    await sendToMake('delete', {
+    const nowIso = new Date().toISOString();
+    const publicacionesJson = await loadPublicacionesJsonForMake();
+    const nextPublicacionesJson = {
+      ...publicacionesJson,
+      updatedAt: nowIso,
+      items: publicacionesJson.items.filter((currentItem) => currentItem.id !== item.id)
+    };
+    const payload = attachPublicacionesPayload({
       id: item.id,
       imagePath: item.image?.path
-    });
+    }, nextPublicacionesJson);
+
+    await sendToMake('delete', payload);
     showAlert('Publicación eliminada correctamente.');
     if (postId.value === item.id) resetForm();
     await loadAdminPosts();
