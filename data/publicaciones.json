@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-04T17:17:52.708Z",
+  "updatedAt": "2026-07-04T17:44:30.869Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -40,6 +40,19 @@
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
       "updatedAt": "2026-07-04T17:17:52.708Z"
+    },
+    {
+      "id": "pub_20260704194430",
+      "title": "Elemento 5",
+      "description": "ddddddddddddddddddd\ndddddd\nddddddddd",
+      "image": {
+        "src": "assets/uploads/20260704-194430-conexion-airtable.png",
+        "path": "assets/uploads/20260704-194430-conexion-airtable.png",
+        "alt": "Elemento 5"
+      },
+      "status": "published",
+      "createdAt": "2026-07-04T17:44:30.869Z",
+      "updatedAt": "2026-07-04T17:44:30.869Z"
     }
   ]
 }
