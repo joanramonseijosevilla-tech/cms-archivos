@@ -56,6 +56,34 @@ function normalizeSrc(src) {
   return `../${src}`;
 }
 
+function addAdminCacheBuster(src) {
+  const normalizedSrc = normalizeSrc(src);
+  if (!normalizedSrc || normalizedSrc.startsWith('blob:') || normalizedSrc.startsWith('data:')) return normalizedSrc;
+  const separator = normalizedSrc.includes('?') ? '&' : '?';
+  return `${normalizedSrc}${separator}v=${Date.now()}`;
+}
+
+function getAdminImageSrc(item) {
+  return item?._localPreviewSrc || addAdminCacheBuster(item?.image?.src);
+}
+
+function stripPanelOnlyFields(item) {
+  if (!item || typeof item !== 'object') return item;
+  const { _localPreviewSrc, ...publicItem } = item;
+  return publicItem;
+}
+
+function withPanelPreview(items, previewItemId, previewSrc) {
+  return items.map((item) => {
+    const previousItem = state.items.find((currentItem) => currentItem.id === item.id);
+    const localPreviewSrc = item.id === previewItemId && previewSrc
+      ? previewSrc
+      : previousItem?._localPreviewSrc;
+
+    return localPreviewSrc ? { ...item, _localPreviewSrc: localPreviewSrc } : item;
+  });
+}
+
 function truncate(text, max = 120) {
   if (!text) return '';
   return text.length > max ? `${text.slice(0, max).trim()}…` : text;
@@ -107,9 +135,14 @@ function renderAdminPosts() {
       card.className = 'admin-post';
 
       const img = document.createElement('img');
-      img.src = normalizeSrc(item.image?.src);
+      img.src = getAdminImageSrc(item);
       img.alt = item.image?.alt || item.title || 'Imagen de publicación';
       img.loading = 'lazy';
+      img.onerror = () => {
+        if (item._localPreviewSrc && img.src !== item._localPreviewSrc) {
+          img.src = item._localPreviewSrc;
+        }
+      };
 
       const content = document.createElement('div');
 
@@ -334,15 +367,22 @@ async function sendToMake(action, payload) {
   });
 
   const text = await response.text();
-  let data = {};
+  let data;
+
   try {
-    data = text ? JSON.parse(text) : {};
+    if (!text.trim()) throw new Error('Respuesta vacía de Make.');
+    data = JSON.parse(text);
   } catch {
-    data = { message: text };
+    throw new Error(
+      response.ok
+        ? 'Make no confirmó la operación con un JSON válido { "ok": true }.'
+        : `Make respondió con error ${response.status}.`
+    );
   }
 
-  if (!response.ok || data.ok === false) {
-    throw new Error(data.error || data.message || `Make respondió con error ${response.status}.`);
+  // El panel solo actualiza el estado local cuando Make confirma ok:true.
+  if (!response.ok || data.ok !== true) {
+    throw new Error(data.error || data.message || 'Make no confirmó la operación con { "ok": true }.');
   }
 
   return data;
@@ -362,8 +402,9 @@ async function savePost(event) {
     const now = new Date();
     const nowIso = now.toISOString();
     // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
-    const currentItems = Array.isArray(state.items) ? state.items : [];
+    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
     let nextPublicacionesJson;
+    let localPreviewSrc = '';
 
     const payload = {
       id: postId.value || undefined,
@@ -390,12 +431,15 @@ async function savePost(event) {
         updatedAt: nowIso
       };
 
+      const imageBase64 = await fileToBase64(file);
+      localPreviewSrc = `data:${file.type};base64,${imageBase64}`;
+
       payload.id = newItem.id;
       payload.image = {
         fileName: imagePath.split('/').pop(),
         originalFileName: file.name,
         mimeType: file.type,
-        base64: await fileToBase64(file),
+        base64: imageBase64,
         path: imagePath
       };
 
@@ -409,11 +453,14 @@ async function savePost(event) {
 
       if (file) {
         const imagePath = buildFinalImagePath(file, now);
+        const imageBase64 = await fileToBase64(file);
+        localPreviewSrc = `data:${file.type};base64,${imageBase64}`;
+
         payload.image = {
           fileName: imagePath.split('/').pop(),
           originalFileName: file.name,
           mimeType: file.type,
-          base64: await fileToBase64(file),
+          base64: imageBase64,
           path: imagePath
         };
         nextImage = {
@@ -445,7 +492,8 @@ async function savePost(event) {
     attachPublicacionesPayload(payload, nextPublicacionesJson);
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
-    state.items = nextPublicacionesJson.items;
+    // _localPreviewSrc es solo una ayuda visual temporal del panel tras OK de Make.
+    state.items = withPanelPreview(nextPublicacionesJson.items, payload.id, localPreviewSrc);
     renderAdminPosts();
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
     resetForm();
@@ -464,7 +512,7 @@ async function deletePost(item) {
   try {
     const nowIso = new Date().toISOString();
     // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
-    const currentItems = Array.isArray(state.items) ? state.items : [];
+    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
     const nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
@@ -476,7 +524,7 @@ async function deletePost(item) {
     }, nextPublicacionesJson);
 
     await sendToMake('delete', payload);
-    state.items = nextPublicacionesJson.items;
+    state.items = withPanelPreview(nextPublicacionesJson.items, null, '');
     renderAdminPosts();
     showAlert('Publicación eliminada correctamente.');
     if (postId.value === item.id) resetForm();
