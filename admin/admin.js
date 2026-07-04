@@ -361,7 +361,8 @@ async function savePost(event) {
     const description = postDescription.value.trim();
     const now = new Date();
     const nowIso = now.toISOString();
-    const publicacionesJson = await loadPublicacionesJsonForMake();
+    // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
+    const currentItems = Array.isArray(state.items) ? state.items : [];
     let nextPublicacionesJson;
 
     const payload = {
@@ -399,9 +400,9 @@ async function savePost(event) {
       };
 
       nextPublicacionesJson = {
-        ...publicacionesJson,
+        version: 1,
         updatedAt: nowIso,
-        items: [...publicacionesJson.items, newItem]
+        items: [...currentItems, newItem]
       };
     } else {
       let nextImage = null;
@@ -423,9 +424,9 @@ async function savePost(event) {
       }
 
       nextPublicacionesJson = {
-        ...publicacionesJson,
+        version: 1,
         updatedAt: nowIso,
-        items: publicacionesJson.items.map((item) => {
+        items: currentItems.map((item) => {
           if (item.id !== postId.value) return item;
           return {
             ...item,
@@ -444,9 +445,10 @@ async function savePost(event) {
     attachPublicacionesPayload(payload, nextPublicacionesJson);
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
+    state.items = nextPublicacionesJson.items;
+    renderAdminPosts();
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
     resetForm();
-    await loadAdminPosts();
   } catch (error) {
     showAlert(error.message, 'error');
     console.error(error);
@@ -461,11 +463,12 @@ async function deletePost(item) {
 
   try {
     const nowIso = new Date().toISOString();
-    const publicacionesJson = await loadPublicacionesJsonForMake();
+    // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
+    const currentItems = Array.isArray(state.items) ? state.items : [];
     const nextPublicacionesJson = {
-      ...publicacionesJson,
+      version: 1,
       updatedAt: nowIso,
-      items: publicacionesJson.items.filter((currentItem) => currentItem.id !== item.id)
+      items: currentItems.filter((currentItem) => currentItem.id !== item.id)
     };
     const payload = attachPublicacionesPayload({
       id: item.id,
@@ -473,9 +476,10 @@ async function deletePost(item) {
     }, nextPublicacionesJson);
 
     await sendToMake('delete', payload);
+    state.items = nextPublicacionesJson.items;
+    renderAdminPosts();
     showAlert('Publicación eliminada correctamente.');
     if (postId.value === item.id) resetForm();
-    await loadAdminPosts();
   } catch (error) {
     showAlert(error.message, 'error');
     console.error(error);
