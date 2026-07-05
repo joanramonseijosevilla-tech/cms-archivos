@@ -175,7 +175,7 @@ input[type="file"]::file-selector-button {
   gap: 0.75rem;
   border: 1px solid var(--dark-card-border);
   border-radius: var(--radius-md);
-  padding: 1rem;
+  padding: 0.9rem;
   background: rgba(15, 23, 42, 0.72);
 }
 
@@ -195,14 +195,14 @@ input[type="file"]::file-selector-button {
 .post-preview-image-wrap {
   display: grid;
   place-items: center;
-  min-height: clamp(220px, 35vw, 420px);
+  min-height: clamp(140px, 18vw, 220px);
   background: var(--dark-surface);
 }
 
 .post-preview-image {
   display: block;
   width: 100%;
-  height: clamp(220px, 35vw, 420px);
+  height: clamp(140px, 18vw, 220px);
   object-fit: contain;
   object-position: center;
   background: var(--dark-surface);
@@ -216,7 +216,7 @@ input[type="file"]::file-selector-button {
 }
 
 .post-preview-body {
-  padding: 1rem;
+  padding: 0.85rem;
 }
 
 .post-preview-body h3 {

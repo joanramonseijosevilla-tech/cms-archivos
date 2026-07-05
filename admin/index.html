@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-7">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-10">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-11">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-10"></script>
+  <script defer src="admin.js?v=20260705-11"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -70,6 +70,8 @@
               <textarea id="post-description" rows="6" maxlength="900" required placeholder="Describe la publicación…"></textarea>
             </label>
 
+            <div id="image-preview" class="image-preview hidden"></div>
+
             <label>
               Fotografía
               <input id="post-image" type="file" accept="image/jpeg,image/png,image/webp">
@@ -87,8 +89,6 @@
                 <option value="hidden">Oculto</option>
               </select>
             </label>
-
-            <div id="image-preview" class="image-preview hidden"></div>
 
             <div class="form-actions">
               <button id="save-button" class="button" type="submit">Guardar publicación</button>
