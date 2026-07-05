@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T08:56:06.431Z",
+  "updatedAt": "2026-07-05T09:21:31.969Z",
   "items": [
     {
       "id": "pub_20260705085000",
@@ -141,6 +141,20 @@
       "createdAt": "2026-07-05T07:46:14.660Z",
       "updatedAt": "2026-07-05T07:46:14.660Z",
       "order": 9
+    },
+    {
+      "id": "pub_20260705112131",
+      "title": "Elemento 21",
+      "description": "Esto es una prueba para ver la vista previa\nTal y como quedará en la publicación\nPero espero que funcione\nDe Corazón",
+      "image": {
+        "src": "assets/uploads/20260705-112131-rutas-filtros-logica.png",
+        "path": "assets/uploads/20260705-112131-rutas-filtros-logica.png",
+        "alt": "Elemento 21"
+      },
+      "status": "published",
+      "createdAt": "2026-07-05T09:21:31.969Z",
+      "updatedAt": "2026-07-05T09:21:31.969Z",
+      "order": 10
     }
   ]
 }
