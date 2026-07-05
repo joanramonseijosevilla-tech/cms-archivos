@@ -1,6 +1,6 @@
 const config = window.CMS_CONFIG;
 const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
-const RAW_GITHUB_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/main/';
+const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
 
 const state = {
   items: [],
@@ -69,12 +69,34 @@ function getRawGithubAssetUrl(src) {
   return `${RAW_GITHUB_BASE_URL}${cleanPath}`;
 }
 
+function getPagesAssetUrl(src) {
+  const cleanPath = cleanRelativePath(src);
+  return `../${cleanPath}`;
+}
+
 function normalizeSrc(src) {
   if (!src) return '';
-  if (src.startsWith('http') || src.startsWith('blob:') || src.startsWith('data:')) return src;
+  if (src.startsWith('blob:') || src.startsWith('data:')) return src;
+  if (src.startsWith('http')) return src;
   if (isUploadedAssetPath(src)) return getRawGithubAssetUrl(src);
   if (src.startsWith('/')) return `..${src}`;
   return `../${src}`;
+}
+
+function setImageSrc(img, src) {
+  const primarySrc = addAdminCacheBuster(src);
+  const fallbackSrc = isUploadedAssetPath(src) ? addCacheBuster(getPagesAssetUrl(src)) : '';
+
+  if (!primarySrc) return;
+
+  img.dataset.fallbackTried = 'false';
+  img.onerror = () => {
+    if (fallbackSrc && img.dataset.fallbackTried !== 'true') {
+      img.dataset.fallbackTried = 'true';
+      img.src = fallbackSrc;
+    }
+  };
+  img.src = primarySrc;
 }
 
 function addCacheBuster(src) {
@@ -303,7 +325,7 @@ function renderAdminPosts() {
       card.className = 'admin-post';
 
       const img = document.createElement('img');
-      img.src = getAdminImageSrc(item);
+      setImageSrc(img, item.image?.src);
       img.alt = item.image?.alt || item.title || 'Imagen de publicación';
       img.loading = 'lazy';
 
@@ -374,7 +396,7 @@ function renderPreview(src, alt = '') {
     return;
   }
   const img = document.createElement('img');
-  img.src = normalizeSrc(src);
+  setImageSrc(img, src);
   img.alt = alt;
   imagePreview.append(img);
   imagePreview.classList.remove('hidden');

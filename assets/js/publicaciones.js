@@ -1,6 +1,6 @@
 const POSTS_JSON_API_URL = 'https://api.github.com/repos/joanramonseijosevilla-tech/cms-archivos/contents/data/publicaciones.json';
 const POSTS_JSON_FALLBACK_URL = 'data/publicaciones.json';
-const RAW_GITHUB_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/main/';
+const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
 
 const postsGrid = document.querySelector('#posts-grid');
 const postsStatus = document.querySelector('#posts-status');
@@ -93,16 +93,40 @@ function cleanRelativePath(src) {
     .replace(/^\/+/, '');
 }
 
+function isUploadedAssetPath(src) {
+  return cleanRelativePath(src).startsWith('assets/uploads/');
+}
+
+function getRawGithubAssetUrl(src) {
+  return `${RAW_GITHUB_BASE_URL}${cleanRelativePath(src)}`;
+}
+
+function getPagesAssetUrl(src) {
+  return cleanRelativePath(src);
+}
+
 function normalizeSrc(src) {
   if (!src) return '';
-  if (src.startsWith('http') || src.startsWith('blob:') || src.startsWith('data:')) return src;
+  if (src.startsWith('blob:') || src.startsWith('data:')) return src;
+  if (src.startsWith('http')) return addCacheBuster(src);
+  if (isUploadedAssetPath(src)) return addCacheBuster(getRawGithubAssetUrl(src));
+  return addCacheBuster(getPagesAssetUrl(src));
+}
 
-  const cleanPath = cleanRelativePath(src);
-  if (cleanPath.startsWith('assets/uploads/')) {
-    return `${RAW_GITHUB_BASE_URL}${cleanPath}`;
-  }
+function setImageSrc(img, src) {
+  const primarySrc = normalizeSrc(src);
+  const fallbackSrc = isUploadedAssetPath(src) ? addCacheBuster(getPagesAssetUrl(src)) : '';
 
-  return cleanPath;
+  if (!primarySrc) return;
+
+  img.dataset.fallbackTried = 'false';
+  img.onerror = () => {
+    if (fallbackSrc && img.dataset.fallbackTried !== 'true') {
+      img.dataset.fallbackTried = 'true';
+      img.src = fallbackSrc;
+    }
+  };
+  img.src = primarySrc;
 }
 
 function renderPosts(items) {
@@ -129,7 +153,7 @@ function renderPosts(items) {
     img.className = 'post-card-image';
     img.loading = 'lazy';
     img.decoding = 'async';
-    img.src = normalizeSrc(item.image?.src);
+    setImageSrc(img, item.image?.src);
     img.alt = item.image?.alt || item.title || 'Imagen de publicación';
 
     const body = document.createElement('div');
