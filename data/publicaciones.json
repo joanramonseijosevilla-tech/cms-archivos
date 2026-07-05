@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T07:59:52.249Z",
+  "updatedAt": "2026-07-05T08:00:54.428Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -14,19 +14,6 @@
       "createdAt": "2026-07-04T17:38:59.299Z",
       "updatedAt": "2026-07-04T17:38:59.300Z",
       "description": "D8"
-    },
-    {
-      "id": "pub_20260704191511",
-      "title": "Elemento 3",
-      "description": "Descripción Elemento 3",
-      "image": {
-        "src": "assets/uploads/20260704-191511-sheduled-tally.png",
-        "path": "assets/uploads/20260704-191511-sheduled-tally.png",
-        "alt": "Elemento 3"
-      },
-      "status": "published",
-      "createdAt": "2026-07-04T17:15:11.450Z",
-      "updatedAt": "2026-07-04T17:15:11.450Z"
     },
     {
       "id": "pub_20260704191752",
