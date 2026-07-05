@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T06:09:35.549Z",
+  "updatedAt": "2026-07-05T06:10:34.592Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -70,7 +70,7 @@
     {
       "id": "pub_20260704205450",
       "title": "Elemento 8",
-      "description": ";odificacion elemento 8",
+      "description": "Modificacion elemento 8 V2",
       "image": {
         "src": "assets/uploads/20260704-205450-acciones.png",
         "path": "assets/uploads/20260704-205450-acciones.png",
@@ -78,7 +78,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
-      "updatedAt": "2026-07-05T04:02:31.036Z"
+      "updatedAt": "2026-07-05T06:10:34.592Z"
     },
     {
       "id": "pub_20260704211442",
