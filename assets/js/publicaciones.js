@@ -231,6 +231,124 @@ function itemMatchesCategoryFilter(item) {
   return getItemCategory(item) === currentCategoryFilter;
 }
 
+function escapeHtml(text) {
+  const span = document.createElement('span');
+  span.textContent = String(text || '');
+  return span.innerHTML;
+}
+
+function looksLikeRichHtml(value) {
+  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span)\b/i.test(String(value || ''));
+}
+
+function convertPlainTextToRichHtml(value) {
+  const text = String(value || '').replace(/\r\n/g, '\n').trim();
+  if (!text) return '';
+
+  const blocks = text.split(/\n{2,}/);
+
+  return blocks.map((block) => {
+    const lines = block.split('\n').filter((line) => line.trim());
+    if (!lines.length) return '';
+
+    const isBulletList = lines.every((line) => /^\s*[-*•]\s+/.test(line));
+    const isNumberedList = lines.every((line) => /^\s*\d+[.)]\s+/.test(line));
+
+    if (isBulletList) {
+      return `<ul>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*[-*•]\s+/, ''))}</li>`).join('')}</ul>`;
+    }
+
+    if (isNumberedList) {
+      return `<ol>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`;
+    }
+
+    return `<p>${lines.map(escapeHtml).join('<br>')}</p>`;
+  }).filter(Boolean).join('');
+}
+
+function getSafeTextAlign(value) {
+  const align = String(value || '').toLowerCase().trim();
+  return ['left', 'center', 'right'].includes(align) ? align : '';
+}
+
+function getNodeTextAlign(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return '';
+  const styleAlign = getSafeTextAlign(node.style?.textAlign);
+  if (styleAlign) return styleAlign;
+  return getSafeTextAlign(node.getAttribute('align'));
+}
+
+function cleanRichNode(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return document.createTextNode(node.textContent || '');
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return null;
+  }
+
+  const sourceTag = node.tagName.toLowerCase();
+  const mappedTag = sourceTag === 'b' ? 'strong' : sourceTag === 'i' ? 'em' : sourceTag;
+  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div'];
+
+  if (mappedTag === 'br') {
+    return document.createElement('br');
+  }
+
+  if (!allowedTags.includes(mappedTag)) {
+    const fragment = document.createDocumentFragment();
+    Array.from(node.childNodes).forEach((child) => {
+      const cleanChild = cleanRichNode(child);
+      if (cleanChild) fragment.append(cleanChild);
+    });
+    return fragment;
+  }
+
+  const cleanNode = document.createElement(mappedTag);
+  const align = getNodeTextAlign(node);
+
+  if (align && ['p', 'div', 'li'].includes(mappedTag)) {
+    cleanNode.style.textAlign = align;
+  }
+
+  Array.from(node.childNodes).forEach((child) => {
+    const cleanChild = cleanRichNode(child);
+    if (cleanChild) cleanNode.append(cleanChild);
+  });
+
+  return cleanNode;
+}
+
+function sanitizeRichText(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  const sourceHtml = looksLikeRichHtml(raw) ? raw : convertPlainTextToRichHtml(raw);
+  const template = document.createElement('template');
+  template.innerHTML = sourceHtml;
+  const output = document.createElement('div');
+
+  Array.from(template.content.childNodes).forEach((node) => {
+    const cleanNode = cleanRichNode(node);
+    if (cleanNode) output.append(cleanNode);
+  });
+
+  if (!output.textContent.trim()) return '';
+  return output.innerHTML;
+}
+
+function renderRichText(container, value, fallback = '') {
+  const cleanHtml = sanitizeRichText(value);
+  container.replaceChildren();
+
+  if (cleanHtml) {
+    container.innerHTML = cleanHtml;
+    return;
+  }
+
+  container.textContent = fallback;
+}
+
 function renderPosts(items) {
   postsGrid.replaceChildren();
 
@@ -280,8 +398,9 @@ function renderPosts(items) {
     const title = document.createElement('h3');
     title.textContent = item.title || 'Publicación sin título';
 
-    const description = document.createElement('p');
-    description.textContent = item.description || '';
+    const description = document.createElement('div');
+    description.className = 'post-card-description rich-text-content';
+    renderRichText(description, item.description || '');
 
     body.append(date, category, title, description);
     article.append(img, body);

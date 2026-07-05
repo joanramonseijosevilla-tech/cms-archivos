@@ -6,10 +6,10 @@
   <title>Panel privado | Mini CMS Nexautia</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-7">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-11">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-17">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-17">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-16"></script>
+  <script defer src="admin.js?v=20260705-17"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -65,10 +65,23 @@
               <input id="post-title" type="text" maxlength="110" required placeholder="Ej. Nueva publicación corporativa">
             </label>
 
-            <label>
-              Descripción
-              <textarea id="post-description" rows="6" maxlength="900" required placeholder="Describe la publicación…"></textarea>
-            </label>
+            <div class="rich-editor-field">
+              <span class="rich-editor-label">Descripción</span>
+              <div class="rich-editor" aria-label="Editor básico de descripción">
+                <div class="rich-editor-toolbar" aria-label="Formato de descripción">
+                  <button class="button button-small button-secondary" type="button" data-rich-command="bold" title="Negrita"><strong>B</strong></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="italic" title="Cursiva"><em>I</em></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="insertUnorderedList" title="Lista con viñetas">• Lista</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="insertOrderedList" title="Lista numerada">1. Lista</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyLeft" title="Alinear a la izquierda">Izq.</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyCenter" title="Centrar">Centro</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyRight" title="Alinear a la derecha">Dcha.</button>
+                </div>
+                <div id="post-description-editor" class="rich-editor-area" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Describe la publicación…"></div>
+              </div>
+              <textarea id="post-description" class="hidden" aria-hidden="true"></textarea>
+              <p class="form-note rich-editor-help">Formato básico: negrita, cursiva, viñetas, lista numerada y alineación. Si pegas texto con formato, se limpiará para mantenerlo seguro.</p>
+            </div>
 
             <label>
               Categoría

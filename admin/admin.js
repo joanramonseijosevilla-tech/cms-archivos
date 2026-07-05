@@ -30,6 +30,8 @@ const postForm = document.querySelector('#post-form');
 const postId = document.querySelector('#post-id');
 const postTitle = document.querySelector('#post-title');
 const postDescription = document.querySelector('#post-description');
+const postDescriptionEditor = document.querySelector('#post-description-editor');
+const richTextButtons = document.querySelectorAll('[data-rich-command]');
 const postImage = document.querySelector('#post-image');
 const postAlt = document.querySelector('#post-alt');
 const postStatus = document.querySelector('#post-status');
@@ -221,6 +223,201 @@ function getFormCategory() {
   return isValidPostCategory(postCategory?.value) ? postCategory.value : DEFAULT_POST_CATEGORY;
 }
 
+function escapeHtml(text) {
+  const span = document.createElement('span');
+  span.textContent = String(text || '');
+  return span.innerHTML;
+}
+
+function looksLikeRichHtml(value) {
+  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span)\b/i.test(String(value || ''));
+}
+
+function convertPlainTextToRichHtml(value) {
+  const text = String(value || '').replace(/\r\n/g, '\n').trim();
+  if (!text) return '';
+
+  const blocks = text.split(/\n{2,}/);
+
+  return blocks.map((block) => {
+    const lines = block.split('\n').filter((line) => line.trim());
+    if (!lines.length) return '';
+
+    const isBulletList = lines.every((line) => /^\s*[-*•]\s+/.test(line));
+    const isNumberedList = lines.every((line) => /^\s*\d+[.)]\s+/.test(line));
+
+    if (isBulletList) {
+      return `<ul>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*[-*•]\s+/, ''))}</li>`).join('')}</ul>`;
+    }
+
+    if (isNumberedList) {
+      return `<ol>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`;
+    }
+
+    return `<p>${lines.map(escapeHtml).join('<br>')}</p>`;
+  }).filter(Boolean).join('');
+}
+
+function getSafeTextAlign(value) {
+  const align = String(value || '').toLowerCase().trim();
+  return ['left', 'center', 'right'].includes(align) ? align : '';
+}
+
+function getNodeTextAlign(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return '';
+  const styleAlign = getSafeTextAlign(node.style?.textAlign);
+  if (styleAlign) return styleAlign;
+  return getSafeTextAlign(node.getAttribute('align'));
+}
+
+function cleanRichNode(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return document.createTextNode(node.textContent || '');
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return null;
+  }
+
+  const sourceTag = node.tagName.toLowerCase();
+  const mappedTag = sourceTag === 'b' ? 'strong' : sourceTag === 'i' ? 'em' : sourceTag;
+  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div'];
+
+  if (mappedTag === 'br') {
+    return document.createElement('br');
+  }
+
+  if (!allowedTags.includes(mappedTag)) {
+    const fragment = document.createDocumentFragment();
+    Array.from(node.childNodes).forEach((child) => {
+      const cleanChild = cleanRichNode(child);
+      if (cleanChild) fragment.append(cleanChild);
+    });
+    return fragment;
+  }
+
+  const cleanNode = document.createElement(mappedTag);
+  const align = getNodeTextAlign(node);
+
+  if (align && ['p', 'div', 'li'].includes(mappedTag)) {
+    cleanNode.style.textAlign = align;
+  }
+
+  Array.from(node.childNodes).forEach((child) => {
+    const cleanChild = cleanRichNode(child);
+    if (cleanChild) cleanNode.append(cleanChild);
+  });
+
+  return cleanNode;
+}
+
+function sanitizeRichText(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  const sourceHtml = looksLikeRichHtml(raw) ? raw : convertPlainTextToRichHtml(raw);
+  const template = document.createElement('template');
+  template.innerHTML = sourceHtml;
+  const output = document.createElement('div');
+
+  Array.from(template.content.childNodes).forEach((node) => {
+    const cleanNode = cleanRichNode(node);
+    if (cleanNode) output.append(cleanNode);
+  });
+
+  if (!output.textContent.trim()) return '';
+  return output.innerHTML;
+}
+
+function richTextToPlainText(value) {
+  const template = document.createElement('template');
+  template.innerHTML = sanitizeRichText(value);
+  return template.content.textContent.trim();
+}
+
+function renderRichText(container, value, fallback = '') {
+  const cleanHtml = sanitizeRichText(value);
+  container.replaceChildren();
+
+  if (cleanHtml) {
+    container.innerHTML = cleanHtml;
+    return;
+  }
+
+  container.textContent = fallback;
+}
+
+function getEditorRawHtml() {
+  return postDescriptionEditor ? postDescriptionEditor.innerHTML : postDescription.value;
+}
+
+function getDescriptionSnapshotValue() {
+  return sanitizeRichText(getEditorRawHtml());
+}
+
+function getCleanDescriptionForSave() {
+  const cleanHtml = sanitizeRichText(getEditorRawHtml());
+  if (postDescriptionEditor) postDescriptionEditor.innerHTML = cleanHtml;
+  postDescription.value = cleanHtml;
+  return cleanHtml;
+}
+
+function setDescriptionEditorContent(value) {
+  const cleanHtml = sanitizeRichText(value);
+  if (postDescriptionEditor) postDescriptionEditor.innerHTML = cleanHtml;
+  postDescription.value = cleanHtml;
+}
+
+function syncDescriptionFieldFromEditor() {
+  if (!postDescriptionEditor) return;
+  postDescription.value = postDescriptionEditor.innerHTML;
+}
+
+function insertHtmlAtCursor(html) {
+  postDescriptionEditor?.focus();
+
+  if (document.queryCommandSupported?.('insertHTML')) {
+    document.execCommand('insertHTML', false, html);
+    return;
+  }
+
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return;
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const fragment = template.content;
+  const lastChild = fragment.lastChild;
+  range.insertNode(fragment);
+
+  if (lastChild) {
+    range.setStartAfter(lastChild);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+}
+
+function handleRichTextPaste(event) {
+  event.preventDefault();
+  const html = event.clipboardData?.getData('text/html') || '';
+  const text = event.clipboardData?.getData('text/plain') || '';
+  const cleanHtml = sanitizeRichText(html || text);
+  insertHtmlAtCursor(cleanHtml || escapeHtml(text));
+  syncDescriptionFieldFromEditor();
+  updateLivePreview();
+}
+
+function runRichTextCommand(command) {
+  if (!command || !postDescriptionEditor) return;
+  postDescriptionEditor.focus();
+  document.execCommand(command, false, null);
+  syncDescriptionFieldFromEditor();
+  updateLivePreview();
+}
+
 function normalizeSearchText(text) {
   return String(text || '')
     .normalize('NFD')
@@ -235,7 +432,7 @@ function itemMatchesSearch(item, query) {
 
   const searchableText = normalizeSearchText([
     item?.title,
-    item?.description,
+    richTextToPlainText(item?.description),
     getCategoryLabel(item)
   ].join(' '));
 
@@ -460,7 +657,7 @@ function getFormSnapshot() {
   return JSON.stringify({
     id: postId.value || '',
     title: postTitle.value || '',
-    description: postDescription.value || '',
+    description: getDescriptionSnapshotValue(),
     alt: postAlt.value || '',
     status: getFormStatus(),
     category: getFormCategory(),
@@ -491,7 +688,8 @@ function blockIfUnsavedFormChanges(message) {
 
 function validateRequiredPostFields(isEdit, file) {
   const title = postTitle.value.trim();
-  const description = postDescription.value.trim();
+  const description = getCleanDescriptionForSave();
+  const descriptionText = richTextToPlainText(description);
   const alt = postAlt.value.trim();
 
   if (!title) {
@@ -499,8 +697,8 @@ function validateRequiredPostFields(isEdit, file) {
     throw new Error('El título es obligatorio.');
   }
 
-  if (!description) {
-    postDescription.focus();
+  if (!descriptionText) {
+    postDescriptionEditor?.focus();
     throw new Error('La descripción es obligatoria.');
   }
 
@@ -666,9 +864,9 @@ function renderAdminPosts() {
 
       meta.append(date, status, category);
 
-      const description = document.createElement('p');
-      description.className = 'admin-post-description';
-      description.textContent = item.description || '';
+      const description = document.createElement('div');
+      description.className = 'admin-post-description rich-text-content';
+      renderRichText(description, item.description || '');
 
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
@@ -728,7 +926,7 @@ function startEdit(item) {
   if (blockIfUnsavedFormChanges('Tienes cambios sin guardar en el formulario. Si editas otra publicación, se perderán. ¿Continuar?')) return;
   postId.value = item.id;
   postTitle.value = item.title || '';
-  postDescription.value = item.description || '';
+  setDescriptionEditorContent(item.description || '');
   postAlt.value = item.image?.alt || '';
   if (postStatus) postStatus.value = getItemStatus(item);
   if (postCategory) postCategory.value = getItemCategory(item);
@@ -753,6 +951,7 @@ function clearPreviewObjectUrl() {
 
 function resetForm() {
   postForm.reset();
+  setDescriptionEditorContent('');
   postId.value = '';
   currentImagePath.value = '';
   currentImageSrc.value = '';
@@ -802,7 +1001,7 @@ function createPreviewImage(src, alt) {
 
 function updateLivePreview() {
   const title = postTitle.value.trim();
-  const description = postDescription.value.trim();
+  const description = getDescriptionSnapshotValue();
   const status = getFormStatus();
   const category = getFormCategory();
   const imageSrc = getPreviewImageSrc();
@@ -838,9 +1037,9 @@ function updateLivePreview() {
   const titleNode = document.createElement('h3');
   titleNode.textContent = title || 'Título de la publicación';
 
-  const descriptionNode = document.createElement('p');
-  descriptionNode.className = 'post-preview-description';
-  descriptionNode.textContent = description || 'La descripción aparecerá aquí.';
+  const descriptionNode = document.createElement('div');
+  descriptionNode.className = 'post-preview-description rich-text-content';
+  renderRichText(descriptionNode, description, 'La descripción aparecerá aquí.');
 
   meta.append(date, statusBadge, categoryBadge);
   body.append(meta, titleNode, descriptionNode);
@@ -1313,9 +1512,26 @@ postImage.addEventListener('change', () => {
   updateLivePreview();
 });
 
-[postTitle, postDescription, postAlt, postStatus, postCategory]
+[postTitle, postAlt, postStatus, postCategory]
   .filter(Boolean)
   .forEach((field) => field.addEventListener('input', updateLivePreview));
+
+if (postDescriptionEditor) {
+  postDescriptionEditor.addEventListener('input', () => {
+    syncDescriptionFieldFromEditor();
+    updateLivePreview();
+  });
+  postDescriptionEditor.addEventListener('paste', handleRichTextPaste);
+  postDescriptionEditor.addEventListener('blur', () => {
+    setDescriptionEditorContent(getEditorRawHtml());
+    updateLivePreview();
+  });
+}
+
+richTextButtons.forEach((button) => {
+  button.addEventListener('mousedown', (event) => event.preventDefault());
+  button.addEventListener('click', () => runRichTextCommand(button.dataset.richCommand));
+});
 
 [postStatus, postCategory]
   .filter(Boolean)

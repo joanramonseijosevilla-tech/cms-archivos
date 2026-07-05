@@ -583,3 +583,40 @@ code {
     width: 158px;
   }
 }
+
+.rich-text-content {
+  white-space: normal;
+}
+
+.rich-text-content p,
+.rich-text-content div,
+.rich-text-content ul,
+.rich-text-content ol {
+  margin: 0 0 0.75rem;
+}
+
+.rich-text-content p:last-child,
+.rich-text-content div:last-child,
+.rich-text-content ul:last-child,
+.rich-text-content ol:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+  padding-left: 1.25rem;
+}
+
+.rich-text-content li {
+  margin: 0.22rem 0;
+}
+
+.post-card-description.rich-text-content {
+  color: var(--muted);
+}
+
+.post-card .rich-text-content p,
+.post-card .rich-text-content div,
+.post-card .rich-text-content li {
+  white-space: normal;
+}
