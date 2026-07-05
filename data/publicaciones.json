@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T06:34:00.480Z",
+  "updatedAt": "2026-07-05T06:36:33.408Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -118,19 +118,6 @@
       "status": "published",
       "createdAt": "2026-07-05T06:17:01.964Z",
       "updatedAt": "2026-07-05T06:17:01.964Z"
-    },
-    {
-      "id": "pub_20260705083400",
-      "title": "Elemento 16",
-      "description": "Version 4.4",
-      "image": {
-        "src": "assets/uploads/20260705-083400-sheduled-tally.png",
-        "path": "assets/uploads/20260705-083400-sheduled-tally.png",
-        "alt": "Elemento 16"
-      },
-      "status": "published",
-      "createdAt": "2026-07-05T06:34:00.480Z",
-      "updatedAt": "2026-07-05T06:34:00.480Z"
     }
   ]
 }
