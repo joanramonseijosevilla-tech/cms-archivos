@@ -334,8 +334,13 @@ function renderAdminPosts() {
       const title = document.createElement('h3');
       title.textContent = item.title || 'Sin título';
 
-      const meta = document.createElement('p');
-      meta.textContent = `${formatDate(item.createdAt)} · ${truncate(item.description, 100)}`;
+      const date = document.createElement('p');
+      date.className = 'admin-post-date';
+      date.textContent = formatDate(item.createdAt);
+
+      const description = document.createElement('p');
+      description.className = 'admin-post-description';
+      description.textContent = item.description || '';
 
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
@@ -353,7 +358,7 @@ function renderAdminPosts() {
       deleteButton.addEventListener('click', () => deletePost(item));
 
       actions.append(editButton, deleteButton);
-      content.append(title, meta, actions);
+      content.append(title, date, description, actions);
       card.append(img, content);
       fragment.append(card);
     });

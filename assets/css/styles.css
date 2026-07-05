@@ -407,9 +407,11 @@ code {
 }
 
 .post-card-image {
-  aspect-ratio: 4 / 3;
+  display: block;
   width: 100%;
+  height: clamp(220px, 24vw, 320px);
   object-fit: contain;
+  object-position: center;
   background: var(--dark-surface);
 }
 

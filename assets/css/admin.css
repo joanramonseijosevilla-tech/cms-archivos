@@ -167,9 +167,12 @@ input[type="file"]::file-selector-button {
 }
 
 .image-preview img {
+  display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: clamp(220px, 35vw, 420px);
   object-fit: contain;
+  object-position: center;
+  background: var(--dark-surface);
 }
 
 .admin-alert {
@@ -204,10 +207,12 @@ input[type="file"]::file-selector-button {
 }
 
 .admin-post img {
+  display: block;
   width: 110px;
   height: 92px;
   border-radius: 14px;
   object-fit: contain;
+  object-position: center;
   background: var(--dark-surface);
 }
 
@@ -222,6 +227,13 @@ input[type="file"]::file-selector-button {
   margin: 0.35rem 0 0;
   color: var(--muted);
   font-size: 0.93rem;
+}
+
+.admin-post-date {
+  font-weight: 800;
+}
+
+.admin-post-description {
   white-space: pre-line;
 }
 
@@ -273,8 +285,7 @@ input[type="file"]::file-selector-button {
 
   .admin-post img {
     width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
+    height: 220px;
   }
 }
 
