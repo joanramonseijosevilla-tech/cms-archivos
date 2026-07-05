@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T08:24:16.302Z",
+  "updatedAt": "2026-07-05T08:25:01.204Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -102,9 +102,9 @@
         "path": "assets/uploads/20260705-085000-iterador-make.png",
         "alt": "Elemento 17"
       },
-      "status": "hidden",
+      "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
-      "updatedAt": "2026-07-05T08:24:16.302Z"
+      "updatedAt": "2026-07-05T08:25:01.204Z"
     },
     {
       "id": "pub_20260705094614",
