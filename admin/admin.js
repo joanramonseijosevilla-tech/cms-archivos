@@ -9,7 +9,8 @@ const state = {
   orderDirty: false,
   orderOriginalItems: null,
   previewObjectUrl: '',
-  searchQuery: ''
+  searchQuery: '',
+  statusFilter: 'all'
 };
 
 const loginView = document.querySelector('#login-view');
@@ -35,6 +36,7 @@ const cancelEditButton = document.querySelector('#cancel-edit-button');
 const refreshButton = document.querySelector('#refresh-button');
 const imagePreview = document.querySelector('#image-preview');
 const postSearch = document.querySelector('#post-search');
+const postStatusFilter = document.querySelector('#post-status-filter');
 const clearSearchButton = document.querySelector('#clear-search-button');
 
 function showAlert(message, type = 'success') {
@@ -220,9 +222,62 @@ function hasActiveSearch() {
   return Boolean(getSearchQuery());
 }
 
+function getStatusFilter() {
+  return state.statusFilter === 'published' || state.statusFilter === 'hidden'
+    ? state.statusFilter
+    : 'all';
+}
+
+function hasActiveStatusFilter() {
+  return getStatusFilter() !== 'all';
+}
+
+function hasActiveListFilter() {
+  return hasActiveSearch() || hasActiveStatusFilter();
+}
+
+function itemMatchesStatusFilter(item) {
+  const filter = getStatusFilter();
+  if (filter === 'all') return true;
+  if (filter === 'published') return isItemPublished(item);
+  return !isItemPublished(item);
+}
+
+function getPostStats(items) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const published = safeItems.filter((item) => isItemPublished(item)).length;
+  const hidden = safeItems.length - published;
+
+  return {
+    total: safeItems.length,
+    published,
+    hidden
+  };
+}
+
+function buildStatusText(displayedCount, fullItems) {
+  const stats = getPostStats(fullItems);
+  const filterActive = hasActiveListFilter();
+  const parts = [
+    `Total: ${stats.total}`,
+    `Publicadas: ${stats.published}`,
+    `Ocultas: ${stats.hidden}`
+  ];
+
+  if (filterActive) {
+    parts.push(`Mostrando: ${displayedCount}`);
+  }
+
+  return parts.join(' · ');
+}
+
 function updateSearchControls() {
-  if (!postSearch || !clearSearchButton) return;
-  clearSearchButton.classList.toggle('hidden', !hasActiveSearch());
+  if (postStatusFilter && postStatusFilter.value !== getStatusFilter()) {
+    postStatusFilter.value = getStatusFilter();
+  }
+
+  if (!clearSearchButton) return;
+  clearSearchButton.classList.toggle('hidden', !hasActiveListFilter());
 }
 
 function getManualOrderValue(item) {
@@ -430,18 +485,12 @@ function renderAdminPosts() {
   }
 
   const fullOrderedItems = getOrderedItems(state.items);
-  const searchActive = hasActiveSearch();
-  const displayedItems = searchActive
-    ? fullOrderedItems.filter((item) => itemMatchesSearch(item, state.searchQuery))
-    : fullOrderedItems;
+  const filterActive = hasActiveListFilter();
+  const displayedItems = fullOrderedItems.filter((item) => (
+    itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item)
+  ));
 
-  if (searchActive) {
-    adminStatus.textContent = displayedItems.length
-      ? `Mostrando ${displayedItems.length} de ${fullOrderedItems.length} publicaciones.`
-      : 'No hay publicaciones que coincidan con la búsqueda.';
-  } else {
-    adminStatus.textContent = '';
-  }
+  adminStatus.textContent = buildStatusText(displayedItems.length, fullOrderedItems);
 
   const fragment = document.createDocumentFragment();
 
@@ -509,16 +558,16 @@ function renderAdminPosts() {
       moveUpButton.type = 'button';
       moveUpButton.className = 'button button-secondary';
       moveUpButton.textContent = 'Subir';
-      moveUpButton.disabled = searchActive || fullIndex === 0;
-      moveUpButton.title = searchActive ? 'Limpia la búsqueda para cambiar el orden.' : '';
+      moveUpButton.disabled = filterActive || fullIndex === 0;
+      moveUpButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
       moveUpButton.addEventListener('click', () => movePost(item, -1));
 
       const moveDownButton = document.createElement('button');
       moveDownButton.type = 'button';
       moveDownButton.className = 'button button-secondary';
       moveDownButton.textContent = 'Bajar';
-      moveDownButton.disabled = searchActive || fullIndex === fullOrderedItems.length - 1;
-      moveDownButton.title = searchActive ? 'Limpia la búsqueda para cambiar el orden.' : '';
+      moveDownButton.disabled = filterActive || fullIndex === fullOrderedItems.length - 1;
+      moveDownButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
       moveDownButton.addEventListener('click', () => movePost(item, 1));
 
       const toggleStatusButton = document.createElement('button');
@@ -545,10 +594,10 @@ function renderAdminPosts() {
       fragment.append(card);
     });
 
-  if (searchActive && !displayedItems.length) {
+  if (filterActive && !displayedItems.length) {
     const emptySearch = document.createElement('p');
     emptySearch.className = 'status';
-    emptySearch.textContent = 'Prueba con otra palabra o limpia la búsqueda para ver todo el contenido.';
+    emptySearch.textContent = 'No hay publicaciones que coincidan con la búsqueda o el filtro seleccionado.';
     fragment.append(emptySearch);
   }
 
@@ -1126,10 +1175,19 @@ if (postSearch) {
   });
 }
 
+if (postStatusFilter) {
+  postStatusFilter.addEventListener('change', () => {
+    state.statusFilter = postStatusFilter.value;
+    renderAdminPosts();
+  });
+}
+
 if (clearSearchButton) {
   clearSearchButton.addEventListener('click', () => {
     state.searchQuery = '';
+    state.statusFilter = 'all';
     if (postSearch) postSearch.value = '';
+    if (postStatusFilter) postStatusFilter.value = 'all';
     renderAdminPosts();
     postSearch?.focus();
   });

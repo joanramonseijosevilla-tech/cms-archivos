@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-7">
   <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-11">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-13"></script>
+  <script defer src="admin.js?v=20260705-14"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -110,7 +110,15 @@
               Buscar publicación
               <input id="post-search" type="search" autocomplete="off" placeholder="Buscar por título o descripción">
             </label>
-            <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda</button>
+            <label>
+              Filtrar por estado
+              <select id="post-status-filter">
+                <option value="all">Todas</option>
+                <option value="published">Publicadas</option>
+                <option value="hidden">Ocultas</option>
+              </select>
+            </label>
+            <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda y filtros</button>
           </div>
           <div id="admin-status" class="status" role="status">Cargando publicaciones…</div>
           <div id="admin-posts" class="admin-posts"></div>
