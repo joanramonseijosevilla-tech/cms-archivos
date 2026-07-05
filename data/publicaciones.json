@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T03:45:04.748Z",
+  "updatedAt": "2026-07-05T04:02:31.036Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -83,7 +83,7 @@
     {
       "id": "pub_20260704205450",
       "title": "Elemento 8",
-      "description": "Pruebas elllemento 8",
+      "description": ";odificacion elemento 8",
       "image": {
         "src": "assets/uploads/20260704-205450-acciones.png",
         "path": "assets/uploads/20260704-205450-acciones.png",
@@ -91,7 +91,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
-      "updatedAt": "2026-07-04T18:54:50.573Z"
+      "updatedAt": "2026-07-05T04:02:31.036Z"
     },
     {
       "id": "pub_20260704211442",
@@ -109,7 +109,7 @@
     {
       "id": "pub_20260704212926",
       "title": "Elemento 10",
-      "description": "Prueba modificar 2",
+      "description": "Prueba elemento 10\nEsto es otr prueba",
       "image": {
         "src": "assets/uploads/20260704-212926-router-make.png",
         "path": "assets/uploads/20260704-212926-router-make.png",
@@ -117,7 +117,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T19:29:26.675Z",
-      "updatedAt": "2026-07-05T03:45:04.748Z"
+      "updatedAt": "2026-07-04T19:29:26.675Z"
     },
     {
       "id": "pub_20260704220126",
