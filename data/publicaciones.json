@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T07:58:27.335Z",
+  "updatedAt": "2026-07-05T07:59:52.249Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -96,7 +96,7 @@
     {
       "id": "pub_20260704220331",
       "title": "Elemento 14",
-      "description": "ddddddd",
+      "description": "Nueva prueba modificació y salto línea\nA ver si funciona",
       "image": {
         "src": "assets/uploads/20260704-220331-esquema-webhook.png",
         "path": "assets/uploads/20260704-220331-esquema-webhook.png",
@@ -104,7 +104,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T20:03:31.261Z",
-      "updatedAt": "2026-07-04T20:03:31.261Z"
+      "updatedAt": "2026-07-05T07:59:52.249Z"
     },
     {
       "id": "pub_20260705085000",
