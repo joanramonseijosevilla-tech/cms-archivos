@@ -1,14 +1,23 @@
 const POSTS_JSON_API_URL = 'https://api.github.com/repos/joanramonseijosevilla-tech/cms-archivos/contents/data/publicaciones.json';
 const POSTS_JSON_FALLBACK_URL = 'data/publicaciones.json';
 const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
+const POST_CATEGORIES = [
+  { value: 'galeria', label: 'Galería' },
+  { value: 'proyectos', label: 'Proyectos' },
+  { value: 'novedades', label: 'Novedades' }
+];
+const DEFAULT_POST_CATEGORY = 'galeria';
 
 const postsGrid = document.querySelector('#posts-grid');
+const postsCategoryFilters = document.querySelector('#posts-category-filters');
 const postsStatus = document.querySelector('#posts-status');
 const yearNode = document.querySelector('#year');
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
 }
+
+let currentCategoryFilter = 'all';
 
 function addCacheBuster(url) {
   const separator = url.includes('?') ? '&' : '?';
@@ -43,6 +52,19 @@ function getManualOrderValue(item) {
 function getCreatedAtTime(item) {
   const time = Date.parse(item?.createdAt || '');
   return Number.isNaN(time) ? 0 : time;
+}
+
+function isValidPostCategory(category) {
+  return POST_CATEGORIES.some((item) => item.value === category);
+}
+
+function getItemCategory(item) {
+  return isValidPostCategory(item?.category) ? item.category : DEFAULT_POST_CATEGORY;
+}
+
+function getCategoryLabel(categoryOrItem) {
+  const category = typeof categoryOrItem === 'string' ? categoryOrItem : getItemCategory(categoryOrItem);
+  return POST_CATEGORIES.find((item) => item.value === category)?.label || 'Galería';
 }
 
 function hasManualOrder(items) {
@@ -171,21 +193,69 @@ function isPublishedItem(item) {
   return item?.status !== 'hidden' && item?.status !== 'draft';
 }
 
+function getCategoryCounts(items) {
+  const safeItems = Array.isArray(items) ? items : [];
+  return POST_CATEGORIES.reduce((counts, category) => {
+    counts[category.value] = safeItems.filter((item) => getItemCategory(item) === category.value).length;
+    return counts;
+  }, { all: safeItems.length });
+}
+
+function renderCategoryFilters(publishedItems) {
+  if (!postsCategoryFilters) return;
+
+  postsCategoryFilters.replaceChildren();
+
+  const counts = getCategoryCounts(publishedItems);
+  const filters = [
+    { value: 'all', label: 'Todas' },
+    ...POST_CATEGORIES
+  ];
+
+  filters.forEach((filter) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = filter.value === currentCategoryFilter ? 'button button-small' : 'button button-small button-secondary';
+    button.textContent = `${filter.label} (${counts[filter.value] || 0})`;
+    button.setAttribute('aria-pressed', String(filter.value === currentCategoryFilter));
+    button.addEventListener('click', () => {
+      currentCategoryFilter = filter.value;
+      renderPosts(publishedItems);
+    });
+    postsCategoryFilters.append(button);
+  });
+}
+
+function itemMatchesCategoryFilter(item) {
+  if (currentCategoryFilter === 'all') return true;
+  return getItemCategory(item) === currentCategoryFilter;
+}
+
 function renderPosts(items) {
   postsGrid.replaceChildren();
 
   const publishedItems = getOrderedItems(items).filter(isPublishedItem);
+  const displayedItems = publishedItems.filter(itemMatchesCategoryFilter);
+
+  renderCategoryFilters(publishedItems);
 
   if (!publishedItems.length) {
     postsStatus.textContent = 'Todavía no hay publicaciones.';
     return;
   }
 
-  postsStatus.textContent = '';
+  if (!displayedItems.length) {
+    postsStatus.textContent = 'No hay publicaciones publicadas en esta categoría.';
+    return;
+  }
+
+  postsStatus.textContent = currentCategoryFilter === 'all'
+    ? ''
+    : `Mostrando categoría: ${getCategoryLabel(currentCategoryFilter)}`;
 
   const fragment = document.createDocumentFragment();
 
-  publishedItems.forEach((item) => {
+  displayedItems.forEach((item) => {
     const article = document.createElement('article');
     article.className = 'post-card';
 
@@ -203,13 +273,17 @@ function renderPosts(items) {
     date.className = 'post-date';
     date.textContent = formatDate(item.createdAt);
 
+    const category = document.createElement('span');
+    category.className = 'post-date';
+    category.textContent = getCategoryLabel(item);
+
     const title = document.createElement('h3');
     title.textContent = item.title || 'Publicación sin título';
 
     const description = document.createElement('p');
     description.textContent = item.description || '';
 
-    body.append(date, title, description);
+    body.append(date, category, title, description);
     article.append(img, body);
     fragment.append(article);
   });

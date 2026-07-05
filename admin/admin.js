@@ -1,6 +1,12 @@
 const config = window.CMS_CONFIG;
 const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
 const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
+const POST_CATEGORIES = [
+  { value: 'galeria', label: 'Galería' },
+  { value: 'proyectos', label: 'Proyectos' },
+  { value: 'novedades', label: 'Novedades' }
+];
+const DEFAULT_POST_CATEGORY = 'galeria';
 
 const state = {
   items: [],
@@ -11,6 +17,7 @@ const state = {
   previewObjectUrl: '',
   searchQuery: '',
   statusFilter: 'all',
+  categoryFilter: 'all',
   formBaseline: ''
 };
 
@@ -26,6 +33,7 @@ const postDescription = document.querySelector('#post-description');
 const postImage = document.querySelector('#post-image');
 const postAlt = document.querySelector('#post-alt');
 const postStatus = document.querySelector('#post-status');
+const postCategory = document.querySelector('#post-category');
 const currentImagePath = document.querySelector('#current-image-path');
 const currentImageSrc = document.querySelector('#current-image-src');
 const adminPosts = document.querySelector('#admin-posts');
@@ -38,6 +46,7 @@ const refreshButton = document.querySelector('#refresh-button');
 const imagePreview = document.querySelector('#image-preview');
 const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
+const postCategoryFilter = document.querySelector('#post-category-filter');
 const clearSearchButton = document.querySelector('#clear-search-button');
 
 function showAlert(message, type = 'success') {
@@ -195,6 +204,23 @@ function isItemPublished(item) {
   return getItemStatus(item) === 'published';
 }
 
+function isValidPostCategory(category) {
+  return POST_CATEGORIES.some((item) => item.value === category);
+}
+
+function getItemCategory(item) {
+  return isValidPostCategory(item?.category) ? item.category : DEFAULT_POST_CATEGORY;
+}
+
+function getCategoryLabel(categoryOrItem) {
+  const category = typeof categoryOrItem === 'string' ? categoryOrItem : getItemCategory(categoryOrItem);
+  return POST_CATEGORIES.find((item) => item.value === category)?.label || 'Galería';
+}
+
+function getFormCategory() {
+  return isValidPostCategory(postCategory?.value) ? postCategory.value : DEFAULT_POST_CATEGORY;
+}
+
 function normalizeSearchText(text) {
   return String(text || '')
     .normalize('NFD')
@@ -209,7 +235,8 @@ function itemMatchesSearch(item, query) {
 
   const searchableText = normalizeSearchText([
     item?.title,
-    item?.description
+    item?.description,
+    getCategoryLabel(item)
   ].join(' '));
 
   return searchableText.includes(cleanQuery);
@@ -233,8 +260,16 @@ function hasActiveStatusFilter() {
   return getStatusFilter() !== 'all';
 }
 
+function getCategoryFilter() {
+  return isValidPostCategory(state.categoryFilter) ? state.categoryFilter : 'all';
+}
+
+function hasActiveCategoryFilter() {
+  return getCategoryFilter() !== 'all';
+}
+
 function hasActiveListFilter() {
-  return hasActiveSearch() || hasActiveStatusFilter();
+  return hasActiveSearch() || hasActiveStatusFilter() || hasActiveCategoryFilter();
 }
 
 function itemMatchesStatusFilter(item) {
@@ -244,15 +279,26 @@ function itemMatchesStatusFilter(item) {
   return !isItemPublished(item);
 }
 
+function itemMatchesCategoryFilter(item) {
+  const filter = getCategoryFilter();
+  if (filter === 'all') return true;
+  return getItemCategory(item) === filter;
+}
+
 function getPostStats(items) {
   const safeItems = Array.isArray(items) ? items : [];
   const published = safeItems.filter((item) => isItemPublished(item)).length;
   const hidden = safeItems.length - published;
+  const categoryCounts = POST_CATEGORIES.reduce((counts, category) => {
+    counts[category.value] = safeItems.filter((item) => getItemCategory(item) === category.value).length;
+    return counts;
+  }, {});
 
   return {
     total: safeItems.length,
     published,
-    hidden
+    hidden,
+    categories: categoryCounts
   };
 }
 
@@ -262,7 +308,10 @@ function buildStatusText(displayedCount, fullItems) {
   const parts = [
     `Total: ${stats.total}`,
     `Publicadas: ${stats.published}`,
-    `Ocultas: ${stats.hidden}`
+    `Ocultas: ${stats.hidden}`,
+    `Galería: ${stats.categories.galeria || 0}`,
+    `Proyectos: ${stats.categories.proyectos || 0}`,
+    `Novedades: ${stats.categories.novedades || 0}`
   ];
 
   if (filterActive) {
@@ -275,6 +324,10 @@ function buildStatusText(displayedCount, fullItems) {
 function updateSearchControls() {
   if (postStatusFilter && postStatusFilter.value !== getStatusFilter()) {
     postStatusFilter.value = getStatusFilter();
+  }
+
+  if (postCategoryFilter && postCategoryFilter.value !== getCategoryFilter()) {
+    postCategoryFilter.value = getCategoryFilter();
   }
 
   if (!clearSearchButton) return;
@@ -322,6 +375,7 @@ function getOrderedItems(items) {
 function normalizeItemsWithOrder(items) {
   return getOrderedItems(items).map((item, index) => ({
     ...item,
+    category: getItemCategory(item),
     order: index
   }));
 }
@@ -409,6 +463,7 @@ function getFormSnapshot() {
     description: postDescription.value || '',
     alt: postAlt.value || '',
     status: getFormStatus(),
+    category: getFormCategory(),
     currentImagePath: currentImagePath.value || '',
     currentImageSrc: currentImageSrc.value || '',
     image: getSelectedImageSignature()
@@ -547,7 +602,7 @@ function renderAdminPosts() {
   const fullOrderedItems = getOrderedItems(state.items);
   const filterActive = hasActiveListFilter();
   const displayedItems = fullOrderedItems.filter((item) => (
-    itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item)
+    itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item) && itemMatchesCategoryFilter(item)
   ));
 
   adminStatus.textContent = buildStatusText(displayedItems.length, fullOrderedItems);
@@ -605,7 +660,11 @@ function renderAdminPosts() {
       status.className = `admin-post-status ${isItemPublished(item) ? '' : 'hidden-status'}`.trim();
       status.textContent = getStatusLabel(item);
 
-      meta.append(date, status);
+      const category = document.createElement('p');
+      category.className = 'admin-post-status';
+      category.textContent = getCategoryLabel(item);
+
+      meta.append(date, status, category);
 
       const description = document.createElement('p');
       description.className = 'admin-post-description';
@@ -672,6 +731,7 @@ function startEdit(item) {
   postDescription.value = item.description || '';
   postAlt.value = item.image?.alt || '';
   if (postStatus) postStatus.value = getItemStatus(item);
+  if (postCategory) postCategory.value = getItemCategory(item);
   currentImagePath.value = item.image?.path || '';
   currentImageSrc.value = item.image?.src || '';
   formTitle.textContent = 'Editar publicación';
@@ -697,6 +757,7 @@ function resetForm() {
   currentImagePath.value = '';
   currentImageSrc.value = '';
   if (postStatus) postStatus.value = 'published';
+  if (postCategory) postCategory.value = DEFAULT_POST_CATEGORY;
   formTitle.textContent = 'Nueva publicación';
   saveButton.textContent = 'Guardar publicación';
   cancelEditButton.classList.add('hidden');
@@ -743,6 +804,7 @@ function updateLivePreview() {
   const title = postTitle.value.trim();
   const description = postDescription.value.trim();
   const status = getFormStatus();
+  const category = getFormCategory();
   const imageSrc = getPreviewImageSrc();
   const alt = postAlt.value.trim() || title || 'Vista previa de la publicación';
 
@@ -769,6 +831,10 @@ function updateLivePreview() {
   statusBadge.className = `admin-post-status ${status === 'hidden' ? 'hidden-status' : ''}`.trim();
   statusBadge.textContent = status === 'hidden' ? 'Oculto' : 'Publicado';
 
+  const categoryBadge = document.createElement('span');
+  categoryBadge.className = 'admin-post-status';
+  categoryBadge.textContent = getCategoryLabel(category);
+
   const titleNode = document.createElement('h3');
   titleNode.textContent = title || 'Título de la publicación';
 
@@ -776,7 +842,7 @@ function updateLivePreview() {
   descriptionNode.className = 'post-preview-description';
   descriptionNode.textContent = description || 'La descripción aparecerá aquí.';
 
-  meta.append(date, statusBadge);
+  meta.append(date, statusBadge, categoryBadge);
   body.append(meta, titleNode, descriptionNode);
   card.append(createPreviewImage(imageSrc, alt), body);
   imagePreview.append(heading, card);
@@ -940,6 +1006,7 @@ async function savePost(event) {
     const file = postImage.files[0];
     const { title, description, alt } = validateRequiredPostFields(isEdit, file);
     const status = getFormStatus();
+    const category = getFormCategory();
     const now = new Date();
     const nowIso = now.toISOString();
     const currentItems = normalizeItemsWithOrder(
@@ -952,7 +1019,8 @@ async function savePost(event) {
       description,
       alt,
       currentImagePath: currentImagePath.value || undefined,
-      currentImageSrc: currentImageSrc.value || undefined
+      currentImageSrc: currentImageSrc.value || undefined,
+      category
     };
 
     if (!isEdit) {
@@ -967,6 +1035,7 @@ async function savePost(event) {
           alt: alt || title
         },
         status,
+        category,
         createdAt: nowIso,
         updatedAt: nowIso
       };
@@ -1023,6 +1092,7 @@ async function savePost(event) {
               alt: alt || item.image?.alt || title
             },
             status,
+            category,
             updatedAt: nowIso
           };
         }))
@@ -1243,9 +1313,13 @@ postImage.addEventListener('change', () => {
   updateLivePreview();
 });
 
-[postTitle, postDescription, postAlt, postStatus]
+[postTitle, postDescription, postAlt, postStatus, postCategory]
   .filter(Boolean)
   .forEach((field) => field.addEventListener('input', updateLivePreview));
+
+[postStatus, postCategory]
+  .filter(Boolean)
+  .forEach((field) => field.addEventListener('change', updateLivePreview));
 
 if (postSearch) {
   postSearch.addEventListener('input', () => {
@@ -1261,12 +1335,21 @@ if (postStatusFilter) {
   });
 }
 
+if (postCategoryFilter) {
+  postCategoryFilter.addEventListener('change', () => {
+    state.categoryFilter = postCategoryFilter.value;
+    renderAdminPosts();
+  });
+}
+
 if (clearSearchButton) {
   clearSearchButton.addEventListener('click', () => {
     state.searchQuery = '';
     state.statusFilter = 'all';
+    state.categoryFilter = 'all';
     if (postSearch) postSearch.value = '';
     if (postStatusFilter) postStatusFilter.value = 'all';
+    if (postCategoryFilter) postCategoryFilter.value = 'all';
     renderAdminPosts();
     postSearch?.focus();
   });

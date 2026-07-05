@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-7">
   <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-11">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-15"></script>
+  <script defer src="admin.js?v=20260705-16"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -70,6 +70,15 @@
               <textarea id="post-description" rows="6" maxlength="900" required placeholder="Describe la publicación…"></textarea>
             </label>
 
+            <label>
+              Categoría
+              <select id="post-category">
+                <option value="galeria">Galería</option>
+                <option value="proyectos">Proyectos</option>
+                <option value="novedades">Novedades</option>
+              </select>
+            </label>
+
             <div id="image-preview" class="image-preview hidden"></div>
 
             <label>
@@ -116,6 +125,15 @@
                 <option value="all">Todas</option>
                 <option value="published">Publicadas</option>
                 <option value="hidden">Ocultas</option>
+              </select>
+            </label>
+            <label>
+              Filtrar por categoría
+              <select id="post-category-filter">
+                <option value="all">Todas</option>
+                <option value="galeria">Galería</option>
+                <option value="proyectos">Proyectos</option>
+                <option value="novedades">Novedades</option>
               </select>
             </label>
             <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda y filtros</button>
