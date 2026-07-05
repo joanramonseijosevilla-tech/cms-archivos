@@ -1,7 +1,22 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T10:22:19.627Z",
+  "updatedAt": "2026-07-05T11:02:27.844Z",
   "items": [
+    {
+      "id": "pub_20260705130227",
+      "title": "Prueba de Categoria. Proyectos",
+      "description": "Elementos clave de un proyectoObjetivos: Lo que se espera lograr, que debe ser claro y medible.Ciclo de vida: Las fases secuenciales por las que pasa el proyecto, que generalmente incluyen: inicio, planificación, ejecución, seguimiento y cierre.Alcance: \nDefine exactamente qué se incluye y qué queda fuera del proyecto.Fases principalesPara que un proyecto sea exitoso, suele estructurarse en varias etapas:Inicio y planificación: Definición de metas, estimación de recursos y elaboración del cronograma.Ejecución: Puesta en marcha de las tareas planificadas.Monitoreo y control: Supervisión del progreso para evitar desviaciones en tiempo o presupuesto.Cierre\nEvaluación final de los resultados y entrega.Tipos de proyectos más comunesLos proyectos pueden variar enormemente según su ámbito y propósito:Privados/Productivos: Buscan generar rentabilidad económica o ganancias.Públicos/Sociales: Enfo",
+      "image": {
+        "src": "assets/uploads/20260705-130227-url-webhook.png",
+        "path": "assets/uploads/20260705-130227-url-webhook.png",
+        "alt": "Prueba de Categoria. Proyectos"
+      },
+      "status": "published",
+      "category": "proyectos",
+      "createdAt": "2026-07-05T11:02:27.844Z",
+      "updatedAt": "2026-07-05T11:02:27.844Z",
+      "order": 0
+    },
     {
       "id": "pub_20260705121737",
       "title": "sssssss",
@@ -14,7 +29,8 @@
       "status": "published",
       "createdAt": "2026-07-05T10:17:37.398Z",
       "updatedAt": "2026-07-05T10:17:37.398Z",
-      "order": 0
+      "order": 1,
+      "category": "galeria"
     },
     {
       "id": "pub_20260705113558",
@@ -28,7 +44,8 @@
       "status": "published",
       "createdAt": "2026-07-05T09:35:58.479Z",
       "updatedAt": "2026-07-05T10:19:28.843Z",
-      "order": 1
+      "order": 2,
+      "category": "galeria"
     },
     {
       "id": "pub_20260705085000",
@@ -42,7 +59,8 @@
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
       "updatedAt": "2026-07-05T10:22:19.627Z",
-      "order": 2
+      "order": 3,
+      "category": "galeria"
     },
     {
       "id": "pub_20260705095827",
@@ -56,7 +74,8 @@
       "status": "published",
       "createdAt": "2026-07-05T07:58:27.335Z",
       "updatedAt": "2026-07-05T09:40:47.060Z",
-      "order": 3
+      "order": 4,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704220331",
@@ -70,7 +89,8 @@
       "status": "published",
       "createdAt": "2026-07-04T20:03:31.261Z",
       "updatedAt": "2026-07-05T10:01:40.717Z",
-      "order": 4
+      "order": 5,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704211442",
@@ -84,7 +104,8 @@
       "status": "published",
       "createdAt": "2026-07-04T19:14:42.512Z",
       "updatedAt": "2026-07-05T03:42:46.041Z",
-      "order": 5
+      "order": 6,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704205450",
@@ -98,7 +119,8 @@
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
       "updatedAt": "2026-07-05T06:10:34.592Z",
-      "order": 6
+      "order": 7,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704201105",
@@ -112,7 +134,8 @@
       "status": "published",
       "createdAt": "2026-07-04T18:11:05.861Z",
       "updatedAt": "2026-07-04T18:11:05.861Z",
-      "order": 7
+      "order": 8,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704194430",
@@ -126,7 +149,8 @@
       "status": "published",
       "createdAt": "2026-07-04T17:44:30.869Z",
       "updatedAt": "2026-07-04T18:41:28.903Z",
-      "order": 8
+      "order": 9,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704173859",
@@ -140,7 +164,8 @@
       "createdAt": "2026-07-04T17:38:59.299Z",
       "updatedAt": "2026-07-04T17:38:59.300Z",
       "description": "D8",
-      "order": 9
+      "order": 10,
+      "category": "galeria"
     },
     {
       "id": "pub_20260704191752",
@@ -154,7 +179,8 @@
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
       "updatedAt": "2026-07-04T17:17:52.708Z",
-      "order": 10
+      "order": 11,
+      "category": "galeria"
     },
     {
       "id": "pub_20260705094614",
@@ -168,7 +194,8 @@
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
       "updatedAt": "2026-07-05T07:46:14.660Z",
-      "order": 11
+      "order": 12,
+      "category": "galeria"
     },
     {
       "id": "pub_20260705112131",
@@ -182,7 +209,8 @@
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
       "updatedAt": "2026-07-05T09:21:31.969Z",
-      "order": 12
+      "order": 13,
+      "category": "galeria"
     }
   ]
 }
