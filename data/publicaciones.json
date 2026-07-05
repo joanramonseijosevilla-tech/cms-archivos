@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T08:00:54.428Z",
+  "updatedAt": "2026-07-05T08:23:18.568Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -128,9 +128,9 @@
         "path": "assets/uploads/20260705-095827-trigger-formulario-tally.png",
         "alt": "Elemento 19"
       },
-      "status": "published",
+      "status": "hidden",
       "createdAt": "2026-07-05T07:58:27.335Z",
-      "updatedAt": "2026-07-05T07:58:27.335Z"
+      "updatedAt": "2026-07-05T08:23:18.568Z"
     }
   ]
 }
