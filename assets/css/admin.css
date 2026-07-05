@@ -169,7 +169,7 @@ input[type="file"]::file-selector-button {
 .image-preview img {
   width: 100%;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .admin-alert {
@@ -207,7 +207,7 @@ input[type="file"]::file-selector-button {
   width: 110px;
   height: 92px;
   border-radius: 14px;
-  object-fit: cover;
+  object-fit: contain;
   background: var(--dark-surface);
 }
 
@@ -222,6 +222,7 @@ input[type="file"]::file-selector-button {
   margin: 0.35rem 0 0;
   color: var(--muted);
   font-size: 0.93rem;
+  white-space: pre-line;
 }
 
 .admin-post-actions {

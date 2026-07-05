@@ -409,7 +409,7 @@ code {
 .post-card-image {
   aspect-ratio: 4 / 3;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
   background: var(--dark-surface);
 }
 
@@ -419,6 +419,7 @@ code {
 
 .post-card p {
   color: var(--muted);
+  white-space: pre-line;
 }
 
 .post-date {
