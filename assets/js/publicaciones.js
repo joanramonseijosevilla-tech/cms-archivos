@@ -1,4 +1,5 @@
-const POSTS_JSON_URL = 'data/publicaciones.json';
+const POSTS_JSON_API_URL = 'https://api.github.com/repos/joanramonseijosevilla-tech/cms-archivos/contents/data/publicaciones.json';
+const POSTS_JSON_FALLBACK_URL = 'data/publicaciones.json';
 
 const postsGrid = document.querySelector('#posts-grid');
 const postsStatus = document.querySelector('#posts-status');
@@ -6,6 +7,71 @@ const yearNode = document.querySelector('#year');
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
+}
+
+function addCacheBuster(url) {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${Date.now()}`;
+}
+
+function decodeBase64Json(content) {
+  const cleanContent = String(content || '').replace(/\s/g, '');
+  const binary = atob(cleanContent);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function normalizePublicacionesJson(data) {
+  return {
+    version: data?.version || 1,
+    updatedAt: data?.updatedAt || '',
+    items: Array.isArray(data?.items) ? data.items : []
+  };
+}
+
+async function fetchFromGitHubApi() {
+  const response = await fetch(addCacheBuster(POSTS_JSON_API_URL), {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/vnd.github+json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer GitHub API (${response.status})`);
+  }
+
+  const data = await response.json();
+  if (!data || typeof data.content !== 'string') {
+    throw new Error('GitHub API no devolvió el contenido esperado.');
+  }
+
+  return normalizePublicacionesJson(decodeBase64Json(data.content));
+}
+
+async function fetchFromPagesFallback() {
+  const response = await fetch(addCacheBuster(POSTS_JSON_FALLBACK_URL), {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer el JSON público (${response.status})`);
+  }
+
+  return normalizePublicacionesJson(await response.json());
+}
+
+async function loadPublicacionesJson() {
+  try {
+    return await fetchFromGitHubApi();
+  } catch (apiError) {
+    console.warn('No se pudo leer desde GitHub API. Se usa fallback de GitHub Pages:', apiError);
+    return fetchFromPagesFallback();
+  }
 }
 
 function formatDate(dateString) {
@@ -74,17 +140,8 @@ function renderPosts(items) {
 
 async function loadPosts() {
   try {
-    const response = await fetch(`${POSTS_JSON_URL}?v=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error(`No se pudo leer el JSON (${response.status})`);
-    }
-
-    const data = await response.json();
-    renderPosts(Array.isArray(data.items) ? data.items : []);
+    const data = await loadPublicacionesJson();
+    renderPosts(data.items);
   } catch (error) {
     postsStatus.textContent = 'No se han podido cargar las publicaciones.';
     console.error(error);

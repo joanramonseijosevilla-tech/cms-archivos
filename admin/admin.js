@@ -1,6 +1,9 @@
 const config = window.CMS_CONFIG;
+const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
+
 const state = {
   items: [],
+  publicacionesUpdatedAt: '',
   password: sessionStorage.getItem('cmsPassword') || ''
 };
 
@@ -56,11 +59,15 @@ function normalizeSrc(src) {
   return `../${src}`;
 }
 
+function addCacheBuster(src) {
+  const separator = src.includes('?') ? '&' : '?';
+  return `${src}${separator}v=${Date.now()}`;
+}
+
 function addAdminCacheBuster(src) {
   const normalizedSrc = normalizeSrc(src);
   if (!normalizedSrc || normalizedSrc.startsWith('blob:') || normalizedSrc.startsWith('data:')) return normalizedSrc;
-  const separator = normalizedSrc.includes('?') ? '&' : '?';
-  return `${normalizedSrc}${separator}v=${Date.now()}`;
+  return addCacheBuster(normalizedSrc);
 }
 
 function getAdminImageSrc(item) {
@@ -88,15 +95,14 @@ async function waitForImageReady(imagePath, maxAttempts = 10, delayMs = 800) {
   }
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const separator = imageUrl.includes('?') ? '&' : '?';
-    const cacheBustedUrl = `${imageUrl}${separator}v=${Date.now()}`;
+    const cacheBustedUrl = addCacheBuster(imageUrl);
 
     try {
       await loadImageOnce(cacheBustedUrl);
       return cacheBustedUrl;
     } catch (error) {
       if (attempt === maxAttempts) {
-        throw new Error('Make confirmó la subida, pero la imagen todavía no está disponible en GitHub Pages. Espera unos segundos y pulsa Actualizar.');
+        throw new Error('Make confirmó la subida, pero la imagen todavía no está disponible en GitHub Pages.');
       }
 
       await wait(delayMs);
@@ -123,22 +129,138 @@ function formatDate(dateString) {
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
 
+function normalizePublicacionesJson(data) {
+  return {
+    version: data?.version || 1,
+    updatedAt: data?.updatedAt || '',
+    items: Array.isArray(data?.items) ? data.items : []
+  };
+}
+
+function getUpdatedAtTime(data) {
+  const time = Date.parse(data?.updatedAt || '');
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function decodeBase64Json(content) {
+  const cleanContent = String(content || '').replace(/\s/g, '');
+  const binary = atob(cleanContent);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function readLocalSnapshot() {
+  try {
+    const raw = localStorage.getItem(ADMIN_LOCAL_SNAPSHOT_KEY);
+    if (!raw) return null;
+    return normalizePublicacionesJson(JSON.parse(raw));
+  } catch (error) {
+    console.warn('No se pudo leer la copia local del panel:', error);
+    return null;
+  }
+}
+
+function saveLocalSnapshot(publicacionesJson) {
+  try {
+    localStorage.setItem(ADMIN_LOCAL_SNAPSHOT_KEY, JSON.stringify(normalizePublicacionesJson(publicacionesJson)));
+  } catch (error) {
+    console.warn('No se pudo guardar la copia local del panel:', error);
+  }
+}
+
+function chooseNewestPublicacionesJson(remoteJson, localJson) {
+  if (localJson && getUpdatedAtTime(localJson) > getUpdatedAtTime(remoteJson)) {
+    return localJson;
+  }
+
+  return remoteJson;
+}
+
+function setStateFromPublicacionesJson(publicacionesJson) {
+  const normalized = normalizePublicacionesJson(publicacionesJson);
+  state.items = normalized.items;
+  state.publicacionesUpdatedAt = normalized.updatedAt;
+}
+
+async function fetchPublicacionesJsonFromGitHubApi() {
+  if (!config.GITHUB_JSON_API_URL) {
+    throw new Error('No hay URL de GitHub API configurada.');
+  }
+
+  const response = await fetch(addCacheBuster(config.GITHUB_JSON_API_URL), {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/vnd.github+json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer GitHub API (${response.status}).`);
+  }
+
+  const data = await response.json();
+  if (!data || typeof data.content !== 'string') {
+    throw new Error('GitHub API no devolvió el contenido esperado.');
+  }
+
+  return normalizePublicacionesJson(decodeBase64Json(data.content));
+}
+
+async function fetchPublicacionesJsonFromPages() {
+  const response = await fetch(addCacheBuster(config.PUBLIC_JSON_URL), {
+    cache: 'no-store',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer data/publicaciones.json (${response.status}).`);
+  }
+
+  return normalizePublicacionesJson(await response.json());
+}
+
+async function loadPublicacionesJsonForPanel() {
+  try {
+    return await fetchPublicacionesJsonFromGitHubApi();
+  } catch (apiError) {
+    console.warn('No se pudo leer desde GitHub API. Se usa fallback de GitHub Pages:', apiError);
+    return fetchPublicacionesJsonFromPages();
+  }
+}
+
+async function loadPublicacionesJsonForMake() {
+  return loadPublicacionesJsonForPanel();
+}
+
 async function loadAdminPosts() {
   adminStatus.textContent = 'Cargando publicaciones…';
   adminPosts.replaceChildren();
 
   try {
-    const response = await fetch(`${config.PUBLIC_JSON_URL}?v=${Date.now()}`, {
-      cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
-    });
+    const remoteJson = await loadPublicacionesJsonForPanel();
+    const localJson = readLocalSnapshot();
+    const newestJson = chooseNewestPublicacionesJson(remoteJson, localJson);
 
-    if (!response.ok) throw new Error(`No se pudo leer el JSON (${response.status})`);
+    setStateFromPublicacionesJson(newestJson);
 
-    const data = await response.json();
-    state.items = Array.isArray(data.items) ? data.items : [];
+    if (newestJson === remoteJson) {
+      saveLocalSnapshot(remoteJson);
+    }
+
     renderAdminPosts();
   } catch (error) {
+    const localJson = readLocalSnapshot();
+
+    if (localJson) {
+      setStateFromPublicacionesJson(localJson);
+      renderAdminPosts();
+      console.warn('Se muestra la última versión confirmada en este navegador porque no se pudo leer el JSON remoto:', error);
+      return;
+    }
+
     adminStatus.textContent = 'No se han podido cargar las publicaciones.';
     console.error(error);
   }
@@ -267,7 +389,6 @@ function validateImage(file, isEdit) {
   }
 }
 
-
 function padNumber(value) {
   return String(value).padStart(2, '0');
 }
@@ -328,28 +449,6 @@ function buildFinalImagePath(file, date) {
   return `assets/uploads/${buildFinalImageName(file, date)}`;
 }
 
-function normalizePublicacionesJson(data) {
-  return {
-    version: data?.version || 1,
-    updatedAt: data?.updatedAt || new Date().toISOString(),
-    items: Array.isArray(data?.items) ? data.items : []
-  };
-}
-
-async function loadPublicacionesJsonForMake() {
-  const response = await fetch(`${config.PUBLIC_JSON_URL}?v=${Date.now()}`, {
-    cache: 'no-store',
-    headers: { 'Accept': 'application/json' }
-  });
-
-  if (!response.ok) {
-    throw new Error(`No se pudo leer data/publicaciones.json (${response.status}).`);
-  }
-
-  const data = await response.json();
-  return normalizePublicacionesJson(data);
-}
-
 function encodeJsonToBase64(data) {
   const jsonString = JSON.stringify(data, null, 2);
   const bytes = new TextEncoder().encode(jsonString);
@@ -403,7 +502,6 @@ async function sendToMake(action, payload) {
     );
   }
 
-  // El panel solo actualiza el estado local cuando Make confirma ok:true.
   if (!response.ok || data.ok !== true) {
     throw new Error(data.error || data.message || 'Make no confirmó la operación con { "ok": true }.');
   }
@@ -424,7 +522,6 @@ async function savePost(event) {
     const description = postDescription.value.trim();
     const now = new Date();
     const nowIso = now.toISOString();
-    // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
     const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
     let nextPublicacionesJson;
     const payload = {
@@ -473,7 +570,7 @@ async function savePost(event) {
       if (file) {
         const imagePath = buildFinalImagePath(file, now);
         const imageBase64 = await fileToBase64(file);
-          payload.image = {
+        payload.image = {
           fileName: imagePath.split('/').pop(),
           originalFileName: file.name,
           mimeType: file.type,
@@ -510,7 +607,8 @@ async function savePost(event) {
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
 
-    state.items = nextPublicacionesJson.items;
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
     showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
     resetForm();
@@ -534,7 +632,6 @@ async function deletePost(item) {
 
   try {
     const nowIso = new Date().toISOString();
-    // Usamos state.items como base local para evitar sobrescrituras por caché o retraso de GitHub Pages.
     const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
     const nextPublicacionesJson = {
       version: 1,
@@ -547,7 +644,9 @@ async function deletePost(item) {
     }, nextPublicacionesJson);
 
     await sendToMake('delete', payload);
-    state.items = nextPublicacionesJson.items;
+
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
     showAlert('Publicación eliminada correctamente.');
     if (postId.value === item.id) resetForm();

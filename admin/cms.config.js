@@ -1,9 +1,12 @@
 window.CMS_CONFIG = {
   // Pega aquí la URL del webhook de Make. Ejemplo:
   // https://hook.eu2.make.com/xxxxxxxxxxxxxxxxxxxxxxxx
-  MAKE_WEBHOOK_URL: 'https://hook.eu2.make.com/q1xfipdqrfrhucups0tqbgahkaobf5yj',
+  MAKE_WEBHOOK_URL: 'PEGAR_AQUI_WEBHOOK_DE_MAKE',
 
-  // Ruta pública del JSON desde /admin/index.html
+  // Fuente principal de lectura: GitHub API pública, sin token, para evitar retrasos de GitHub Pages.
+  GITHUB_JSON_API_URL: 'https://api.github.com/repos/joanramonseijosevilla-tech/cms-archivos/contents/data/publicaciones.json',
+
+  // Fallback público desde /admin/index.html si GitHub API no responde.
   PUBLIC_JSON_URL: '../data/publicaciones.json',
 
   // Tamaño máximo recomendado antes de enviar a Make.
