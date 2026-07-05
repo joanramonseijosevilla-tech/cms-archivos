@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T09:36:35.951Z",
+  "updatedAt": "2026-07-05T09:40:47.060Z",
   "items": [
     {
       "id": "pub_20260705113558",
@@ -32,8 +32,8 @@
     },
     {
       "id": "pub_20260705095827",
-      "title": "Elemento 19",
-      "description": "Esto es una prueba de salto de línea\nTambien de Imagenes\nA ver si funciona",
+      "title": "Elemento 19 V2",
+      "description": "Esto es una prueba de salto de línea\nTambien de Imagenes\nA ver si funciona\nV2",
       "image": {
         "src": "assets/uploads/20260705-095827-trigger-formulario-tally.png",
         "path": "assets/uploads/20260705-095827-trigger-formulario-tally.png",
@@ -41,7 +41,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T07:58:27.335Z",
-      "updatedAt": "2026-07-05T08:26:05.286Z",
+      "updatedAt": "2026-07-05T09:40:47.060Z",
       "order": 2
     },
     {
