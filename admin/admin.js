@@ -10,7 +10,8 @@ const state = {
   orderOriginalItems: null,
   previewObjectUrl: '',
   searchQuery: '',
-  statusFilter: 'all'
+  statusFilter: 'all',
+  formBaseline: ''
 };
 
 const loginView = document.querySelector('#login-view');
@@ -394,6 +395,65 @@ function blockIfPendingOrder() {
   return true;
 }
 
+function getSelectedImageSignature() {
+  const file = postImage.files[0];
+  if (!file) return '';
+
+  return [file.name, file.size, file.type, file.lastModified].join('|');
+}
+
+function getFormSnapshot() {
+  return JSON.stringify({
+    id: postId.value || '',
+    title: postTitle.value || '',
+    description: postDescription.value || '',
+    alt: postAlt.value || '',
+    status: getFormStatus(),
+    currentImagePath: currentImagePath.value || '',
+    currentImageSrc: currentImageSrc.value || '',
+    image: getSelectedImageSignature()
+  });
+}
+
+function updateFormBaseline() {
+  state.formBaseline = getFormSnapshot();
+}
+
+function hasUnsavedFormChanges() {
+  return Boolean(state.formBaseline) && getFormSnapshot() !== state.formBaseline;
+}
+
+function confirmDiscardFormChanges(message = 'Tienes cambios sin guardar en el formulario. ¿Quieres descartarlos?') {
+  if (!hasUnsavedFormChanges()) return true;
+  return window.confirm(message);
+}
+
+function blockIfUnsavedFormChanges(message) {
+  if (confirmDiscardFormChanges(message)) return false;
+  showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
+  return true;
+}
+
+function validateRequiredPostFields(isEdit, file) {
+  const title = postTitle.value.trim();
+  const description = postDescription.value.trim();
+  const alt = postAlt.value.trim();
+
+  if (!title) {
+    postTitle.focus();
+    throw new Error('El título es obligatorio.');
+  }
+
+  if (!description) {
+    postDescription.focus();
+    throw new Error('La descripción es obligatoria.');
+  }
+
+  validateImage(file, isEdit);
+
+  return { title, description, alt };
+}
+
 async function fetchPublicacionesJsonFromGitHubApi() {
   if (!config.GITHUB_JSON_API_URL) {
     throw new Error('No hay URL de GitHub API configurada.');
@@ -606,6 +666,7 @@ function renderAdminPosts() {
 
 function startEdit(item) {
   if (blockIfPendingOrder()) return;
+  if (blockIfUnsavedFormChanges('Tienes cambios sin guardar en el formulario. Si editas otra publicación, se perderán. ¿Continuar?')) return;
   postId.value = item.id;
   postTitle.value = item.title || '';
   postDescription.value = item.description || '';
@@ -619,6 +680,7 @@ function startEdit(item) {
   postImage.required = false;
   clearPreviewObjectUrl();
   updateLivePreview();
+  updateFormBaseline();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -641,6 +703,7 @@ function resetForm() {
   postImage.required = false;
   clearPreviewObjectUrl();
   updateLivePreview();
+  updateFormBaseline();
 }
 
 function getEditingItem() {
@@ -875,10 +938,7 @@ async function savePost(event) {
   try {
     const isEdit = Boolean(postId.value);
     const file = postImage.files[0];
-    validateImage(file, isEdit);
-
-    const title = postTitle.value.trim();
-    const description = postDescription.value.trim();
+    const { title, description, alt } = validateRequiredPostFields(isEdit, file);
     const status = getFormStatus();
     const now = new Date();
     const nowIso = now.toISOString();
@@ -890,7 +950,7 @@ async function savePost(event) {
       id: postId.value || undefined,
       title,
       description,
-      alt: postAlt.value.trim(),
+      alt,
       currentImagePath: currentImagePath.value || undefined,
       currentImageSrc: currentImageSrc.value || undefined
     };
@@ -904,7 +964,7 @@ async function savePost(event) {
         image: {
           src: imagePath,
           path: imagePath,
-          alt: title
+          alt: alt || title
         },
         status,
         createdAt: nowIso,
@@ -945,7 +1005,7 @@ async function savePost(event) {
         nextImage = {
           src: imagePath,
           path: imagePath,
-          alt: postAlt.value.trim() || title
+          alt: alt || title
         };
       }
 
@@ -960,7 +1020,7 @@ async function savePost(event) {
             description,
             image: nextImage || {
               ...item.image,
-              alt: postAlt.value.trim() || item.image?.alt || title
+              alt: alt || item.image?.alt || title
             },
             status,
             updatedAt: nowIso
@@ -1141,14 +1201,33 @@ loginForm.addEventListener('submit', async (event) => {
 });
 
 logoutButton.addEventListener('click', () => {
+  if (hasUnsavedFormChanges()) {
+    if (!confirmDiscardFormChanges('Tienes cambios sin guardar. Si sales del panel, se perderán. ¿Continuar?')) {
+      showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
+      return;
+    }
+    resetForm();
+  }
+
   sessionStorage.removeItem('cmsPassword');
   state.password = '';
   showLogin();
 });
 
 postForm.addEventListener('submit', savePost);
-cancelEditButton.addEventListener('click', resetForm);
+cancelEditButton.addEventListener('click', () => {
+  if (blockIfUnsavedFormChanges('Tienes cambios sin guardar. ¿Quieres cancelar la edición y descartarlos?')) return;
+  resetForm();
+});
 refreshButton.addEventListener('click', () => {
+  if (hasUnsavedFormChanges()) {
+    if (!confirmDiscardFormChanges('Tienes cambios sin guardar. Si actualizas el listado, se perderán. ¿Continuar?')) {
+      showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
+      return;
+    }
+    resetForm();
+  }
+
   if (blockIfPendingOrder()) return;
   loadAdminPosts();
 });
@@ -1193,7 +1272,13 @@ if (clearSearchButton) {
   });
 }
 
-updateLivePreview();
+window.addEventListener('beforeunload', (event) => {
+  if (!hasUnsavedFormChanges() && !state.orderDirty) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
+
+resetForm();
 
 if (state.password) {
   showAdmin();
