@@ -1,5 +1,6 @@
 const config = window.CMS_CONFIG;
 const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
+const RAW_GITHUB_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/main/';
 
 const state = {
   items: [],
@@ -52,9 +53,26 @@ function showLogin() {
   loginView.classList.remove('hidden');
 }
 
+function cleanRelativePath(src) {
+  return String(src || '')
+    .replace(/^\.\.\//, '')
+    .replace(/^\.\//, '')
+    .replace(/^\/+/, '');
+}
+
+function isUploadedAssetPath(src) {
+  return cleanRelativePath(src).startsWith('assets/uploads/');
+}
+
+function getRawGithubAssetUrl(src) {
+  const cleanPath = cleanRelativePath(src);
+  return `${RAW_GITHUB_BASE_URL}${cleanPath}`;
+}
+
 function normalizeSrc(src) {
   if (!src) return '';
   if (src.startsWith('http') || src.startsWith('blob:') || src.startsWith('data:')) return src;
+  if (isUploadedAssetPath(src)) return getRawGithubAssetUrl(src);
   if (src.startsWith('/')) return `..${src}`;
   return `../${src}`;
 }
@@ -102,7 +120,7 @@ async function waitForImageReady(imagePath, maxAttempts = 10, delayMs = 800) {
       return cacheBustedUrl;
     } catch (error) {
       if (attempt === maxAttempts) {
-        throw new Error('Make confirmó la subida, pero la imagen todavía no está disponible en GitHub Pages.');
+        throw new Error('Make confirmó la subida, pero la imagen todavía no está disponible en GitHub.');
       }
 
       await wait(delayMs);
@@ -615,7 +633,7 @@ async function savePost(event) {
 
     if (payload.image?.path) {
       waitForImageReady(payload.image.path).catch((error) => {
-        console.warn('La imagen todavía no está disponible en GitHub Pages:', error);
+        console.warn('La imagen todavía no está disponible en GitHub:', error);
       });
     }
   } catch (error) {

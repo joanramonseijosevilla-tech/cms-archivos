@@ -1,5 +1,6 @@
 const POSTS_JSON_API_URL = 'https://api.github.com/repos/joanramonseijosevilla-tech/cms-archivos/contents/data/publicaciones.json';
 const POSTS_JSON_FALLBACK_URL = 'data/publicaciones.json';
+const RAW_GITHUB_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/main/';
 
 const postsGrid = document.querySelector('#posts-grid');
 const postsStatus = document.querySelector('#posts-status');
@@ -85,9 +86,23 @@ function formatDate(dateString) {
   }).format(date);
 }
 
+function cleanRelativePath(src) {
+  return String(src || '')
+    .replace(/^\.\.\//, '')
+    .replace(/^\.\//, '')
+    .replace(/^\/+/, '');
+}
+
 function normalizeSrc(src) {
   if (!src) return '';
-  return src.startsWith('/') ? src.slice(1) : src;
+  if (src.startsWith('http') || src.startsWith('blob:') || src.startsWith('data:')) return src;
+
+  const cleanPath = cleanRelativePath(src);
+  if (cleanPath.startsWith('assets/uploads/')) {
+    return `${RAW_GITHUB_BASE_URL}${cleanPath}`;
+  }
+
+  return cleanPath;
 }
 
 function renderPosts(items) {
