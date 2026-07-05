@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-7">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-7">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-8">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-7"></script>
+  <script defer src="admin.js?v=20260705-8"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -78,6 +78,14 @@
             <label>
               Texto alternativo de la imagen
               <input id="post-alt" type="text" maxlength="140" placeholder="Ej. Imagen descriptiva de la publicación">
+            </label>
+
+            <label>
+              Estado
+              <select id="post-status">
+                <option value="published">Publicado</option>
+                <option value="hidden">Oculto</option>
+              </select>
             </label>
 
             <div id="image-preview" class="image-preview hidden"></div>

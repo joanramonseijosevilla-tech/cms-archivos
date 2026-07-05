@@ -19,6 +19,7 @@ const postTitle = document.querySelector('#post-title');
 const postDescription = document.querySelector('#post-description');
 const postImage = document.querySelector('#post-image');
 const postAlt = document.querySelector('#post-alt');
+const postStatus = document.querySelector('#post-status');
 const currentImagePath = document.querySelector('#current-image-path');
 const currentImageSrc = document.querySelector('#current-image-src');
 const adminPosts = document.querySelector('#admin-posts');
@@ -167,6 +168,22 @@ function formatDate(dateString) {
   const date = new Date(dateString || '');
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+function getItemStatus(item) {
+  return item?.status === 'hidden' || item?.status === 'draft' ? 'hidden' : 'published';
+}
+
+function getStatusLabel(item) {
+  return getItemStatus(item) === 'hidden' ? 'Oculto' : 'Publicado';
+}
+
+function getFormStatus() {
+  return postStatus?.value === 'hidden' ? 'hidden' : 'published';
+}
+
+function isItemPublished(item) {
+  return getItemStatus(item) === 'published';
 }
 
 function normalizePublicacionesJson(data) {
@@ -334,9 +351,18 @@ function renderAdminPosts() {
       const title = document.createElement('h3');
       title.textContent = item.title || 'Sin título';
 
+      const meta = document.createElement('div');
+      meta.className = 'admin-post-meta';
+
       const date = document.createElement('p');
       date.className = 'admin-post-date';
       date.textContent = formatDate(item.createdAt);
+
+      const status = document.createElement('p');
+      status.className = `admin-post-status ${isItemPublished(item) ? '' : 'hidden-status'}`.trim();
+      status.textContent = getStatusLabel(item);
+
+      meta.append(date, status);
 
       const description = document.createElement('p');
       description.className = 'admin-post-description';
@@ -344,6 +370,12 @@ function renderAdminPosts() {
 
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
+
+      const toggleStatusButton = document.createElement('button');
+      toggleStatusButton.type = 'button';
+      toggleStatusButton.className = 'button button-secondary';
+      toggleStatusButton.textContent = isItemPublished(item) ? 'Ocultar' : 'Publicar';
+      toggleStatusButton.addEventListener('click', () => togglePostStatus(item));
 
       const editButton = document.createElement('button');
       editButton.type = 'button';
@@ -357,8 +389,8 @@ function renderAdminPosts() {
       deleteButton.textContent = 'Eliminar';
       deleteButton.addEventListener('click', () => deletePost(item));
 
-      actions.append(editButton, deleteButton);
-      content.append(title, date, description, actions);
+      actions.append(toggleStatusButton, editButton, deleteButton);
+      content.append(title, meta, description, actions);
       card.append(img, content);
       fragment.append(card);
     });
@@ -371,6 +403,7 @@ function startEdit(item) {
   postTitle.value = item.title || '';
   postDescription.value = item.description || '';
   postAlt.value = item.image?.alt || '';
+  if (postStatus) postStatus.value = getItemStatus(item);
   currentImagePath.value = item.image?.path || '';
   currentImageSrc.value = item.image?.src || '';
   formTitle.textContent = 'Editar publicación';
@@ -386,6 +419,7 @@ function resetForm() {
   postId.value = '';
   currentImagePath.value = '';
   currentImageSrc.value = '';
+  if (postStatus) postStatus.value = 'published';
   formTitle.textContent = 'Nueva publicación';
   saveButton.textContent = 'Guardar publicación';
   cancelEditButton.classList.add('hidden');
@@ -565,6 +599,7 @@ async function savePost(event) {
 
     const title = postTitle.value.trim();
     const description = postDescription.value.trim();
+    const status = getFormStatus();
     const now = new Date();
     const nowIso = now.toISOString();
     const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
@@ -589,7 +624,7 @@ async function savePost(event) {
           path: imagePath,
           alt: title
         },
-        status: 'published',
+        status,
         createdAt: nowIso,
         updatedAt: nowIso
       };
@@ -642,6 +677,7 @@ async function savePost(event) {
               ...item.image,
               alt: postAlt.value.trim() || item.image?.alt || title
             },
+            status,
             updatedAt: nowIso
           };
         })
@@ -668,6 +704,42 @@ async function savePost(event) {
     console.error(error);
   } finally {
     setBusy(false);
+  }
+}
+
+async function togglePostStatus(item) {
+  const nextStatus = isItemPublished(item) ? 'hidden' : 'published';
+  const actionLabel = nextStatus === 'hidden' ? 'ocultada' : 'publicada';
+
+  try {
+    const nowIso = new Date().toISOString();
+    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: currentItems.map((currentItem) => {
+        if (currentItem.id !== item.id) return currentItem;
+        return {
+          ...currentItem,
+          status: nextStatus,
+          updatedAt: nowIso
+        };
+      })
+    };
+    const payload = attachPublicacionesPayload({
+      id: item.id,
+      status: nextStatus
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`Publicación ${actionLabel} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
   }
 }
 

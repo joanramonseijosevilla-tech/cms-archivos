@@ -129,11 +129,15 @@ function setImageSrc(img, src) {
   img.src = primarySrc;
 }
 
+function isPublishedItem(item) {
+  return item?.status !== 'hidden' && item?.status !== 'draft';
+}
+
 function renderPosts(items) {
   postsGrid.replaceChildren();
 
   const publishedItems = items
-    .filter((item) => item.status !== 'draft')
+    .filter(isPublishedItem)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   if (!publishedItems.length) {

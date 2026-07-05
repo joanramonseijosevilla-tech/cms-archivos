@@ -112,7 +112,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   min-height: 50px;
   border: 1px solid #ffffff2e;
@@ -129,8 +130,18 @@ textarea::placeholder {
   color: #94a3b8;
 }
 
+select {
+  cursor: pointer;
+}
+
+select option {
+  color: #0f172a;
+  background: #fff;
+}
+
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: var(--secondary);
   box-shadow: 0 0 0 4px #2563eb33;
 }
@@ -229,8 +240,33 @@ input[type="file"]::file-selector-button {
   font-size: 0.93rem;
 }
 
+.admin-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
 .admin-post-date {
+  margin: 0;
   font-weight: 800;
+}
+
+.admin-post-status {
+  margin: 0;
+  padding: 0.16rem 0.48rem;
+  border: 1px solid #60a5fa;
+  border-radius: 999px;
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.admin-post-status.hidden-status {
+  border-color: #fbbf24;
+  color: #fde68a;
 }
 
 .admin-post-description {
