@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T08:53:59.818Z",
+  "updatedAt": "2026-07-05T08:56:06.431Z",
   "items": [
     {
       "id": "pub_20260705085000",
@@ -39,9 +39,9 @@
         "path": "assets/uploads/20260704-220331-esquema-webhook.png",
         "alt": "Elemento 14"
       },
-      "status": "published",
+      "status": "hidden",
       "createdAt": "2026-07-04T20:03:31.261Z",
-      "updatedAt": "2026-07-05T07:59:52.249Z",
+      "updatedAt": "2026-07-05T08:56:06.431Z",
       "order": 2
     },
     {
