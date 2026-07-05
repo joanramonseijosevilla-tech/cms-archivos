@@ -7,7 +7,8 @@ const state = {
   publicacionesUpdatedAt: '',
   password: sessionStorage.getItem('cmsPassword') || '',
   orderDirty: false,
-  orderOriginalItems: null
+  orderOriginalItems: null,
+  previewObjectUrl: ''
 };
 
 const loginView = document.querySelector('#login-view');
@@ -509,8 +510,16 @@ function startEdit(item) {
   saveButton.textContent = 'Guardar cambios';
   cancelEditButton.classList.remove('hidden');
   postImage.required = false;
-  renderPreview(item.image?.src, item.image?.alt || item.title);
+  clearPreviewObjectUrl();
+  updateLivePreview();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearPreviewObjectUrl() {
+  if (state.previewObjectUrl) {
+    URL.revokeObjectURL(state.previewObjectUrl);
+    state.previewObjectUrl = '';
+  }
 }
 
 function resetForm() {
@@ -523,20 +532,84 @@ function resetForm() {
   saveButton.textContent = 'Guardar publicación';
   cancelEditButton.classList.add('hidden');
   postImage.required = false;
-  imagePreview.classList.add('hidden');
-  imagePreview.replaceChildren();
+  clearPreviewObjectUrl();
+  updateLivePreview();
 }
 
-function renderPreview(src, alt = '') {
-  imagePreview.replaceChildren();
+function getEditingItem() {
+  if (!postId.value) return null;
+  return state.items.find((item) => item.id === postId.value) || null;
+}
+
+function getPreviewCreatedAt() {
+  return getEditingItem()?.createdAt || new Date().toISOString();
+}
+
+function getPreviewImageSrc() {
+  return state.previewObjectUrl || currentImageSrc.value || currentImagePath.value || '';
+}
+
+function createPreviewImage(src, alt) {
+  const imageWrap = document.createElement('div');
+  imageWrap.className = 'post-preview-image-wrap';
+
   if (!src) {
-    imagePreview.classList.add('hidden');
-    return;
+    const placeholder = document.createElement('span');
+    placeholder.className = 'post-preview-placeholder';
+    placeholder.textContent = 'Selecciona una imagen para ver la vista previa.';
+    imageWrap.append(placeholder);
+    return imageWrap;
   }
+
   const img = document.createElement('img');
-  setImageSrc(img, src);
+  img.className = 'post-preview-image';
   img.alt = alt;
-  imagePreview.append(img);
+  setImageSrc(img, src);
+  imageWrap.append(img);
+  return imageWrap;
+}
+
+function updateLivePreview() {
+  const title = postTitle.value.trim();
+  const description = postDescription.value.trim();
+  const status = getFormStatus();
+  const imageSrc = getPreviewImageSrc();
+  const alt = postAlt.value.trim() || title || 'Vista previa de la publicación';
+
+  imagePreview.replaceChildren();
+
+  const heading = document.createElement('p');
+  heading.className = 'post-live-preview-title';
+  heading.textContent = 'Vista previa antes de guardar';
+
+  const card = document.createElement('article');
+  card.className = 'post-preview-card';
+
+  const body = document.createElement('div');
+  body.className = 'post-preview-body';
+
+  const meta = document.createElement('div');
+  meta.className = 'post-preview-meta';
+
+  const date = document.createElement('span');
+  date.className = 'post-date';
+  date.textContent = formatDate(getPreviewCreatedAt()) || 'Fecha al guardar';
+
+  const statusBadge = document.createElement('span');
+  statusBadge.className = `admin-post-status ${status === 'hidden' ? 'hidden-status' : ''}`.trim();
+  statusBadge.textContent = status === 'hidden' ? 'Oculto' : 'Publicado';
+
+  const titleNode = document.createElement('h3');
+  titleNode.textContent = title || 'Título de la publicación';
+
+  const descriptionNode = document.createElement('p');
+  descriptionNode.className = 'post-preview-description';
+  descriptionNode.textContent = description || 'La descripción aparecerá aquí.';
+
+  meta.append(date, statusBadge);
+  body.append(meta, titleNode, descriptionNode);
+  card.append(createPreviewImage(imageSrc, alt), body);
+  imagePreview.append(heading, card);
   imagePreview.classList.remove('hidden');
 }
 
@@ -971,11 +1044,21 @@ refreshButton.addEventListener('click', () => {
 });
 
 postImage.addEventListener('change', () => {
+  clearPreviewObjectUrl();
   const file = postImage.files[0];
-  if (!file) return;
-  const localUrl = URL.createObjectURL(file);
-  renderPreview(localUrl, postTitle.value);
+
+  if (file) {
+    state.previewObjectUrl = URL.createObjectURL(file);
+  }
+
+  updateLivePreview();
 });
+
+[postTitle, postDescription, postAlt, postStatus]
+  .filter(Boolean)
+  .forEach((field) => field.addEventListener('input', updateLivePreview));
+
+updateLivePreview();
 
 if (state.password) {
   showAdmin();
