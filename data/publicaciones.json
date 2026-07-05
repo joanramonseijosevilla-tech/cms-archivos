@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T10:17:37.398Z",
+  "updatedAt": "2026-07-05T10:19:28.843Z",
   "items": [
     {
       "id": "pub_20260705121737",
@@ -18,8 +18,8 @@
     },
     {
       "id": "pub_20260705113558",
-      "title": "Elemento 22",
-      "description": "Nueva Publicación de prueba\nEsto saldrá nbien\nVerás como si\nVa quedando clulo",
+      "title": "Elemento 22 v2",
+      "description": "Nueva Publicación de prueba\nEsto saldrá nbien\nVerás como si\nVa quedando clulo\nv2",
       "image": {
         "src": "assets/uploads/20260705-113558-trigger-formulario-tally.png",
         "path": "assets/uploads/20260705-113558-trigger-formulario-tally.png",
@@ -27,7 +27,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T09:35:58.479Z",
-      "updatedAt": "2026-07-05T09:36:35.951Z",
+      "updatedAt": "2026-07-05T10:19:28.843Z",
       "order": 1
     },
     {
