@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T06:50:00.143Z",
+  "updatedAt": "2026-07-05T07:46:14.660Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -118,6 +118,19 @@
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
       "updatedAt": "2026-07-05T06:50:00.143Z"
+    },
+    {
+      "id": "pub_20260705094614",
+      "title": "Elemento 18",
+      "description": "CSS ver si cubre bien imagenes\nTema salto de línea",
+      "image": {
+        "src": "assets/uploads/20260705-094614-iterador-make.png",
+        "path": "assets/uploads/20260705-094614-iterador-make.png",
+        "alt": "Elemento 18"
+      },
+      "status": "published",
+      "createdAt": "2026-07-05T07:46:14.660Z",
+      "updatedAt": "2026-07-05T07:46:14.660Z"
     }
   ]
 }
