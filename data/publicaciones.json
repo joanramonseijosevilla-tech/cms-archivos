@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T10:19:28.843Z",
+  "updatedAt": "2026-07-05T10:22:19.627Z",
   "items": [
     {
       "id": "pub_20260705121737",
@@ -32,16 +32,16 @@
     },
     {
       "id": "pub_20260705085000",
-      "title": "Elemento 17",
-      "description": "Elemento 17 fallback",
+      "title": "Elemento 17 Editar",
+      "description": "Elemento 17 fallback\nEditar\nv2",
       "image": {
-        "src": "assets/uploads/20260705-085000-iterador-make.png",
-        "path": "assets/uploads/20260705-085000-iterador-make.png",
+        "src": "assets/uploads/20260705-122219-acciones.png",
+        "path": "assets/uploads/20260705-122219-acciones.png",
         "alt": "Elemento 17"
       },
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
-      "updatedAt": "2026-07-05T08:25:01.204Z",
+      "updatedAt": "2026-07-05T10:22:19.627Z",
       "order": 2
     },
     {
