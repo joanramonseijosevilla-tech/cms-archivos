@@ -35,6 +35,44 @@ function normalizePublicacionesJson(data) {
   };
 }
 
+function getManualOrderValue(item) {
+  const order = Number(item?.order);
+  return Number.isFinite(order) ? order : null;
+}
+
+function getCreatedAtTime(item) {
+  const time = Date.parse(item?.createdAt || '');
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function hasManualOrder(items) {
+  return items.some((item) => getManualOrderValue(item) !== null);
+}
+
+function getOrderedItems(items) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const manualOrder = hasManualOrder(safeItems);
+
+  return safeItems
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if (manualOrder) {
+        const orderA = getManualOrderValue(a.item);
+        const orderB = getManualOrderValue(b.item);
+        const normalizedOrderA = orderA === null ? Number.MAX_SAFE_INTEGER : orderA;
+        const normalizedOrderB = orderB === null ? Number.MAX_SAFE_INTEGER : orderB;
+
+        if (normalizedOrderA !== normalizedOrderB) return normalizedOrderA - normalizedOrderB;
+      }
+
+      const dateDifference = getCreatedAtTime(b.item) - getCreatedAtTime(a.item);
+      if (dateDifference !== 0) return dateDifference;
+
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
+}
+
 async function fetchFromGitHubApi() {
   const response = await fetch(addCacheBuster(POSTS_JSON_API_URL), {
     cache: 'no-store',
@@ -136,9 +174,7 @@ function isPublishedItem(item) {
 function renderPosts(items) {
   postsGrid.replaceChildren();
 
-  const publishedItems = items
-    .filter(isPublishedItem)
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const publishedItems = getOrderedItems(items).filter(isPublishedItem);
 
   if (!publishedItems.length) {
     postsStatus.textContent = 'Todavía no hay publicaciones.';

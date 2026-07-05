@@ -5,7 +5,9 @@ const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-a
 const state = {
   items: [],
   publicacionesUpdatedAt: '',
-  password: sessionStorage.getItem('cmsPassword') || ''
+  password: sessionStorage.getItem('cmsPassword') || '',
+  orderDirty: false,
+  orderOriginalItems: null
 };
 
 const loginView = document.querySelector('#login-view');
@@ -186,11 +188,56 @@ function isItemPublished(item) {
   return getItemStatus(item) === 'published';
 }
 
+function getManualOrderValue(item) {
+  const order = Number(item?.order);
+  return Number.isFinite(order) ? order : null;
+}
+
+function getCreatedAtTime(item) {
+  const time = Date.parse(item?.createdAt || '');
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function hasManualOrder(items) {
+  return items.some((item) => getManualOrderValue(item) !== null);
+}
+
+function getOrderedItems(items) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const manualOrder = hasManualOrder(safeItems);
+
+  return safeItems
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if (manualOrder) {
+        const orderA = getManualOrderValue(a.item);
+        const orderB = getManualOrderValue(b.item);
+        const normalizedOrderA = orderA === null ? Number.MAX_SAFE_INTEGER : orderA;
+        const normalizedOrderB = orderB === null ? Number.MAX_SAFE_INTEGER : orderB;
+
+        if (normalizedOrderA !== normalizedOrderB) return normalizedOrderA - normalizedOrderB;
+      }
+
+      const dateDifference = getCreatedAtTime(b.item) - getCreatedAtTime(a.item);
+      if (dateDifference !== 0) return dateDifference;
+
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
+}
+
+function normalizeItemsWithOrder(items) {
+  return getOrderedItems(items).map((item, index) => ({
+    ...item,
+    order: index
+  }));
+}
+
 function normalizePublicacionesJson(data) {
   return {
     version: data?.version || 1,
     updatedAt: data?.updatedAt || '',
-    items: Array.isArray(data?.items) ? data.items : []
+    items: normalizeItemsWithOrder(Array.isArray(data?.items) ? data.items : [])
   };
 }
 
@@ -242,6 +289,17 @@ function setStateFromPublicacionesJson(publicacionesJson) {
   const normalized = normalizePublicacionesJson(publicacionesJson);
   state.items = normalized.items;
   state.publicacionesUpdatedAt = normalized.updatedAt;
+}
+
+function clearPendingOrder() {
+  state.orderDirty = false;
+  state.orderOriginalItems = null;
+}
+
+function blockIfPendingOrder() {
+  if (!state.orderDirty) return false;
+  showAlert('Tienes cambios de orden pendientes. Pulsa Guardar orden o Cancelar cambios antes de hacer otra acción.', 'error');
+  return true;
 }
 
 async function fetchPublicacionesJsonFromGitHubApi() {
@@ -302,6 +360,7 @@ async function loadAdminPosts() {
     const newestJson = chooseNewestPublicacionesJson(remoteJson, localJson);
 
     setStateFromPublicacionesJson(newestJson);
+    clearPendingOrder();
 
     if (newestJson === remoteJson) {
       saveLocalSnapshot(remoteJson);
@@ -313,6 +372,7 @@ async function loadAdminPosts() {
 
     if (localJson) {
       setStateFromPublicacionesJson(localJson);
+      clearPendingOrder();
       renderAdminPosts();
       console.warn('Se muestra la última versión confirmada en este navegador porque no se pudo leer el JSON remoto:', error);
       return;
@@ -334,10 +394,34 @@ function renderAdminPosts() {
   adminStatus.textContent = '';
   const fragment = document.createDocumentFragment();
 
-  state.items
-    .slice()
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-    .forEach((item) => {
+  if (state.orderDirty) {
+    const orderNotice = document.createElement('div');
+    orderNotice.className = 'admin-alert';
+    orderNotice.textContent = 'Orden cambiado en pantalla. Pulsa Guardar orden para publicarlo o Cancelar cambios para deshacerlo.';
+
+    const orderActions = document.createElement('div');
+    orderActions.className = 'admin-post-actions';
+
+    const saveOrderButton = document.createElement('button');
+    saveOrderButton.type = 'button';
+    saveOrderButton.className = 'button';
+    saveOrderButton.textContent = 'Guardar orden';
+    saveOrderButton.addEventListener('click', saveManualOrder);
+
+    const cancelOrderButton = document.createElement('button');
+    cancelOrderButton.type = 'button';
+    cancelOrderButton.className = 'button button-secondary';
+    cancelOrderButton.textContent = 'Cancelar cambios';
+    cancelOrderButton.addEventListener('click', cancelManualOrder);
+
+    orderActions.append(saveOrderButton, cancelOrderButton);
+    fragment.append(orderNotice, orderActions);
+  }
+
+  const orderedItems = getOrderedItems(state.items);
+
+  orderedItems
+    .forEach((item, index) => {
       const card = document.createElement('article');
       card.className = 'admin-post';
 
@@ -371,6 +455,20 @@ function renderAdminPosts() {
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
 
+      const moveUpButton = document.createElement('button');
+      moveUpButton.type = 'button';
+      moveUpButton.className = 'button button-secondary';
+      moveUpButton.textContent = 'Subir';
+      moveUpButton.disabled = index === 0;
+      moveUpButton.addEventListener('click', () => movePost(item, -1));
+
+      const moveDownButton = document.createElement('button');
+      moveDownButton.type = 'button';
+      moveDownButton.className = 'button button-secondary';
+      moveDownButton.textContent = 'Bajar';
+      moveDownButton.disabled = index === orderedItems.length - 1;
+      moveDownButton.addEventListener('click', () => movePost(item, 1));
+
       const toggleStatusButton = document.createElement('button');
       toggleStatusButton.type = 'button';
       toggleStatusButton.className = 'button button-secondary';
@@ -389,7 +487,7 @@ function renderAdminPosts() {
       deleteButton.textContent = 'Eliminar';
       deleteButton.addEventListener('click', () => deletePost(item));
 
-      actions.append(toggleStatusButton, editButton, deleteButton);
+      actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, deleteButton);
       content.append(title, meta, description, actions);
       card.append(img, content);
       fragment.append(card);
@@ -399,6 +497,7 @@ function renderAdminPosts() {
 }
 
 function startEdit(item) {
+  if (blockIfPendingOrder()) return;
   postId.value = item.id;
   postTitle.value = item.title || '';
   postDescription.value = item.description || '';
@@ -590,6 +689,7 @@ async function sendToMake(action, payload) {
 
 async function savePost(event) {
   event.preventDefault();
+  if (blockIfPendingOrder()) return;
   setBusy(true);
 
   try {
@@ -602,7 +702,9 @@ async function savePost(event) {
     const status = getFormStatus();
     const now = new Date();
     const nowIso = now.toISOString();
-    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
     let nextPublicacionesJson;
     const payload = {
       id: postId.value || undefined,
@@ -642,7 +744,7 @@ async function savePost(event) {
       nextPublicacionesJson = {
         version: 1,
         updatedAt: nowIso,
-        items: [...currentItems, newItem]
+        items: normalizeItemsWithOrder([newItem, ...currentItems])
       };
     } else {
       let nextImage = null;
@@ -667,7 +769,7 @@ async function savePost(event) {
       nextPublicacionesJson = {
         version: 1,
         updatedAt: nowIso,
-        items: currentItems.map((item) => {
+        items: normalizeItemsWithOrder(currentItems.map((item) => {
           if (item.id !== postId.value) return item;
           return {
             ...item,
@@ -680,7 +782,7 @@ async function savePost(event) {
             status,
             updatedAt: nowIso
           };
-        })
+        }))
       };
     }
 
@@ -707,24 +809,96 @@ async function savePost(event) {
   }
 }
 
+function movePost(item, direction) {
+  const currentItems = normalizeItemsWithOrder(
+    Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+  );
+  const currentIndex = currentItems.findIndex((currentItem) => currentItem.id === item.id);
+  const nextIndex = currentIndex + direction;
+
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= currentItems.length) return;
+
+  if (!state.orderDirty) {
+    state.orderOriginalItems = currentItems.map((currentItem) => ({ ...currentItem }));
+  }
+
+  const reorderedItems = currentItems.slice();
+  const [movedItem] = reorderedItems.splice(currentIndex, 1);
+  reorderedItems.splice(nextIndex, 0, movedItem);
+
+  state.items = reorderedItems.map((currentItem, index) => ({
+    ...currentItem,
+    order: index
+  }));
+  state.orderDirty = true;
+  renderAdminPosts();
+}
+
+async function saveManualOrder() {
+  if (!state.orderDirty) return;
+
+  try {
+    setBusy(true);
+    const nowIso = new Date().toISOString();
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(
+        Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+      )
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'reorder'
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    clearPendingOrder();
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert('Orden guardado correctamente.');
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  } finally {
+    setBusy(false);
+  }
+}
+
+function cancelManualOrder() {
+  if (!state.orderDirty) return;
+
+  if (Array.isArray(state.orderOriginalItems)) {
+    state.items = normalizeItemsWithOrder(state.orderOriginalItems);
+  }
+
+  clearPendingOrder();
+  renderAdminPosts();
+  showAlert('Cambios de orden cancelados.');
+}
+
 async function togglePostStatus(item) {
+  if (blockIfPendingOrder()) return;
   const nextStatus = isItemPublished(item) ? 'hidden' : 'published';
   const actionLabel = nextStatus === 'hidden' ? 'ocultada' : 'publicada';
 
   try {
     const nowIso = new Date().toISOString();
-    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
     const nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
-      items: currentItems.map((currentItem) => {
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
         if (currentItem.id !== item.id) return currentItem;
         return {
           ...currentItem,
           status: nextStatus,
           updatedAt: nowIso
         };
-      })
+      }))
     };
     const payload = attachPublicacionesPayload({
       id: item.id,
@@ -744,16 +918,19 @@ async function togglePostStatus(item) {
 }
 
 async function deletePost(item) {
+  if (blockIfPendingOrder()) return;
   const confirmed = window.confirm(`¿Eliminar "${item.title || 'esta publicación'}"?`);
   if (!confirmed) return;
 
   try {
     const nowIso = new Date().toISOString();
-    const currentItems = Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : [];
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
     const nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
-      items: currentItems.filter((currentItem) => currentItem.id !== item.id)
+      items: normalizeItemsWithOrder(currentItems.filter((currentItem) => currentItem.id !== item.id))
     };
     const payload = attachPublicacionesPayload({
       id: item.id,
@@ -788,7 +965,10 @@ logoutButton.addEventListener('click', () => {
 
 postForm.addEventListener('submit', savePost);
 cancelEditButton.addEventListener('click', resetForm);
-refreshButton.addEventListener('click', loadAdminPosts);
+refreshButton.addEventListener('click', () => {
+  if (blockIfPendingOrder()) return;
+  loadAdminPosts();
+});
 
 postImage.addEventListener('change', () => {
   const file = postImage.files[0];
