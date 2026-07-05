@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T04:24:13.057Z",
+  "updatedAt": "2026-07-05T04:34:06.582Z",
   "items": [
     {
       "id": "pub_20260704173859",
@@ -122,7 +122,7 @@
     {
       "id": "pub_20260704220126",
       "title": "Ekemento 13",
-      "description": "Modificacion Elemento 13",
+      "description": "Modificacion Elemento v2 13",
       "image": {
         "src": "assets/uploads/20260704-220126-sheduled-tally.png",
         "path": "assets/uploads/20260704-220126-sheduled-tally.png",
@@ -130,7 +130,7 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T20:01:26.802Z",
-      "updatedAt": "2026-07-05T04:24:13.057Z"
+      "updatedAt": "2026-07-05T04:34:06.582Z"
     },
     {
       "id": "pub_20260704220331",
