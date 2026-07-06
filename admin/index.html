@@ -6,10 +6,10 @@
   <title>Panel privado | Mini CMS Nexautia</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-17">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-17">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-18">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-18">
   <script defer src="cms.config.js?v=20260705-5"></script>
-  <script defer src="admin.js?v=20260705-17"></script>
+  <script defer src="admin.js?v=20260705-18"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -69,18 +69,26 @@
               <span class="rich-editor-label">Descripción</span>
               <div class="rich-editor" aria-label="Editor básico de descripción">
                 <div class="rich-editor-toolbar" aria-label="Formato de descripción">
-                  <button class="button button-small button-secondary" type="button" data-rich-command="bold" title="Negrita"><strong>B</strong></button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="italic" title="Cursiva"><em>I</em></button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="insertUnorderedList" title="Lista con viñetas">• Lista</button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="insertOrderedList" title="Lista numerada">1. Lista</button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyLeft" title="Alinear a la izquierda">Izq.</button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyCenter" title="Centrar">Centro</button>
-                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyRight" title="Alinear a la derecha">Dcha.</button>
+                  <select id="rich-format-select" class="rich-editor-format-select" aria-label="Formato de texto">
+                    <option value="p">Texto</option>
+                    <option value="h2">Título grande</option>
+                    <option value="h3">Título medio</option>
+                    <option value="h4">Título pequeño</option>
+                  </select>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="bold" title="Negrita" aria-label="Negrita"><strong>B</strong></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="italic" title="Cursiva" aria-label="Cursiva"><em>I</em></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="insertUnorderedList" title="Lista con viñetas" aria-label="Lista con viñetas">•</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="insertOrderedList" title="Lista numerada" aria-label="Lista numerada">1.</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="outdent" title="Reducir sangría" aria-label="Reducir sangría">←</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="indent" title="Aumentar sangría" aria-label="Aumentar sangría">→</button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyLeft" title="Alinear a la izquierda" aria-label="Alinear a la izquierda"><span class="align-icon align-icon-left" aria-hidden="true"><span></span><span></span><span></span></span></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyCenter" title="Centrar" aria-label="Centrar"><span class="align-icon align-icon-center" aria-hidden="true"><span></span><span></span><span></span></span></button>
+                  <button class="button button-small button-secondary" type="button" data-rich-command="justifyRight" title="Alinear a la derecha" aria-label="Alinear a la derecha"><span class="align-icon align-icon-right" aria-hidden="true"><span></span><span></span><span></span></span></button>
                 </div>
                 <div id="post-description-editor" class="rich-editor-area" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Describe la publicación…"></div>
               </div>
               <textarea id="post-description" class="hidden" aria-hidden="true"></textarea>
-              <p class="form-note rich-editor-help">Formato básico: negrita, cursiva, viñetas, lista numerada y alineación. Si pegas texto con formato, se limpiará para mantenerlo seguro.</p>
+              <p class="form-note rich-editor-help">Formato básico: títulos, negrita, cursiva, viñetas, lista numerada, sangría y alineación. Al pegar desde otro editor se conserva el formato razonable y se limpia lo no seguro.</p>
             </div>
 
             <label>

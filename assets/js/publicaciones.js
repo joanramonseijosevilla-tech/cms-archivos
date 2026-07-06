@@ -238,7 +238,17 @@ function escapeHtml(text) {
 }
 
 function looksLikeRichHtml(value) {
-  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span)\b/i.test(String(value || ''));
+  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span|font|h[1-6])\b/i.test(String(value || ''));
+}
+
+function mapRichTag(sourceTag) {
+  if (sourceTag === 'b') return 'strong';
+  if (sourceTag === 'i') return 'em';
+  if (sourceTag === 'font') return 'span';
+  if (sourceTag === 'h1' || sourceTag === 'h2') return 'h2';
+  if (sourceTag === 'h3') return 'h3';
+  if (sourceTag === 'h4' || sourceTag === 'h5' || sourceTag === 'h6') return 'h4';
+  return sourceTag;
 }
 
 function convertPlainTextToRichHtml(value) {
@@ -262,13 +272,21 @@ function convertPlainTextToRichHtml(value) {
       return `<ol>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`;
     }
 
+    if (lines.length === 1) {
+      const headingMatch = lines[0].match(/^\s*(#{1,3})\s+(.+)$/);
+      if (headingMatch) {
+        const headingTag = headingMatch[1].length === 1 ? 'h2' : headingMatch[1].length === 2 ? 'h3' : 'h4';
+        return `<${headingTag}>${escapeHtml(headingMatch[2])}</${headingTag}>`;
+      }
+    }
+
     return `<p>${lines.map(escapeHtml).join('<br>')}</p>`;
   }).filter(Boolean).join('');
 }
 
 function getSafeTextAlign(value) {
   const align = String(value || '').toLowerCase().trim();
-  return ['left', 'center', 'right'].includes(align) ? align : '';
+  return ['left', 'center', 'right', 'justify'].includes(align) ? align : '';
 }
 
 function getNodeTextAlign(node) {
@@ -276,6 +294,111 @@ function getNodeTextAlign(node) {
   const styleAlign = getSafeTextAlign(node.style?.textAlign);
   if (styleAlign) return styleAlign;
   return getSafeTextAlign(node.getAttribute('align'));
+}
+
+function parseCssLengthToPx(value) {
+  const raw = String(value || '').toLowerCase().trim();
+  if (!raw) return null;
+
+  if (['small', 'x-small'].includes(raw)) return 12;
+  if (['medium', 'normal'].includes(raw)) return 16;
+  if (raw === 'large') return 19;
+  if (raw === 'x-large') return 24;
+  if (raw === 'xx-large') return 30;
+
+  const match = raw.match(/^(-?\d+(?:\.\d+)?)(px|pt|em|rem|%)?$/);
+  if (!match) return null;
+
+  const number = Number.parseFloat(match[1]);
+  if (!Number.isFinite(number) || number <= 0) return null;
+
+  const unit = match[2] || 'px';
+  if (unit === 'pt') return number * 1.333;
+  if (unit === 'em' || unit === 'rem') return number * 16;
+  if (unit === '%') return (number / 100) * 16;
+  return number;
+}
+
+function getNodeFontSizePx(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return null;
+
+  const styleSize = parseCssLengthToPx(node.style?.fontSize);
+  if (styleSize) return styleSize;
+
+  if (node.tagName.toLowerCase() === 'font') {
+    const fontSize = Number.parseInt(node.getAttribute('size') || '', 10);
+    if (Number.isFinite(fontSize)) {
+      if (fontSize <= 2) return 13;
+      if (fontSize === 4) return 18;
+      if (fontSize === 5) return 22;
+      if (fontSize >= 6) return 26;
+    }
+  }
+
+  return null;
+}
+
+function getSafeSizeClass(node, mappedTag) {
+  if (['h2', 'h3', 'h4'].includes(mappedTag)) return '';
+  const px = getNodeFontSizePx(node);
+  if (!px) return '';
+  if (px <= 13) return 'rich-size-small';
+  if (px >= 24) return 'rich-size-xlarge';
+  if (px >= 18) return 'rich-size-large';
+  return '';
+}
+
+function getSafeIndentClass(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return '';
+  const marginPx = parseCssLengthToPx(node.style?.marginLeft);
+  const paddingPx = parseCssLengthToPx(node.style?.paddingLeft);
+  const indentPx = parseCssLengthToPx(node.style?.textIndent);
+  const px = Math.max(marginPx || 0, paddingPx || 0, indentPx || 0);
+
+  if (px < 14) return '';
+  const level = Math.min(4, Math.max(1, Math.round(px / 32)));
+  return `rich-indent-${level}`;
+}
+
+function getSafeExistingRichClasses(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return [];
+  return Array.from(node.classList || []).filter((className) => (
+    ['rich-align-center', 'rich-align-right', 'rich-align-justify', 'rich-size-small', 'rich-size-large', 'rich-size-xlarge', 'rich-indent-1', 'rich-indent-2', 'rich-indent-3', 'rich-indent-4'].includes(className)
+  ));
+}
+
+function getSafeRichClasses(node, mappedTag) {
+  const classes = new Set(getSafeExistingRichClasses(node));
+  const align = getNodeTextAlign(node);
+  const sizeClass = getSafeSizeClass(node, mappedTag);
+  const indentClass = getSafeIndentClass(node);
+
+  if (align === 'center' || align === 'right' || align === 'justify') {
+    classes.add(`rich-align-${align}`);
+  }
+
+  if (sizeClass) classes.add(sizeClass);
+  if (indentClass) classes.add(indentClass);
+
+  return Array.from(classes);
+}
+
+function isNodeBold(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  const weight = String(node.style?.fontWeight || '').toLowerCase();
+  return weight === 'bold' || Number.parseInt(weight, 10) >= 600;
+}
+
+function isNodeItalic(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  return String(node.style?.fontStyle || '').toLowerCase() === 'italic';
+}
+
+function appendCleanChildren(target, node) {
+  Array.from(node.childNodes).forEach((child) => {
+    const cleanChild = cleanRichNode(child);
+    if (cleanChild) target.append(cleanChild);
+  });
 }
 
 function cleanRichNode(node) {
@@ -288,8 +411,8 @@ function cleanRichNode(node) {
   }
 
   const sourceTag = node.tagName.toLowerCase();
-  const mappedTag = sourceTag === 'b' ? 'strong' : sourceTag === 'i' ? 'em' : sourceTag;
-  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div'];
+  const mappedTag = mapRichTag(sourceTag);
+  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div', 'span', 'h2', 'h3', 'h4'];
 
   if (mappedTag === 'br') {
     return document.createElement('br');
@@ -297,25 +420,38 @@ function cleanRichNode(node) {
 
   if (!allowedTags.includes(mappedTag)) {
     const fragment = document.createDocumentFragment();
-    Array.from(node.childNodes).forEach((child) => {
-      const cleanChild = cleanRichNode(child);
-      if (cleanChild) fragment.append(cleanChild);
-    });
+    appendCleanChildren(fragment, node);
+    return fragment;
+  }
+
+  const safeClasses = getSafeRichClasses(node, mappedTag);
+  const shouldWrapBold = isNodeBold(node) && mappedTag !== 'strong';
+  const shouldWrapItalic = isNodeItalic(node) && mappedTag !== 'em';
+
+  if (mappedTag === 'span' && !safeClasses.length && !shouldWrapBold && !shouldWrapItalic) {
+    const fragment = document.createDocumentFragment();
+    appendCleanChildren(fragment, node);
     return fragment;
   }
 
   const cleanNode = document.createElement(mappedTag);
-  const align = getNodeTextAlign(node);
+  if (safeClasses.length) cleanNode.className = safeClasses.join(' ');
 
-  if (align && ['p', 'div', 'li'].includes(mappedTag)) {
-    cleanNode.style.textAlign = align;
+  let childTarget = cleanNode;
+
+  if (shouldWrapBold) {
+    const strong = document.createElement('strong');
+    cleanNode.append(strong);
+    childTarget = strong;
   }
 
-  Array.from(node.childNodes).forEach((child) => {
-    const cleanChild = cleanRichNode(child);
-    if (cleanChild) cleanNode.append(cleanChild);
-  });
+  if (shouldWrapItalic) {
+    const em = document.createElement('em');
+    childTarget.append(em);
+    childTarget = em;
+  }
 
+  appendCleanChildren(childTarget, node);
   return cleanNode;
 }
 
@@ -335,6 +471,12 @@ function sanitizeRichText(value) {
 
   if (!output.textContent.trim()) return '';
   return output.innerHTML;
+}
+
+function richTextToPlainText(value) {
+  const template = document.createElement('template');
+  template.innerHTML = sanitizeRichText(value);
+  return template.content.textContent.trim();
 }
 
 function renderRichText(container, value, fallback = '') {

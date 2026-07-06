@@ -32,6 +32,7 @@ const postTitle = document.querySelector('#post-title');
 const postDescription = document.querySelector('#post-description');
 const postDescriptionEditor = document.querySelector('#post-description-editor');
 const richTextButtons = document.querySelectorAll('[data-rich-command]');
+const richFormatSelect = document.querySelector('#rich-format-select');
 const postImage = document.querySelector('#post-image');
 const postAlt = document.querySelector('#post-alt');
 const postStatus = document.querySelector('#post-status');
@@ -50,6 +51,7 @@ const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
 const postCategoryFilter = document.querySelector('#post-category-filter');
 const clearSearchButton = document.querySelector('#clear-search-button');
+let richEditorSavedRange = null;
 
 function showAlert(message, type = 'success') {
   adminAlert.textContent = message;
@@ -230,7 +232,17 @@ function escapeHtml(text) {
 }
 
 function looksLikeRichHtml(value) {
-  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span)\b/i.test(String(value || ''));
+  return /<\/?(p|br|strong|b|em|i|ul|ol|li|div|span|font|h[1-6])\b/i.test(String(value || ''));
+}
+
+function mapRichTag(sourceTag) {
+  if (sourceTag === 'b') return 'strong';
+  if (sourceTag === 'i') return 'em';
+  if (sourceTag === 'font') return 'span';
+  if (sourceTag === 'h1' || sourceTag === 'h2') return 'h2';
+  if (sourceTag === 'h3') return 'h3';
+  if (sourceTag === 'h4' || sourceTag === 'h5' || sourceTag === 'h6') return 'h4';
+  return sourceTag;
 }
 
 function convertPlainTextToRichHtml(value) {
@@ -254,13 +266,21 @@ function convertPlainTextToRichHtml(value) {
       return `<ol>${lines.map((line) => `<li>${escapeHtml(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`;
     }
 
+    if (lines.length === 1) {
+      const headingMatch = lines[0].match(/^\s*(#{1,3})\s+(.+)$/);
+      if (headingMatch) {
+        const headingTag = headingMatch[1].length === 1 ? 'h2' : headingMatch[1].length === 2 ? 'h3' : 'h4';
+        return `<${headingTag}>${escapeHtml(headingMatch[2])}</${headingTag}>`;
+      }
+    }
+
     return `<p>${lines.map(escapeHtml).join('<br>')}</p>`;
   }).filter(Boolean).join('');
 }
 
 function getSafeTextAlign(value) {
   const align = String(value || '').toLowerCase().trim();
-  return ['left', 'center', 'right'].includes(align) ? align : '';
+  return ['left', 'center', 'right', 'justify'].includes(align) ? align : '';
 }
 
 function getNodeTextAlign(node) {
@@ -268,6 +288,111 @@ function getNodeTextAlign(node) {
   const styleAlign = getSafeTextAlign(node.style?.textAlign);
   if (styleAlign) return styleAlign;
   return getSafeTextAlign(node.getAttribute('align'));
+}
+
+function parseCssLengthToPx(value) {
+  const raw = String(value || '').toLowerCase().trim();
+  if (!raw) return null;
+
+  if (['small', 'x-small'].includes(raw)) return 12;
+  if (['medium', 'normal'].includes(raw)) return 16;
+  if (raw === 'large') return 19;
+  if (raw === 'x-large') return 24;
+  if (raw === 'xx-large') return 30;
+
+  const match = raw.match(/^(-?\d+(?:\.\d+)?)(px|pt|em|rem|%)?$/);
+  if (!match) return null;
+
+  const number = Number.parseFloat(match[1]);
+  if (!Number.isFinite(number) || number <= 0) return null;
+
+  const unit = match[2] || 'px';
+  if (unit === 'pt') return number * 1.333;
+  if (unit === 'em' || unit === 'rem') return number * 16;
+  if (unit === '%') return (number / 100) * 16;
+  return number;
+}
+
+function getNodeFontSizePx(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return null;
+
+  const styleSize = parseCssLengthToPx(node.style?.fontSize);
+  if (styleSize) return styleSize;
+
+  if (node.tagName.toLowerCase() === 'font') {
+    const fontSize = Number.parseInt(node.getAttribute('size') || '', 10);
+    if (Number.isFinite(fontSize)) {
+      if (fontSize <= 2) return 13;
+      if (fontSize === 4) return 18;
+      if (fontSize === 5) return 22;
+      if (fontSize >= 6) return 26;
+    }
+  }
+
+  return null;
+}
+
+function getSafeSizeClass(node, mappedTag) {
+  if (['h2', 'h3', 'h4'].includes(mappedTag)) return '';
+  const px = getNodeFontSizePx(node);
+  if (!px) return '';
+  if (px <= 13) return 'rich-size-small';
+  if (px >= 24) return 'rich-size-xlarge';
+  if (px >= 18) return 'rich-size-large';
+  return '';
+}
+
+function getSafeIndentClass(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return '';
+  const marginPx = parseCssLengthToPx(node.style?.marginLeft);
+  const paddingPx = parseCssLengthToPx(node.style?.paddingLeft);
+  const indentPx = parseCssLengthToPx(node.style?.textIndent);
+  const px = Math.max(marginPx || 0, paddingPx || 0, indentPx || 0);
+
+  if (px < 14) return '';
+  const level = Math.min(4, Math.max(1, Math.round(px / 32)));
+  return `rich-indent-${level}`;
+}
+
+function getSafeExistingRichClasses(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return [];
+  return Array.from(node.classList || []).filter((className) => (
+    ['rich-align-center', 'rich-align-right', 'rich-align-justify', 'rich-size-small', 'rich-size-large', 'rich-size-xlarge', 'rich-indent-1', 'rich-indent-2', 'rich-indent-3', 'rich-indent-4'].includes(className)
+  ));
+}
+
+function getSafeRichClasses(node, mappedTag) {
+  const classes = new Set(getSafeExistingRichClasses(node));
+  const align = getNodeTextAlign(node);
+  const sizeClass = getSafeSizeClass(node, mappedTag);
+  const indentClass = getSafeIndentClass(node);
+
+  if (align === 'center' || align === 'right' || align === 'justify') {
+    classes.add(`rich-align-${align}`);
+  }
+
+  if (sizeClass) classes.add(sizeClass);
+  if (indentClass) classes.add(indentClass);
+
+  return Array.from(classes);
+}
+
+function isNodeBold(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  const weight = String(node.style?.fontWeight || '').toLowerCase();
+  return weight === 'bold' || Number.parseInt(weight, 10) >= 600;
+}
+
+function isNodeItalic(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  return String(node.style?.fontStyle || '').toLowerCase() === 'italic';
+}
+
+function appendCleanChildren(target, node) {
+  Array.from(node.childNodes).forEach((child) => {
+    const cleanChild = cleanRichNode(child);
+    if (cleanChild) target.append(cleanChild);
+  });
 }
 
 function cleanRichNode(node) {
@@ -280,8 +405,8 @@ function cleanRichNode(node) {
   }
 
   const sourceTag = node.tagName.toLowerCase();
-  const mappedTag = sourceTag === 'b' ? 'strong' : sourceTag === 'i' ? 'em' : sourceTag;
-  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div'];
+  const mappedTag = mapRichTag(sourceTag);
+  const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'div', 'span', 'h2', 'h3', 'h4'];
 
   if (mappedTag === 'br') {
     return document.createElement('br');
@@ -289,25 +414,38 @@ function cleanRichNode(node) {
 
   if (!allowedTags.includes(mappedTag)) {
     const fragment = document.createDocumentFragment();
-    Array.from(node.childNodes).forEach((child) => {
-      const cleanChild = cleanRichNode(child);
-      if (cleanChild) fragment.append(cleanChild);
-    });
+    appendCleanChildren(fragment, node);
+    return fragment;
+  }
+
+  const safeClasses = getSafeRichClasses(node, mappedTag);
+  const shouldWrapBold = isNodeBold(node) && mappedTag !== 'strong';
+  const shouldWrapItalic = isNodeItalic(node) && mappedTag !== 'em';
+
+  if (mappedTag === 'span' && !safeClasses.length && !shouldWrapBold && !shouldWrapItalic) {
+    const fragment = document.createDocumentFragment();
+    appendCleanChildren(fragment, node);
     return fragment;
   }
 
   const cleanNode = document.createElement(mappedTag);
-  const align = getNodeTextAlign(node);
+  if (safeClasses.length) cleanNode.className = safeClasses.join(' ');
 
-  if (align && ['p', 'div', 'li'].includes(mappedTag)) {
-    cleanNode.style.textAlign = align;
+  let childTarget = cleanNode;
+
+  if (shouldWrapBold) {
+    const strong = document.createElement('strong');
+    cleanNode.append(strong);
+    childTarget = strong;
   }
 
-  Array.from(node.childNodes).forEach((child) => {
-    const cleanChild = cleanRichNode(child);
-    if (cleanChild) cleanNode.append(cleanChild);
-  });
+  if (shouldWrapItalic) {
+    const em = document.createElement('em');
+    childTarget.append(em);
+    childTarget = em;
+  }
 
+  appendCleanChildren(childTarget, node);
   return cleanNode;
 }
 
@@ -373,6 +511,24 @@ function syncDescriptionFieldFromEditor() {
   postDescription.value = postDescriptionEditor.innerHTML;
 }
 
+function saveRichEditorSelection() {
+  if (!postDescriptionEditor) return;
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+  if (!postDescriptionEditor.contains(range.commonAncestorContainer)) return;
+  richEditorSavedRange = range.cloneRange();
+}
+
+function restoreRichEditorSelection() {
+  if (!postDescriptionEditor || !richEditorSavedRange) return;
+  const selection = window.getSelection();
+  if (!selection) return;
+  selection.removeAllRanges();
+  selection.addRange(richEditorSavedRange);
+}
+
 function insertHtmlAtCursor(html) {
   postDescriptionEditor?.focus();
 
@@ -413,9 +569,42 @@ function handleRichTextPaste(event) {
 function runRichTextCommand(command) {
   if (!command || !postDescriptionEditor) return;
   postDescriptionEditor.focus();
+  restoreRichEditorSelection();
   document.execCommand(command, false, null);
   syncDescriptionFieldFromEditor();
   updateLivePreview();
+  updateRichFormatControl();
+}
+
+function applyRichTextBlockFormat(blockTag) {
+  if (!postDescriptionEditor) return;
+  const safeBlockTag = ['p', 'h2', 'h3', 'h4'].includes(blockTag) ? blockTag : 'p';
+  postDescriptionEditor.focus();
+  restoreRichEditorSelection();
+  document.execCommand('formatBlock', false, `<${safeBlockTag}>`);
+  syncDescriptionFieldFromEditor();
+  updateLivePreview();
+  updateRichFormatControl();
+}
+
+function getCurrentRichBlockTag() {
+  const selection = window.getSelection();
+  if (!selection || !selection.anchorNode || !postDescriptionEditor?.contains(selection.anchorNode)) return 'p';
+
+  let node = selection.anchorNode.nodeType === Node.ELEMENT_NODE ? selection.anchorNode : selection.anchorNode.parentElement;
+  while (node && node !== postDescriptionEditor) {
+    const tag = node.tagName?.toLowerCase();
+    if (['h2', 'h3', 'h4', 'p'].includes(tag)) return tag;
+    node = node.parentElement;
+  }
+
+  return 'p';
+}
+
+function updateRichFormatControl() {
+  if (!richFormatSelect) return;
+  const currentBlockTag = getCurrentRichBlockTag();
+  if (richFormatSelect.value !== currentBlockTag) richFormatSelect.value = currentBlockTag;
 }
 
 function normalizeSearchText(text) {
@@ -1518,18 +1707,43 @@ postImage.addEventListener('change', () => {
 
 if (postDescriptionEditor) {
   postDescriptionEditor.addEventListener('input', () => {
+    saveRichEditorSelection();
     syncDescriptionFieldFromEditor();
     updateLivePreview();
+    updateRichFormatControl();
   });
   postDescriptionEditor.addEventListener('paste', handleRichTextPaste);
-  postDescriptionEditor.addEventListener('blur', () => {
+  postDescriptionEditor.addEventListener('keyup', () => {
+    saveRichEditorSelection();
+    updateRichFormatControl();
+  });
+  postDescriptionEditor.addEventListener('mouseup', () => {
+    saveRichEditorSelection();
+    updateRichFormatControl();
+  });
+  postDescriptionEditor.addEventListener('blur', (event) => {
+    saveRichEditorSelection();
+
+    if (event.relatedTarget?.closest?.('.rich-editor-toolbar')) {
+      return;
+    }
+
     setDescriptionEditorContent(getEditorRawHtml());
     updateLivePreview();
+    updateRichFormatControl();
   });
 }
 
+if (richFormatSelect) {
+  richFormatSelect.addEventListener('mousedown', saveRichEditorSelection);
+  richFormatSelect.addEventListener('change', () => applyRichTextBlockFormat(richFormatSelect.value));
+}
+
 richTextButtons.forEach((button) => {
-  button.addEventListener('mousedown', (event) => event.preventDefault());
+  button.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+    saveRichEditorSelection();
+  });
   button.addEventListener('click', () => runRichTextCommand(button.dataset.richCommand));
 });
 

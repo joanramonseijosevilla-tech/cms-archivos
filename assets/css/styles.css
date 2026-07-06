@@ -591,14 +591,20 @@ code {
 .rich-text-content p,
 .rich-text-content div,
 .rich-text-content ul,
-.rich-text-content ol {
+.rich-text-content ol,
+.rich-text-content h2,
+.rich-text-content h3,
+.rich-text-content h4 {
   margin: 0 0 0.75rem;
 }
 
 .rich-text-content p:last-child,
 .rich-text-content div:last-child,
 .rich-text-content ul:last-child,
-.rich-text-content ol:last-child {
+.rich-text-content ol:last-child,
+.rich-text-content h2:last-child,
+.rich-text-content h3:last-child,
+.rich-text-content h4:last-child {
   margin-bottom: 0;
 }
 
@@ -611,12 +617,40 @@ code {
   margin: 0.22rem 0;
 }
 
+.rich-text-content h2,
+.rich-text-content h3,
+.rich-text-content h4 {
+  color: inherit;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.rich-text-content h2 { font-size: 1.35em; }
+.rich-text-content h3 { font-size: 1.18em; }
+.rich-text-content h4 { font-size: 1.05em; }
+
+.rich-size-small { font-size: 0.92em; }
+.rich-size-large { font-size: 1.16em; }
+.rich-size-xlarge { font-size: 1.32em; }
+
+.rich-align-center { text-align: center; }
+.rich-align-right { text-align: right; }
+.rich-align-justify { text-align: justify; }
+
+.rich-indent-1 { margin-left: 1.25rem; }
+.rich-indent-2 { margin-left: 2.25rem; }
+.rich-indent-3 { margin-left: 3.25rem; }
+.rich-indent-4 { margin-left: 4.25rem; }
+
 .post-card-description.rich-text-content {
   color: var(--muted);
 }
 
 .post-card .rich-text-content p,
 .post-card .rich-text-content div,
-.post-card .rich-text-content li {
+.post-card .rich-text-content li,
+.post-card .rich-text-content h2,
+.post-card .rich-text-content h3,
+.post-card .rich-text-content h4 {
   white-space: normal;
 }
