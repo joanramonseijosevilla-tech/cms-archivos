@@ -1,7 +1,22 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T20:16:46.658Z",
+  "updatedAt": "2026-07-06T03:41:59.968Z",
   "items": [
+    {
+      "id": "pub_20260706054159",
+      "title": "Prueba 3. Proyectos",
+      "description": "<h2>Crear viñetas personalizadas con imágenes o símbolos</h2><div><ul><li>Se aplica a</li></ul></div><div><div></div></div><div><p>Las viñetas o símbolos de imágenes personalizadas pueden agregar interés visual a una lista de Word. Si alguien le envía un documento con un estilo de viñeta que le guste, puede agregar el estilo a la Biblioteca de viñetas para usarlo de nuevo.</p><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>No puede crear viñetas personalizadas en Word para la Web. Si es el propietario de la versión de escritorio de Word, puede usarla para hacer más cosas con viñetas. Si no es así, ahora puede&nbsp;probar&nbsp;o&nbsp;comprar&nbsp;la última versión de Office.</p></div><p></p><h2>Agregar viñetas o símbolos de imagen a una lista</h2><p>La Biblioteca de viñetas incluye estilos de viñeta de imagen y símbolos. Si no ve el estilo que desea en la biblioteca, puede definir un nuevo estilo de viñeta.</p><ol class=\"rich-indent-1\"><li>Haga clic en la lista a la que desea agregar viñetas o símbolos de imagen.<br>Para cambiar un nivel de lista completo en una lista con varios niveles, haga clic en una viñeta o número en ese nivel de la lista.</li><li>En la pestaña&nbsp;<strong>Inicio</strong>&nbsp;, en el grupo&nbsp;<strong>Párrafo</strong>&nbsp;, haga clic en la flecha situada junto a&nbsp;<strong>Viñetas</strong>&nbsp;y, a continuación, haga clic en&nbsp;<strong>Definir nueva viñeta</strong></li></ol></div>",
+      "image": {
+        "src": "assets/uploads/20260706-054159-array-aggregator-make.png",
+        "path": "assets/uploads/20260706-054159-array-aggregator-make.png",
+        "alt": "Prueba 3. Proyectos"
+      },
+      "status": "published",
+      "category": "proyectos",
+      "createdAt": "2026-07-06T03:41:59.968Z",
+      "updatedAt": "2026-07-06T03:41:59.968Z",
+      "order": 0
+    },
     {
       "id": "pub_20260705221646",
       "title": "Prueba Editor",
@@ -15,7 +30,7 @@
       "category": "galeria",
       "createdAt": "2026-07-05T20:16:46.658Z",
       "updatedAt": "2026-07-05T20:16:46.658Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260705130227",
@@ -30,7 +45,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-05T11:02:27.844Z",
       "updatedAt": "2026-07-05T11:02:27.844Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260705121737",
@@ -44,7 +59,7 @@
       "status": "published",
       "createdAt": "2026-07-05T10:17:37.398Z",
       "updatedAt": "2026-07-05T10:17:37.398Z",
-      "order": 2,
+      "order": 3,
       "category": "galeria"
     },
     {
@@ -59,7 +74,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:35:58.479Z",
       "updatedAt": "2026-07-05T10:19:28.843Z",
-      "order": 3,
+      "order": 4,
       "category": "galeria"
     },
     {
@@ -74,7 +89,7 @@
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
       "updatedAt": "2026-07-05T10:22:19.627Z",
-      "order": 4,
+      "order": 5,
       "category": "galeria"
     },
     {
@@ -89,7 +104,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:58:27.335Z",
       "updatedAt": "2026-07-05T09:40:47.060Z",
-      "order": 5,
+      "order": 6,
       "category": "galeria"
     },
     {
@@ -104,7 +119,7 @@
       "status": "published",
       "createdAt": "2026-07-04T20:03:31.261Z",
       "updatedAt": "2026-07-05T10:01:40.717Z",
-      "order": 6,
+      "order": 7,
       "category": "galeria"
     },
     {
@@ -119,7 +134,7 @@
       "status": "published",
       "createdAt": "2026-07-04T19:14:42.512Z",
       "updatedAt": "2026-07-05T03:42:46.041Z",
-      "order": 7,
+      "order": 8,
       "category": "galeria"
     },
     {
@@ -134,7 +149,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
       "updatedAt": "2026-07-05T06:10:34.592Z",
-      "order": 8,
+      "order": 9,
       "category": "galeria"
     },
     {
@@ -149,7 +164,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:11:05.861Z",
       "updatedAt": "2026-07-04T18:11:05.861Z",
-      "order": 9,
+      "order": 10,
       "category": "galeria"
     },
     {
@@ -164,7 +179,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:44:30.869Z",
       "updatedAt": "2026-07-04T18:41:28.903Z",
-      "order": 10,
+      "order": 11,
       "category": "galeria"
     },
     {
@@ -179,7 +194,7 @@
       "createdAt": "2026-07-04T17:38:59.299Z",
       "updatedAt": "2026-07-04T17:38:59.300Z",
       "description": "D8",
-      "order": 11,
+      "order": 12,
       "category": "galeria"
     },
     {
@@ -194,7 +209,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
       "updatedAt": "2026-07-04T17:17:52.708Z",
-      "order": 12,
+      "order": 13,
       "category": "galeria"
     },
     {
@@ -209,7 +224,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
       "updatedAt": "2026-07-05T07:46:14.660Z",
-      "order": 13,
+      "order": 14,
       "category": "galeria"
     },
     {
@@ -224,7 +239,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
       "updatedAt": "2026-07-05T09:21:31.969Z",
-      "order": 14,
+      "order": 15,
       "category": "galeria"
     }
   ]
