@@ -1,22 +1,7 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-06T03:47:00.747Z",
+  "updatedAt": "2026-07-06T19:13:45.806Z",
   "items": [
-    {
-      "id": "pub_20260706054159",
-      "title": "Prueba 3. Proyectos Mod",
-      "description": "<h2>Crear viñetas personalizadas con imágenes o símbolos</h2><div><ul><ul><li>Se aplica a</li></ul></ul></div><div><div></div></div><div><p>Las viñetas o símbolos de imágenes personalizadas pueden agregar interés visual a una lista de Word. Si alguien le envía un documento con un estilo de viñeta que le guste, puede agregar el estilo a la Biblioteca de viñetas para usarlo de nuevo.</p><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>No puede crear viñetas personalizadas en Word para la Web. Si es el propietario de la versión de escritorio de Word, puede usarla para hacer más cosas con viñetas. Si no es así, ahora puede&nbsp;probar&nbsp;o&nbsp;comprar&nbsp;la última versión de Office.</p></div><p></p><h2>Agregar viñetas o símbolos de imagen a una lista</h2><p>La Biblioteca de viñetas incluye estilos de viñeta de imagen y símbolos. Si no ve el estilo que desea en la biblioteca, puede definir un nuevo estilo de viñeta.</p><ol class=\"rich-indent-1\"><ol><li>Haga clic en la lista a la que desea agregar viñetas o símbolos de imagen.<br>Para cambiar un nivel de lista completo en una lista con varios niveles, haga clic en una viñeta o número en ese nivel de la lista.</li><li>En la pestaña&nbsp;<strong>Inicio</strong>&nbsp;, en el grupo&nbsp;<strong>Párrafo</strong>&nbsp;, haga clic en la flecha situada junto a&nbsp;<strong>Viñetas</strong>&nbsp;y, a continuación, haga clic en&nbsp;<strong>Definir nueva viñeta</strong></li></ol></ol></div>",
-      "image": {
-        "src": "assets/uploads/20260706-054159-array-aggregator-make.png",
-        "path": "assets/uploads/20260706-054159-array-aggregator-make.png",
-        "alt": "Prueba 3. Proyectos"
-      },
-      "status": "published",
-      "category": "proyectos",
-      "createdAt": "2026-07-06T03:41:59.968Z",
-      "updatedAt": "2026-07-06T03:45:22.691Z",
-      "order": 0
-    },
     {
       "id": "pub_20260705130227",
       "title": "Prueba de Categoria. Proyectos",
@@ -30,7 +15,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-05T11:02:27.844Z",
       "updatedAt": "2026-07-05T11:02:27.844Z",
-      "order": 1
+      "order": 0
     },
     {
       "id": "pub_20260705121737",
@@ -44,8 +29,23 @@
       "status": "published",
       "createdAt": "2026-07-05T10:17:37.398Z",
       "updatedAt": "2026-07-05T10:17:37.398Z",
-      "order": 2,
+      "order": 1,
       "category": "galeria"
+    },
+    {
+      "id": "pub_20260706054159",
+      "title": "Prueba 3. Proyectos Mod",
+      "description": "<h2>Crear viñetas personalizadas con imágenes o símbolos</h2><div><ul><ul><li>Se aplica a</li></ul></ul></div><div><div></div></div><div><p>Las viñetas o símbolos de imágenes personalizadas pueden agregar interés visual a una lista de Word. Si alguien le envía un documento con un estilo de viñeta que le guste, puede agregar el estilo a la Biblioteca de viñetas para usarlo de nuevo.</p><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>No puede crear viñetas personalizadas en Word para la Web. Si es el propietario de la versión de escritorio de Word, puede usarla para hacer más cosas con viñetas. Si no es así, ahora puede&nbsp;probar&nbsp;o&nbsp;comprar&nbsp;la última versión de Office.</p></div><p></p><h2>Agregar viñetas o símbolos de imagen a una lista</h2><p>La Biblioteca de viñetas incluye estilos de viñeta de imagen y símbolos. Si no ve el estilo que desea en la biblioteca, puede definir un nuevo estilo de viñeta.</p><ol class=\"rich-indent-1\"><ol><li>Haga clic en la lista a la que desea agregar viñetas o símbolos de imagen.<br>Para cambiar un nivel de lista completo en una lista con varios niveles, haga clic en una viñeta o número en ese nivel de la lista.</li><li>En la pestaña&nbsp;<strong>Inicio</strong>&nbsp;, en el grupo&nbsp;<strong>Párrafo</strong>&nbsp;, haga clic en la flecha situada junto a&nbsp;<strong>Viñetas</strong>&nbsp;y, a continuación, haga clic en&nbsp;<strong>Definir nueva viñeta</strong></li></ol></ol></div>",
+      "image": {
+        "src": "assets/uploads/20260706-054159-array-aggregator-make.png",
+        "path": "assets/uploads/20260706-054159-array-aggregator-make.png",
+        "alt": "Prueba 3. Proyectos"
+      },
+      "status": "published",
+      "category": "proyectos",
+      "createdAt": "2026-07-06T03:41:59.968Z",
+      "updatedAt": "2026-07-06T03:45:22.691Z",
+      "order": 2
     },
     {
       "id": "pub_20260705113558",
