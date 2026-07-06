@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-06T19:16:38.599Z",
+  "updatedAt": "2026-07-06T19:18:45.166Z",
   "items": [
     {
       "id": "pub_20260705130227",
@@ -73,9 +73,11 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
-      "updatedAt": "2026-07-05T10:22:19.627Z",
+      "updatedAt": "2026-07-06T19:18:45.166Z",
       "order": 4,
-      "category": "galeria"
+      "category": "galeria",
+      "deleted": true,
+      "deletedAt": "2026-07-06T19:18:45.166Z"
     },
     {
       "id": "pub_20260705095827",
