@@ -189,8 +189,12 @@ function setImageSrc(img, src) {
   img.src = primarySrc;
 }
 
+function isDeletedItem(item) {
+  return item?.deleted === true || item?.status === 'deleted';
+}
+
 function isPublishedItem(item) {
-  return item?.status !== 'hidden' && item?.status !== 'draft';
+  return !isDeletedItem(item) && item?.status !== 'hidden' && item?.status !== 'draft';
 }
 
 function getCategoryCounts(items) {

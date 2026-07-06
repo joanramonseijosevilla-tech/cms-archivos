@@ -192,11 +192,16 @@ function formatDate(dateString) {
   return new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
 
+function isItemDeleted(item) {
+  return item?.deleted === true || item?.status === 'deleted';
+}
+
 function getItemStatus(item) {
   return item?.status === 'hidden' || item?.status === 'draft' ? 'hidden' : 'published';
 }
 
 function getStatusLabel(item) {
+  if (isItemDeleted(item)) return 'Papelera';
   return getItemStatus(item) === 'hidden' ? 'Oculto' : 'Publicado';
 }
 
@@ -205,7 +210,7 @@ function getFormStatus() {
 }
 
 function isItemPublished(item) {
-  return getItemStatus(item) === 'published';
+  return !isItemDeleted(item) && getItemStatus(item) === 'published';
 }
 
 function isValidPostCategory(category) {
@@ -637,7 +642,7 @@ function hasActiveSearch() {
 }
 
 function getStatusFilter() {
-  return state.statusFilter === 'published' || state.statusFilter === 'hidden'
+  return ['published', 'hidden', 'trash'].includes(state.statusFilter)
     ? state.statusFilter
     : 'all';
 }
@@ -660,6 +665,9 @@ function hasActiveListFilter() {
 
 function itemMatchesStatusFilter(item) {
   const filter = getStatusFilter();
+
+  if (filter === 'trash') return isItemDeleted(item);
+  if (isItemDeleted(item)) return false;
   if (filter === 'all') return true;
   if (filter === 'published') return isItemPublished(item);
   return !isItemPublished(item);
@@ -673,17 +681,20 @@ function itemMatchesCategoryFilter(item) {
 
 function getPostStats(items) {
   const safeItems = Array.isArray(items) ? items : [];
-  const published = safeItems.filter((item) => isItemPublished(item)).length;
-  const hidden = safeItems.length - published;
+  const activeItems = safeItems.filter((item) => !isItemDeleted(item));
+  const deleted = safeItems.length - activeItems.length;
+  const published = activeItems.filter((item) => isItemPublished(item)).length;
+  const hidden = activeItems.length - published;
   const categoryCounts = POST_CATEGORIES.reduce((counts, category) => {
-    counts[category.value] = safeItems.filter((item) => getItemCategory(item) === category.value).length;
+    counts[category.value] = activeItems.filter((item) => getItemCategory(item) === category.value).length;
     return counts;
   }, {});
 
   return {
-    total: safeItems.length,
+    total: activeItems.length,
     published,
     hidden,
+    deleted,
     categories: categoryCounts
   };
 }
@@ -695,6 +706,7 @@ function buildStatusText(displayedCount, fullItems) {
     `Total: ${stats.total}`,
     `Publicadas: ${stats.published}`,
     `Ocultas: ${stats.hidden}`,
+    `Papelera: ${stats.deleted}`,
     `Galería: ${stats.categories.galeria || 0}`,
     `Proyectos: ${stats.categories.proyectos || 0}`,
     `Novedades: ${stats.categories.novedades || 0}`
@@ -987,6 +999,7 @@ function renderAdminPosts() {
   }
 
   const fullOrderedItems = getOrderedItems(state.items);
+  const activeOrderedItems = fullOrderedItems.filter((item) => !isItemDeleted(item));
   const filterActive = hasActiveListFilter();
   const displayedItems = fullOrderedItems.filter((item) => (
     itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item) && itemMatchesCategoryFilter(item)
@@ -1060,50 +1073,71 @@ function renderAdminPosts() {
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
 
-      const moveUpButton = document.createElement('button');
-      moveUpButton.type = 'button';
-      moveUpButton.className = 'button button-secondary';
-      moveUpButton.textContent = 'Subir';
-      moveUpButton.disabled = filterActive || fullIndex === 0;
-      moveUpButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
-      moveUpButton.addEventListener('click', () => movePost(item, -1));
+      if (isItemDeleted(item)) {
+        const restoreButton = document.createElement('button');
+        restoreButton.type = 'button';
+        restoreButton.className = 'button button-secondary';
+        restoreButton.textContent = 'Restaurar';
+        restoreButton.addEventListener('click', () => restorePost(item));
 
-      const moveDownButton = document.createElement('button');
-      moveDownButton.type = 'button';
-      moveDownButton.className = 'button button-secondary';
-      moveDownButton.textContent = 'Bajar';
-      moveDownButton.disabled = filterActive || fullIndex === fullOrderedItems.length - 1;
-      moveDownButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
-      moveDownButton.addEventListener('click', () => movePost(item, 1));
+        const deleteForeverButton = document.createElement('button');
+        deleteForeverButton.type = 'button';
+        deleteForeverButton.className = 'button button-danger';
+        deleteForeverButton.textContent = 'Eliminar definitivamente';
+        deleteForeverButton.addEventListener('click', () => deletePostForever(item));
 
-      const toggleStatusButton = document.createElement('button');
-      toggleStatusButton.type = 'button';
-      toggleStatusButton.className = 'button button-secondary';
-      toggleStatusButton.textContent = isItemPublished(item) ? 'Ocultar' : 'Publicar';
-      toggleStatusButton.addEventListener('click', () => togglePostStatus(item));
+        actions.append(restoreButton, deleteForeverButton);
+      } else {
+        const activeIndex = activeOrderedItems.findIndex((orderedItem) => orderedItem.id === item.id);
 
-      const editButton = document.createElement('button');
-      editButton.type = 'button';
-      editButton.className = 'button button-secondary';
-      editButton.textContent = 'Editar';
-      editButton.addEventListener('click', () => startEdit(item));
+        const moveUpButton = document.createElement('button');
+        moveUpButton.type = 'button';
+        moveUpButton.className = 'button button-secondary';
+        moveUpButton.textContent = 'Subir';
+        moveUpButton.disabled = filterActive || activeIndex === 0;
+        moveUpButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
+        moveUpButton.addEventListener('click', () => movePost(item, -1));
 
-      const deleteButton = document.createElement('button');
-      deleteButton.type = 'button';
-      deleteButton.className = 'button button-danger';
-      deleteButton.textContent = 'Eliminar';
-      deleteButton.addEventListener('click', () => deletePost(item));
+        const moveDownButton = document.createElement('button');
+        moveDownButton.type = 'button';
+        moveDownButton.className = 'button button-secondary';
+        moveDownButton.textContent = 'Bajar';
+        moveDownButton.disabled = filterActive || activeIndex === activeOrderedItems.length - 1;
+        moveDownButton.title = filterActive ? 'Limpia la búsqueda y los filtros para cambiar el orden.' : '';
+        moveDownButton.addEventListener('click', () => movePost(item, 1));
 
-      actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, deleteButton);
+        const toggleStatusButton = document.createElement('button');
+        toggleStatusButton.type = 'button';
+        toggleStatusButton.className = 'button button-secondary';
+        toggleStatusButton.textContent = isItemPublished(item) ? 'Ocultar' : 'Publicar';
+        toggleStatusButton.addEventListener('click', () => togglePostStatus(item));
+
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'button button-secondary';
+        editButton.textContent = 'Editar';
+        editButton.addEventListener('click', () => startEdit(item));
+
+        const trashButton = document.createElement('button');
+        trashButton.type = 'button';
+        trashButton.className = 'button button-danger';
+        trashButton.textContent = 'Papelera';
+        trashButton.title = 'Mover a papelera';
+        trashButton.addEventListener('click', () => movePostToTrash(item));
+
+        actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, trashButton);
+      }
       content.append(title, meta, description, actions);
       card.append(img, content);
       fragment.append(card);
     });
 
-  if (filterActive && !displayedItems.length) {
+  if (!displayedItems.length) {
     const emptySearch = document.createElement('p');
     emptySearch.className = 'status';
-    emptySearch.textContent = 'No hay publicaciones que coincidan con la búsqueda o el filtro seleccionado.';
+    emptySearch.textContent = filterActive
+      ? 'No hay publicaciones que coincidan con la búsqueda o el filtro seleccionado.'
+      : 'No hay publicaciones activas. Revisa la papelera si esperabas ver contenido.';
     fragment.append(emptySearch);
   }
 
@@ -1514,20 +1548,22 @@ function movePost(item, direction) {
   const currentItems = normalizeItemsWithOrder(
     Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
   );
-  const currentIndex = currentItems.findIndex((currentItem) => currentItem.id === item.id);
+  const activeItems = currentItems.filter((currentItem) => !isItemDeleted(currentItem));
+  const deletedItems = currentItems.filter((currentItem) => isItemDeleted(currentItem));
+  const currentIndex = activeItems.findIndex((currentItem) => currentItem.id === item.id);
   const nextIndex = currentIndex + direction;
 
-  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= currentItems.length) return;
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= activeItems.length) return;
 
   if (!state.orderDirty) {
     state.orderOriginalItems = currentItems.map((currentItem) => ({ ...currentItem }));
   }
 
-  const reorderedItems = currentItems.slice();
+  const reorderedItems = activeItems.slice();
   const [movedItem] = reorderedItems.splice(currentIndex, 1);
   reorderedItems.splice(nextIndex, 0, movedItem);
 
-  state.items = reorderedItems.map((currentItem, index) => ({
+  state.items = [...reorderedItems, ...deletedItems].map((currentItem, index) => ({
     ...currentItem,
     order: index
   }));
@@ -1618,9 +1654,87 @@ async function togglePostStatus(item) {
   }
 }
 
-async function deletePost(item) {
+async function movePostToTrash(item) {
   if (blockIfPendingOrder()) return;
-  const confirmed = window.confirm(`¿Eliminar "${item.title || 'esta publicación'}"?`);
+  const confirmed = window.confirm(`¿Mover "${item.title || 'esta publicación'}" a la papelera? Podrás restaurarla después.`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (currentItem.id !== item.id) return currentItem;
+        return {
+          ...currentItem,
+          deleted: true,
+          deletedAt: nowIso,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'trash',
+      id: item.id
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert('Publicación movida a la papelera.');
+    if (postId.value === item.id) resetForm();
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
+
+async function restorePost(item) {
+  if (blockIfPendingOrder()) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (currentItem.id !== item.id) return currentItem;
+        const { deleted, deletedAt, ...restoredItem } = currentItem;
+        return {
+          ...restoredItem,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'restore',
+      id: item.id
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert('Publicación restaurada correctamente.');
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
+
+async function deletePostForever(item) {
+  if (blockIfPendingOrder()) return;
+  const confirmed = window.confirm(`¿Eliminar definitivamente "${item.title || 'esta publicación'}"? Esta acción no se puede deshacer.`);
   if (!confirmed) return;
 
   try {
@@ -1634,6 +1748,7 @@ async function deletePost(item) {
       items: normalizeItemsWithOrder(currentItems.filter((currentItem) => currentItem.id !== item.id))
     };
     const payload = attachPublicacionesPayload({
+      action: 'delete_forever',
       id: item.id,
       imagePath: item.image?.path
     }, nextPublicacionesJson);
@@ -1643,8 +1758,7 @@ async function deletePost(item) {
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
-    showAlert('Publicación eliminada correctamente.');
-    if (postId.value === item.id) resetForm();
+    showAlert('Publicación eliminada definitivamente.');
   } catch (error) {
     showAlert(error.message, 'error');
     console.error(error);
