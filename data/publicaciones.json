@@ -1,7 +1,22 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-05T11:02:27.844Z",
+  "updatedAt": "2026-07-05T20:16:46.658Z",
   "items": [
+    {
+      "id": "pub_20260705221646",
+      "title": "Prueba Editor",
+      "description": "Esto es una pueda<div><ul><li style=\"text-align: left;\">Ahora</li><li style=\"text-align: left;\">dddd</li><li style=\"text-align: left;\">dddd</li><li style=\"text-align: left;\">dddd</li><li style=\"text-align: left;\">dddd</li><li style=\"text-align: left;\">dddd</li><li style=\"text-align: left;\">ddd</li></ul><div>A ver que tal queda todo</div></div><div><ol><li>sddssds</li><li>dsdsdsds</li><li>dsdsdsdsd</li><li>sdsdsdsd</li><li>dsdsdsdsds</li></ol><div><br></div></div>",
+      "image": {
+        "src": "assets/uploads/20260705-221646-conexion-airtable.png",
+        "path": "assets/uploads/20260705-221646-conexion-airtable.png",
+        "alt": "Prueba Editor"
+      },
+      "status": "published",
+      "category": "galeria",
+      "createdAt": "2026-07-05T20:16:46.658Z",
+      "updatedAt": "2026-07-05T20:16:46.658Z",
+      "order": 0
+    },
     {
       "id": "pub_20260705130227",
       "title": "Prueba de Categoria. Proyectos",
@@ -15,7 +30,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-05T11:02:27.844Z",
       "updatedAt": "2026-07-05T11:02:27.844Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260705121737",
@@ -29,7 +44,7 @@
       "status": "published",
       "createdAt": "2026-07-05T10:17:37.398Z",
       "updatedAt": "2026-07-05T10:17:37.398Z",
-      "order": 1,
+      "order": 2,
       "category": "galeria"
     },
     {
@@ -44,7 +59,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:35:58.479Z",
       "updatedAt": "2026-07-05T10:19:28.843Z",
-      "order": 2,
+      "order": 3,
       "category": "galeria"
     },
     {
@@ -59,7 +74,7 @@
       "status": "published",
       "createdAt": "2026-07-05T06:50:00.143Z",
       "updatedAt": "2026-07-05T10:22:19.627Z",
-      "order": 3,
+      "order": 4,
       "category": "galeria"
     },
     {
@@ -74,7 +89,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:58:27.335Z",
       "updatedAt": "2026-07-05T09:40:47.060Z",
-      "order": 4,
+      "order": 5,
       "category": "galeria"
     },
     {
@@ -89,7 +104,7 @@
       "status": "published",
       "createdAt": "2026-07-04T20:03:31.261Z",
       "updatedAt": "2026-07-05T10:01:40.717Z",
-      "order": 5,
+      "order": 6,
       "category": "galeria"
     },
     {
@@ -104,7 +119,7 @@
       "status": "published",
       "createdAt": "2026-07-04T19:14:42.512Z",
       "updatedAt": "2026-07-05T03:42:46.041Z",
-      "order": 6,
+      "order": 7,
       "category": "galeria"
     },
     {
@@ -119,7 +134,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
       "updatedAt": "2026-07-05T06:10:34.592Z",
-      "order": 7,
+      "order": 8,
       "category": "galeria"
     },
     {
@@ -134,7 +149,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:11:05.861Z",
       "updatedAt": "2026-07-04T18:11:05.861Z",
-      "order": 8,
+      "order": 9,
       "category": "galeria"
     },
     {
@@ -149,7 +164,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:44:30.869Z",
       "updatedAt": "2026-07-04T18:41:28.903Z",
-      "order": 9,
+      "order": 10,
       "category": "galeria"
     },
     {
@@ -164,7 +179,7 @@
       "createdAt": "2026-07-04T17:38:59.299Z",
       "updatedAt": "2026-07-04T17:38:59.300Z",
       "description": "D8",
-      "order": 10,
+      "order": 11,
       "category": "galeria"
     },
     {
@@ -179,7 +194,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
       "updatedAt": "2026-07-04T17:17:52.708Z",
-      "order": 11,
+      "order": 12,
       "category": "galeria"
     },
     {
@@ -194,7 +209,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
       "updatedAt": "2026-07-05T07:46:14.660Z",
-      "order": 12,
+      "order": 13,
       "category": "galeria"
     },
     {
@@ -209,7 +224,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
       "updatedAt": "2026-07-05T09:21:31.969Z",
-      "order": 13,
+      "order": 14,
       "category": "galeria"
     }
   ]
