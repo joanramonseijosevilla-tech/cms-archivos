@@ -590,3 +590,47 @@ input[type="file"]::file-selector-button {
 .post-preview-description.rich-text-content h4 {
   white-space: normal;
 }
+
+
+.button-with-icon {
+  gap: 0.45rem;
+}
+
+.button-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 680px) {
+  .admin-body .rich-editor-toolbar {
+    align-items: center;
+  }
+
+  .admin-body .rich-editor-format-select {
+    width: 100%;
+    flex: 1 0 100%;
+  }
+
+  .admin-body .rich-editor-toolbar .button {
+    width: auto;
+    min-width: 42px;
+    flex: 0 0 auto;
+    padding: 0 0.65rem;
+  }
+
+  .admin-body .admin-post-actions {
+    gap: 0.5rem;
+  }
+
+  .admin-body .admin-post-actions .button {
+    width: auto;
+    min-width: 92px;
+    flex: 1 1 calc(50% - 0.5rem);
+    padding: 0 0.75rem;
+  }
+
+  .admin-body .admin-post-actions .button-trash {
+    flex-grow: 0;
+  }
+}

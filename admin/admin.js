@@ -1120,8 +1120,8 @@ function renderAdminPosts() {
 
         const trashButton = document.createElement('button');
         trashButton.type = 'button';
-        trashButton.className = 'button button-danger';
-        trashButton.textContent = 'Papelera';
+        trashButton.className = 'button button-danger button-with-icon button-trash';
+        trashButton.innerHTML = '<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" fill="currentColor"/></svg><span>Papelera</span>';
         trashButton.title = 'Mover a papelera';
         trashButton.addEventListener('click', () => movePostToTrash(item));
 
