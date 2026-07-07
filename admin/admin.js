@@ -7,6 +7,11 @@ const POST_CATEGORIES = [
   { value: 'novedades', label: 'Novedades' }
 ];
 const DEFAULT_POST_CATEGORY = 'galeria';
+const IMAGE_OUTPUT_MIME_TYPE = 'image/webp';
+const IMAGE_OUTPUT_EXTENSION = 'webp';
+const DEFAULT_IMAGE_MAX_SIDE_PX = 1600;
+const DEFAULT_IMAGE_WEBP_QUALITY = 0.85;
+const DEFAULT_MAX_SOURCE_IMAGE_MB = 20;
 
 const state = {
   items: [],
@@ -1284,6 +1289,11 @@ function fileToBase64(file) {
   });
 }
 
+function getConfigNumber(key, fallback) {
+  const value = Number(config?.[key]);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
 function validateImage(file, isEdit) {
   if (!file && !isEdit) {
     throw new Error('Selecciona una fotografía.');
@@ -1292,10 +1302,114 @@ function validateImage(file, isEdit) {
   if (!config.ALLOWED_IMAGE_TYPES.includes(file.type)) {
     throw new Error('Formato no permitido. Usa JPG, PNG o WebP.');
   }
+
+  const maxSourceMb = getConfigNumber('MAX_SOURCE_IMAGE_MB', DEFAULT_MAX_SOURCE_IMAGE_MB);
   const sizeMb = file.size / 1024 / 1024;
-  if (sizeMb > config.MAX_IMAGE_MB) {
-    throw new Error(`La imagen pesa demasiado. Máximo recomendado: ${config.MAX_IMAGE_MB} MB.`);
+  if (sizeMb > maxSourceMb) {
+    throw new Error(`La imagen original pesa demasiado. Máximo permitido: ${maxSourceMb} MB.`);
   }
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('No se pudo procesar la imagen seleccionada.'));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function calculateOptimizedImageSize(width, height, maxSide) {
+  const safeWidth = Number(width) || 0;
+  const safeHeight = Number(height) || 0;
+
+  if (safeWidth <= 0 || safeHeight <= 0) {
+    throw new Error('La imagen seleccionada no tiene dimensiones válidas.');
+  }
+
+  const largestSide = Math.max(safeWidth, safeHeight);
+
+  if (largestSide <= maxSide) {
+    return { width: safeWidth, height: safeHeight };
+  }
+
+  const ratio = maxSide / largestSide;
+  return {
+    width: Math.max(1, Math.round(safeWidth * ratio)),
+    height: Math.max(1, Math.round(safeHeight * ratio))
+  };
+}
+
+function canvasToBlob(canvas, mimeType, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('El navegador no pudo convertir la imagen a WebP.'));
+        return;
+      }
+      resolve(blob);
+    }, mimeType, quality);
+  });
+}
+
+async function optimizeImageForUpload(file, date) {
+  const maxSide = Math.round(getConfigNumber('IMAGE_MAX_SIDE_PX', DEFAULT_IMAGE_MAX_SIDE_PX));
+  const quality = Math.min(1, Math.max(0.1, getConfigNumber('IMAGE_WEBP_QUALITY', DEFAULT_IMAGE_WEBP_QUALITY)));
+  const image = await loadImageFromFile(file);
+  const originalWidth = image.naturalWidth || image.width;
+  const originalHeight = image.naturalHeight || image.height;
+  const nextSize = calculateOptimizedImageSize(originalWidth, originalHeight, maxSide);
+  const canvas = document.createElement('canvas');
+
+  canvas.width = nextSize.width;
+  canvas.height = nextSize.height;
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('El navegador no pudo preparar la imagen para optimizarla.');
+  }
+
+  context.drawImage(image, 0, 0, nextSize.width, nextSize.height);
+
+  const optimizedBlob = await canvasToBlob(canvas, IMAGE_OUTPUT_MIME_TYPE, quality);
+  if (!optimizedBlob.type || optimizedBlob.type !== IMAGE_OUTPUT_MIME_TYPE) {
+    throw new Error('El navegador no pudo generar una imagen WebP válida.');
+  }
+
+  const maxOptimizedMb = getConfigNumber('MAX_IMAGE_MB', 4);
+  const optimizedSizeMb = optimizedBlob.size / 1024 / 1024;
+  if (optimizedSizeMb > maxOptimizedMb) {
+    throw new Error(`La imagen optimizada sigue pesando demasiado (${optimizedSizeMb.toFixed(2)} MB). Máximo: ${maxOptimizedMb} MB.`);
+  }
+
+  const imagePath = buildFinalImagePath(file, date, IMAGE_OUTPUT_EXTENSION);
+  const imageBase64 = await fileToBase64(optimizedBlob);
+
+  return {
+    fileName: imagePath.split('/').pop(),
+    originalFileName: file.name,
+    originalMimeType: file.type,
+    originalSize: file.size,
+    originalWidth,
+    originalHeight,
+    mimeType: IMAGE_OUTPUT_MIME_TYPE,
+    base64: imageBase64,
+    path: imagePath,
+    width: nextSize.width,
+    height: nextSize.height,
+    optimizedSize: optimizedBlob.size,
+    optimized: true
+  };
 }
 
 function padNumber(value) {
@@ -1347,15 +1461,15 @@ function getImageBaseName(file) {
   return slugifyFileName(baseName);
 }
 
-function buildFinalImageName(file, date) {
+function buildFinalImageName(file, date, forcedExtension) {
   const datePart = buildTimestamp(date, '-');
   const baseName = getImageBaseName(file);
-  const extension = getImageExtension(file);
+  const extension = forcedExtension || getImageExtension(file);
   return `${datePart}-${baseName}.${extension}`;
 }
 
-function buildFinalImagePath(file, date) {
-  return `assets/uploads/${buildFinalImageName(file, date)}`;
+function buildFinalImagePath(file, date, forcedExtension) {
+  return `assets/uploads/${buildFinalImageName(file, date, forcedExtension)}`;
 }
 
 function encodeJsonToBase64(data) {
@@ -1446,7 +1560,8 @@ async function savePost(event) {
     };
 
     if (!isEdit) {
-      const imagePath = buildFinalImagePath(file, now);
+      const optimizedImage = await optimizeImageForUpload(file, now);
+      const imagePath = optimizedImage.path;
       const newItem = {
         id: `pub_${buildTimestamp(now)}`,
         title,
@@ -1462,15 +1577,8 @@ async function savePost(event) {
         updatedAt: nowIso
       };
 
-      const imageBase64 = await fileToBase64(file);
       payload.id = newItem.id;
-      payload.image = {
-        fileName: imagePath.split('/').pop(),
-        originalFileName: file.name,
-        mimeType: file.type,
-        base64: imageBase64,
-        path: imagePath
-      };
+      payload.image = optimizedImage;
 
       nextPublicacionesJson = {
         version: 1,
@@ -1484,15 +1592,9 @@ async function savePost(event) {
       let nextImage = null;
 
       if (file) {
-        const imagePath = buildFinalImagePath(file, now);
-        const imageBase64 = await fileToBase64(file);
-        payload.image = {
-          fileName: imagePath.split('/').pop(),
-          originalFileName: file.name,
-          mimeType: file.type,
-          base64: imageBase64,
-          path: imagePath
-        };
+        const optimizedImage = await optimizeImageForUpload(file, now);
+        const imagePath = optimizedImage.path;
+        payload.image = optimizedImage;
         nextImage = {
           src: imagePath,
           path: imagePath,

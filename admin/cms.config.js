@@ -9,8 +9,15 @@ window.CMS_CONFIG = {
   // Fallback público desde /admin/index.html si GitHub API no responde.
   PUBLIC_JSON_URL: '../data/publicaciones.json',
 
-  // Tamaño máximo recomendado antes de enviar a Make.
+  // Tamaño máximo del archivo ya optimizado que se enviará a Make.
   MAX_IMAGE_MB: 4,
+
+  // Tamaño máximo permitido para la imagen original antes de optimizarla en el navegador.
+  MAX_SOURCE_IMAGE_MB: 20,
+
+  // Optimización automática antes de subir a GitHub.
+  IMAGE_MAX_SIDE_PX: 1600,
+  IMAGE_WEBP_QUALITY: 0.85,
 
   // Extensiones permitidas por el panel.
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp']
