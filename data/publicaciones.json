@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T17:44:27.719Z",
+  "updatedAt": "2026-07-08T18:09:31.457Z",
   "items": [
     {
       "id": "pub_20260708054938",
@@ -12,9 +12,9 @@
         "alt": "Ejemplo Prueba Editor"
       },
       "status": "published",
-      "category": "galeria",
+      "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T17:36:09.395Z",
+      "updatedAt": "2026-07-08T18:09:31.457Z",
       "order": 0,
       "published": true
     }
