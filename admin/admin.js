@@ -218,7 +218,11 @@ function isItemDeleted(item) {
 }
 
 function getItemStatus(item) {
-  return item?.status === 'hidden' || item?.status === 'draft' ? 'hidden' : 'published';
+  if (isItemDeleted(item)) return 'deleted';
+  if (item?.status === 'hidden' || item?.status === 'draft') return 'hidden';
+  if (item?.status === 'published') return 'published';
+  if (item?.published === false) return 'hidden';
+  return 'published';
 }
 
 function getStatusLabel(item) {
@@ -1005,21 +1009,21 @@ function createBulkActionsBar(displayedItems) {
     if (selectedHiddenItems.length) {
       availableActions.push({
         value: 'publish',
-        label: `Publicar ${getPostCountLabel(selectedHiddenItems.length)} oculta${selectedHiddenItems.length === 1 ? '' : 's'}`
+        label: `Publicar ${selectedHiddenItems.length} oculta${selectedHiddenItems.length === 1 ? '' : 's'} seleccionada${selectedHiddenItems.length === 1 ? '' : 's'}`
       });
     }
 
     if (selectedPublishedItems.length) {
       availableActions.push({
         value: 'hide',
-        label: `Ocultar ${getPostCountLabel(selectedPublishedItems.length)} publicada${selectedPublishedItems.length === 1 ? '' : 's'}`
+        label: `Ocultar ${selectedPublishedItems.length} publicada${selectedPublishedItems.length === 1 ? '' : 's'} seleccionada${selectedPublishedItems.length === 1 ? '' : 's'}`
       });
     }
 
     if (selectedActiveItems.length) {
       availableActions.push({
         value: 'trash',
-        label: `Mover ${getPostCountLabel(selectedActiveItems.length)} a papelera`
+        label: `Mover ${selectedActiveItems.length} seleccionada${selectedActiveItems.length === 1 ? '' : 's'} a papelera`
       });
     }
   }
@@ -1966,6 +1970,7 @@ async function savePost(event) {
           alt: alt || title
         },
         status,
+        published: status === 'published',
         category,
         createdAt: nowIso,
         updatedAt: nowIso
@@ -2010,6 +2015,7 @@ async function savePost(event) {
               alt: alt || item.image?.alt || title
             },
             status,
+            published: status === 'published',
             category,
             updatedAt: nowIso
           };
@@ -2150,6 +2156,7 @@ async function setSelectedPostsStatus(nextStatus) {
         return {
           ...currentItem,
           status,
+          published: status === 'published',
           updatedAt: nowIso
         };
       }))
@@ -2335,6 +2342,7 @@ async function togglePostStatus(item) {
         return {
           ...currentItem,
           status: nextStatus,
+          published: nextStatus === 'published',
           updatedAt: nowIso
         };
       }))
