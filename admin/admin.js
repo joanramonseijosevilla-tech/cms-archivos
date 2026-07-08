@@ -33,7 +33,9 @@ const state = {
   statusFilter: 'all',
   categoryFilter: 'all',
   formBaseline: '',
-  selectedIds: new Set()
+  selectedIds: new Set(),
+  bulkCategoryEditorOpen: false,
+  bulkCategoryDraft: {}
 };
 
 const loginView = document.querySelector('#login-view');
@@ -932,6 +934,7 @@ function getSelectedDeletedItems() {
 
 function clearPostSelection() {
   state.selectedIds.clear();
+  closeBulkCategoryEditor(false);
   renderAdminPosts();
 }
 
@@ -1044,16 +1047,10 @@ function createBulkActionsBar(displayedItems) {
         label: getBulkToggleStatusLabel(selectedPublishedItems.length, selectedHiddenItems.length)
       });
 
-      const categoryActions = getBulkCategoryActions(selectedActiveItems);
-
-      if (categoryActions.length) {
-        availableActions.push({
-          value: 'category_heading',
-          label: 'Cambiar categoría',
-          disabled: true
-        });
-        availableActions.push(...categoryActions);
-      }
+      availableActions.push({
+        value: 'category_editor',
+        label: `Cambiar categoría de ${selectedActiveItems.length} seleccionada${selectedActiveItems.length === 1 ? '' : 's'}...`
+      });
 
       availableActions.push({
         value: 'trash',
@@ -1116,7 +1113,7 @@ function createBulkActionsBar(displayedItems) {
     }
 
     if (action === 'toggle_status') await toggleSelectedPostsStatus();
-    if (action.startsWith('category:')) await setSelectedPostsCategory(action.replace('category:', ''));
+    if (action === 'category_editor') openBulkCategoryEditor();
     if (action === 'trash') await moveSelectedPostsToTrash();
     if (action === 'restore') await restoreSelectedPosts();
     if (action === 'delete_forever') await deleteSelectedPostsForever();
@@ -1133,6 +1130,261 @@ function createBulkActionsBar(displayedItems) {
   bar.append(selectionLabel, selectionCount, controls);
 
   return bar;
+}
+
+function getBulkCategoryDraftForSelectedItems(selectedItems) {
+  const safeItems = Array.isArray(selectedItems) ? selectedItems : [];
+  const selectedIdSet = new Set(safeItems.map((item) => item.id));
+  const nextDraft = {};
+
+  safeItems.forEach((item) => {
+    const draftCategory = state.bulkCategoryDraft?.[item.id];
+    nextDraft[item.id] = isValidPostCategory(draftCategory) ? draftCategory : getItemCategory(item);
+  });
+
+  Object.keys(state.bulkCategoryDraft || {}).forEach((id) => {
+    if (!selectedIdSet.has(id)) delete state.bulkCategoryDraft[id];
+  });
+
+  state.bulkCategoryDraft = nextDraft;
+  return nextDraft;
+}
+
+function getBulkCategoryChangeCount(selectedItems) {
+  const draft = getBulkCategoryDraftForSelectedItems(selectedItems);
+  return selectedItems.filter((item) => draft[item.id] && draft[item.id] !== getItemCategory(item)).length;
+}
+
+function closeBulkCategoryEditor(shouldRender = true) {
+  state.bulkCategoryEditorOpen = false;
+  state.bulkCategoryDraft = {};
+  if (shouldRender) renderAdminPosts();
+}
+
+function openBulkCategoryEditor() {
+  if (blockIfPendingOrder()) return;
+
+  const selectedItems = getSelectedActiveItems();
+  if (!selectedItems.length) {
+    showAlert('Selecciona publicaciones activas para cambiar su categoría.', 'error');
+    return;
+  }
+
+  getBulkCategoryDraftForSelectedItems(selectedItems);
+  state.bulkCategoryEditorOpen = true;
+  renderAdminPosts();
+}
+
+function setBulkCategoryDraft(id, category) {
+  if (!id || !isValidPostCategory(category)) return;
+  state.bulkCategoryDraft = {
+    ...(state.bulkCategoryDraft || {}),
+    [id]: category
+  };
+  renderAdminPosts();
+}
+
+function setBulkCategoryDraftForAll(category) {
+  if (!isValidPostCategory(category)) return;
+
+  const selectedItems = getSelectedActiveItems();
+  const nextDraft = {};
+
+  selectedItems.forEach((item) => {
+    nextDraft[item.id] = category;
+  });
+
+  state.bulkCategoryDraft = nextDraft;
+  renderAdminPosts();
+}
+
+function createCategorySelect(value, onChange) {
+  const select = document.createElement('select');
+  select.className = 'admin-bulk-category-select';
+  select.value = isValidPostCategory(value) ? value : DEFAULT_POST_CATEGORY;
+
+  POST_CATEGORIES.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.value;
+    option.textContent = category.label;
+    select.append(option);
+  });
+
+  select.addEventListener('change', () => onChange(select.value));
+  return select;
+}
+
+function createBulkCategoryPanel() {
+  const selectedItems = getSelectedActiveItems();
+  const panel = document.createElement('section');
+  panel.className = 'admin-bulk-category-panel';
+
+  const title = document.createElement('h3');
+  title.textContent = 'Cambiar categoría por lotes';
+
+  if (!selectedItems.length) {
+    const emptyText = document.createElement('p');
+    emptyText.textContent = 'No hay publicaciones activas seleccionadas.';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'button button-secondary button-small';
+    closeButton.textContent = 'Cerrar';
+    closeButton.addEventListener('click', () => closeBulkCategoryEditor());
+
+    panel.append(title, emptyText, closeButton);
+    return panel;
+  }
+
+  const draft = getBulkCategoryDraftForSelectedItems(selectedItems);
+  const changeCount = getBulkCategoryChangeCount(selectedItems);
+
+  const intro = document.createElement('p');
+  intro.className = 'admin-bulk-category-intro';
+  intro.textContent = `${selectedItems.length} seleccionada${selectedItems.length === 1 ? '' : 's'}. Puedes poner una misma categoría a todas o ajustar cada una antes de guardar.`;
+
+  const quickRow = document.createElement('div');
+  quickRow.className = 'admin-bulk-category-quick';
+
+  const quickLabel = document.createElement('span');
+  quickLabel.textContent = 'Poner todas en:';
+
+  const quickSelect = createCategorySelect(DEFAULT_POST_CATEGORY, () => {});
+
+  const quickButton = document.createElement('button');
+  quickButton.type = 'button';
+  quickButton.className = 'button button-small button-secondary';
+  quickButton.textContent = 'Aplicar a la selección';
+  quickButton.addEventListener('click', () => setBulkCategoryDraftForAll(quickSelect.value));
+
+  quickRow.append(quickLabel, quickSelect, quickButton);
+
+  const list = document.createElement('div');
+  list.className = 'admin-bulk-category-list';
+
+  selectedItems.forEach((item) => {
+    const row = document.createElement('div');
+    row.className = 'admin-bulk-category-row';
+
+    const itemInfo = document.createElement('div');
+    itemInfo.className = 'admin-bulk-category-item';
+
+    const itemTitle = document.createElement('strong');
+    itemTitle.textContent = item.title || 'Sin título';
+
+    const currentCategory = document.createElement('span');
+    currentCategory.textContent = `Actual: ${getCategoryLabel(item)}`;
+
+    itemInfo.append(itemTitle, currentCategory);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'admin-bulk-category-arrow';
+    arrow.textContent = '→';
+
+    const categorySelect = createCategorySelect(draft[item.id] || getItemCategory(item), (nextCategory) => {
+      setBulkCategoryDraft(item.id, nextCategory);
+    });
+
+    row.append(itemInfo, arrow, categorySelect);
+    list.append(row);
+  });
+
+  const status = document.createElement('p');
+  status.className = 'admin-bulk-category-status';
+  status.textContent = changeCount
+    ? `${changeCount} cambio${changeCount === 1 ? '' : 's'} de categoría pendiente${changeCount === 1 ? '' : 's'}.`
+    : 'No hay cambios de categoría pendientes.';
+
+  const actions = document.createElement('div');
+  actions.className = 'admin-bulk-category-actions';
+
+  const saveButton = document.createElement('button');
+  saveButton.type = 'button';
+  saveButton.className = 'button button-small';
+  saveButton.textContent = 'Guardar categorías';
+  saveButton.disabled = !changeCount;
+  saveButton.addEventListener('click', saveBulkCategoryChanges);
+
+  const cancelButton = document.createElement('button');
+  cancelButton.type = 'button';
+  cancelButton.className = 'button button-small button-secondary';
+  cancelButton.textContent = 'Cancelar';
+  cancelButton.addEventListener('click', () => closeBulkCategoryEditor());
+
+  actions.append(saveButton, cancelButton);
+  panel.append(title, intro, quickRow, list, status, actions);
+
+  return panel;
+}
+
+async function saveBulkCategoryChanges() {
+  if (blockIfPendingOrder()) return;
+
+  const selectedItems = getSelectedActiveItems();
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones activas seleccionadas para cambiar de categoría.', 'error');
+    closeBulkCategoryEditor();
+    return;
+  }
+
+  const draft = getBulkCategoryDraftForSelectedItems(selectedItems);
+  const changes = selectedItems
+    .map((item) => ({
+      id: item.id,
+      from: getItemCategory(item),
+      to: isValidPostCategory(draft[item.id]) ? draft[item.id] : getItemCategory(item)
+    }))
+    .filter((change) => change.to !== change.from);
+
+  if (!changes.length) {
+    showAlert('No hay cambios de categoría para guardar.');
+    return;
+  }
+
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de guardar categorías por lote, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  const confirmed = window.confirm(`¿Guardar ${changes.length} cambio${changes.length === 1 ? '' : 's'} de categoría? Se hará una sola actualización.`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const changesById = changes.reduce((map, change) => {
+      map[change.id] = change.to;
+      return map;
+    }, {});
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        const nextCategory = changesById[currentItem.id];
+        if (!nextCategory) return currentItem;
+        return {
+          ...currentItem,
+          category: nextCategory,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_category_editor',
+      changes
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    closeBulkCategoryEditor(false);
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${changes.length} cambio${changes.length === 1 ? '' : 's'} de categoría guardado${changes.length === 1 ? '' : 's'} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
 }
 
 function getManualOrderValue(item) {
@@ -1452,6 +1704,10 @@ function renderAdminPosts() {
   }
 
   fragment.append(createBulkActionsBar(displayedItems));
+
+  if (state.bulkCategoryEditorOpen) {
+    fragment.append(createBulkCategoryPanel());
+  }
 
   displayedItems
     .forEach((item) => {
