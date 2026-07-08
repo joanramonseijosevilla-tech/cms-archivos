@@ -7,6 +7,13 @@ const POST_CATEGORIES = [
   { value: 'novedades', label: 'Novedades' }
 ];
 const DEFAULT_POST_CATEGORY = 'galeria';
+const RICH_COLOR_PALETTE = [
+  { value: 'blue', className: 'rich-color-blue', hex: '#93c5fd', rgb: [147, 197, 253] },
+  { value: 'green', className: 'rich-color-green', hex: '#86efac', rgb: [134, 239, 172] },
+  { value: 'orange', className: 'rich-color-orange', hex: '#fdba74', rgb: [253, 186, 116] },
+  { value: 'red', className: 'rich-color-red', hex: '#fca5a5', rgb: [252, 165, 165] }
+];
+const RICH_COLOR_CLASSES = RICH_COLOR_PALETTE.map((color) => color.className);
 
 const postsGrid = document.querySelector('#posts-grid');
 const postsCategoryFilters = document.querySelector('#posts-category-filters');
@@ -342,6 +349,70 @@ function getNodeFontSizePx(node) {
   return null;
 }
 
+function parseColorToRgb(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw || raw === 'inherit' || raw === 'initial' || raw === 'transparent') return null;
+
+  const hexMatch = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1].length === 3
+      ? hexMatch[1].split('').map((char) => char + char).join('')
+      : hexMatch[1];
+    return [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16));
+  }
+
+  const rgbMatch = raw.match(/^rgba?\(([^)]+)\)$/i);
+  if (rgbMatch) {
+    const parts = rgbMatch[1].split(',').map((part) => Number.parseFloat(part.trim()));
+    if (parts.length >= 3 && parts.slice(0, 3).every((part) => Number.isFinite(part))) {
+      return parts.slice(0, 3).map((part) => Math.min(255, Math.max(0, Math.round(part))));
+    }
+  }
+
+  const probe = document.createElement('span');
+  probe.style.color = raw;
+  if (!probe.style.color || probe.style.color === raw) return null;
+  return parseColorToRgb(probe.style.color);
+}
+
+function isNeutralRichColor(rgb) {
+  if (!Array.isArray(rgb) || rgb.length < 3) return true;
+  const max = Math.max(...rgb);
+  const min = Math.min(...rgb);
+  return (max - min) <= 22 || max <= 45 || min >= 235;
+}
+
+function getNearestRichColorClass(rgb) {
+  if (isNeutralRichColor(rgb)) return '';
+
+  let bestColor = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  RICH_COLOR_PALETTE.forEach((color) => {
+    const distance = color.rgb.reduce((sum, channel, index) => {
+      const delta = channel - rgb[index];
+      return sum + (delta * delta);
+    }, 0);
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestColor = color;
+    }
+  });
+
+  return bestColor?.className || '';
+}
+
+function getNodeColorClass(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return '';
+  const existingColorClass = Array.from(node.classList || []).find((className) => RICH_COLOR_CLASSES.includes(className));
+  if (existingColorClass) return existingColorClass;
+
+  const colorValue = node.style?.color || node.getAttribute('color') || '';
+  const rgb = parseColorToRgb(colorValue);
+  return getNearestRichColorClass(rgb);
+}
+
 function getSafeSizeClass(node, mappedTag) {
   if (['h2', 'h3', 'h4'].includes(mappedTag)) return '';
   const px = getNodeFontSizePx(node);
@@ -367,7 +438,7 @@ function getSafeIndentClass(node) {
 function getSafeExistingRichClasses(node) {
   if (!node || node.nodeType !== Node.ELEMENT_NODE) return [];
   return Array.from(node.classList || []).filter((className) => (
-    ['rich-align-center', 'rich-align-right', 'rich-align-justify', 'rich-size-small', 'rich-size-large', 'rich-size-xlarge', 'rich-indent-1', 'rich-indent-2', 'rich-indent-3', 'rich-indent-4'].includes(className)
+    ['rich-align-center', 'rich-align-right', 'rich-align-justify', 'rich-size-small', 'rich-size-large', 'rich-size-xlarge', 'rich-indent-1', 'rich-indent-2', 'rich-indent-3', 'rich-indent-4', ...RICH_COLOR_CLASSES].includes(className)
   ));
 }
 
@@ -376,6 +447,7 @@ function getSafeRichClasses(node, mappedTag) {
   const align = getNodeTextAlign(node);
   const sizeClass = getSafeSizeClass(node, mappedTag);
   const indentClass = getSafeIndentClass(node);
+  const colorClass = getNodeColorClass(node);
 
   if (align === 'center' || align === 'right' || align === 'justify') {
     classes.add(`rich-align-${align}`);
@@ -383,6 +455,7 @@ function getSafeRichClasses(node, mappedTag) {
 
   if (sizeClass) classes.add(sizeClass);
   if (indentClass) classes.add(indentClass);
+  if (colorClass) classes.add(colorClass);
 
   return Array.from(classes);
 }

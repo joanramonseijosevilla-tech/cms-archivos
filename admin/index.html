@@ -6,10 +6,10 @@
   <title>Panel privado | Mini CMS Nexautia</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-19">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-20">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-22">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-22">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-21"></script>
+  <script defer src="admin.js?v=20260705-22"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -71,12 +71,16 @@
                 <div class="rich-editor-toolbar" aria-label="Formato de descripción">
                   <select id="rich-format-select" class="rich-editor-format-select" aria-label="Formato de texto">
                     <option value="p">Texto</option>
-                    <option value="h2">Título grande</option>
-                    <option value="h3">Título medio</option>
-                    <option value="h4">Título pequeño</option>
+                    <option value="h2">Título 1</option>
+                    <option value="h3">Título 2</option>
+                    <option value="h4">Título 3</option>
                   </select>
                   <button class="button button-small button-secondary" type="button" data-rich-command="bold" title="Negrita" aria-label="Negrita"><strong>B</strong></button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="italic" title="Cursiva" aria-label="Cursiva"><em>I</em></button>
+                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="blue" title="Color azul" aria-label="Color azul"><span class="rich-color-swatch rich-color-swatch-blue" aria-hidden="true"></span><span class="sr-only">Azul</span></button>
+                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="green" title="Color verde" aria-label="Color verde"><span class="rich-color-swatch rich-color-swatch-green" aria-hidden="true"></span><span class="sr-only">Verde</span></button>
+                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="orange" title="Color naranja" aria-label="Color naranja"><span class="rich-color-swatch rich-color-swatch-orange" aria-hidden="true"></span><span class="sr-only">Naranja</span></button>
+                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="red" title="Color rojo" aria-label="Color rojo"><span class="rich-color-swatch rich-color-swatch-red" aria-hidden="true"></span><span class="sr-only">Rojo</span></button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="insertUnorderedList" title="Lista con viñetas" aria-label="Lista con viñetas">•</button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="insertOrderedList" title="Lista numerada" aria-label="Lista numerada">1.</button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="outdent" title="Reducir sangría" aria-label="Reducir sangría">←</button>
@@ -88,7 +92,7 @@
                 <div id="post-description-editor" class="rich-editor-area" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Describe la publicación…"></div>
               </div>
               <textarea id="post-description" class="hidden" aria-hidden="true"></textarea>
-              <p class="form-note rich-editor-help">Formato básico: títulos, negrita, cursiva, viñetas, lista numerada, sangría y alineación. Al pegar desde otro editor se conserva el formato razonable y se limpia lo no seguro.</p>
+              <p class="form-note rich-editor-help">Formato básico: títulos, negrita, cursiva, colores controlados, viñetas, lista numerada, sangría y alineación. Al pegar desde otro editor se conserva el formato razonable y se limpia lo no seguro.</p>
             </div>
 
             <label>
