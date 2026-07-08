@@ -9,10 +9,10 @@ const POST_CATEGORIES = [
 const DEFAULT_POST_CATEGORY = 'galeria';
 const RICH_BASE_COLOR = { value: 'base', label: 'Color', className: 'rich-color-base', hex: '#cbd5e1', rgb: [203, 213, 225] };
 const RICH_COLOR_PALETTE = [
-  { value: 'blue', label: 'Azul', className: 'rich-color-blue', hex: '#93c5fd', rgb: [147, 197, 253] },
-  { value: 'green', label: 'Verde', className: 'rich-color-green', hex: '#86efac', rgb: [134, 239, 172] },
-  { value: 'orange', label: 'Naranja', className: 'rich-color-orange', hex: '#fdba74', rgb: [253, 186, 116] },
-  { value: 'red', label: 'Rojo', className: 'rich-color-red', hex: '#fca5a5', rgb: [252, 165, 165] }
+  { value: 'blue', label: 'Azul', className: 'rich-color-blue', hex: '#3b82f6', rgb: [59, 130, 246] },
+  { value: 'green', label: 'Verde', className: 'rich-color-green', hex: '#22c55e', rgb: [34, 197, 94] },
+  { value: 'orange', label: 'Naranja', className: 'rich-color-orange', hex: '#f59e0b', rgb: [245, 158, 11] },
+  { value: 'red', label: 'Rojo', className: 'rich-color-red', hex: '#ef4444', rgb: [239, 68, 68] }
 ];
 const RICH_COLOR_OPTIONS = [RICH_BASE_COLOR, ...RICH_COLOR_PALETTE];
 const RICH_COLOR_CLASSES = RICH_COLOR_OPTIONS.map((color) => color.className);
@@ -71,6 +71,7 @@ const postStatusFilter = document.querySelector('#post-status-filter');
 const postCategoryFilter = document.querySelector('#post-category-filter');
 const clearSearchButton = document.querySelector('#clear-search-button');
 let richEditorSavedRange = null;
+let richEditorActiveColorValue = 'base';
 
 function showAlert(message, type = 'success') {
   adminAlert.textContent = message;
@@ -687,25 +688,16 @@ function setRichColorMenuOpen(isOpen) {
   richColorToggle.setAttribute('aria-expanded', String(isOpen));
 }
 
-function applyClassToSelectedRichText(className) {
+function getSelectionRangeInEditor() {
   const selection = window.getSelection();
-  if (!selection || !selection.rangeCount || !postDescriptionEditor) return false;
+  if (!selection || !selection.rangeCount || !postDescriptionEditor) return null;
 
   const range = selection.getRangeAt(0);
-  if (!postDescriptionEditor.contains(range.commonAncestorContainer) || range.collapsed) return false;
+  return postDescriptionEditor.contains(range.commonAncestorContainer) ? range : null;
+}
 
-  const wrapper = document.createElement('span');
-  wrapper.className = className;
-  wrapper.append(range.extractContents());
-  range.insertNode(wrapper);
-
-  const after = document.createRange();
-  after.setStartAfter(wrapper);
-  after.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(after);
-  richEditorSavedRange = after.cloneRange();
-  return true;
+function getColorValueFromClassName(className) {
+  return RICH_COLOR_OPTIONS.find((item) => item.className === className)?.value || '';
 }
 
 function applyRichTextColor(colorValue) {
@@ -715,37 +707,49 @@ function applyRichTextColor(colorValue) {
   postDescriptionEditor.focus();
   restoreRichEditorSelection();
 
-  const wrappedSelection = applyClassToSelectedRichText(color.className);
-  if (!wrappedSelection) {
-    document.execCommand('foreColor', false, color.hex);
+  try {
+    document.execCommand('styleWithCSS', false, true);
+  } catch (error) {
+    // Algunos navegadores pueden ignorar styleWithCSS. foreColor sigue funcionando.
   }
 
-  setDescriptionEditorContent(getEditorRawHtml());
+  document.execCommand('foreColor', false, color.hex);
+  richEditorActiveColorValue = color.value;
+
+  syncDescriptionFieldFromEditor();
+  saveRichEditorSelection();
   updateLivePreview();
   updateRichFormatControl();
-  updateRichColorControl();
+  updateRichColorControl(color.value);
   setRichColorMenuOpen(false);
 }
 
 function getCurrentRichColorValue() {
   const selection = window.getSelection();
-  if (!selection || !selection.anchorNode || !postDescriptionEditor?.contains(selection.anchorNode)) return 'base';
+  const selectionNode = selection?.anchorNode;
 
-  let node = selection.anchorNode.nodeType === Node.ELEMENT_NODE ? selection.anchorNode : selection.anchorNode.parentElement;
+  if (!selectionNode || !postDescriptionEditor?.contains(selectionNode)) {
+    return richEditorActiveColorValue || 'base';
+  }
+
+  let node = selectionNode.nodeType === Node.ELEMENT_NODE ? selectionNode : selectionNode.parentElement;
   while (node && node !== postDescriptionEditor) {
     const colorClass = Array.from(node.classList || []).find((className) => RICH_COLOR_CLASSES.includes(className));
-    if (colorClass) {
-      return getRichColorOption(RICH_COLOR_OPTIONS.find((item) => item.className === colorClass)?.value).value;
-    }
+    if (colorClass) return getColorValueFromClassName(colorClass) || 'base';
+
+    const colorFromStyle = getNodeColorClass(node);
+    if (colorFromStyle) return getColorValueFromClassName(colorFromStyle) || 'base';
+
     node = node.parentElement;
   }
 
-  return 'base';
+  return richEditorActiveColorValue || 'base';
 }
 
-function updateRichColorControl() {
+function updateRichColorControl(forcedColorValue = '') {
   if (!richColorToggle) return;
-  const currentColor = getRichColorOption(getCurrentRichColorValue());
+  const currentColor = getRichColorOption(forcedColorValue || getCurrentRichColorValue());
+  richEditorActiveColorValue = currentColor.value;
 
   if (richColorCurrentLabel) {
     richColorCurrentLabel.textContent = currentColor.value === 'base' ? 'Color' : currentColor.label;

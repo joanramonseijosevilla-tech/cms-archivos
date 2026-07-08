@@ -647,16 +647,16 @@ code {
 .rich-color-base { color: var(--muted); }
 
 .rich-text-content .rich-color-blue,
-.rich-color-blue { color: #93c5fd; }
+.rich-color-blue { color: #3b82f6; }
 
 .rich-text-content .rich-color-green,
-.rich-color-green { color: #86efac; }
+.rich-color-green { color: #16a34a; }
 
 .rich-text-content .rich-color-orange,
-.rich-color-orange { color: #fdba74; }
+.rich-color-orange { color: #f59e0b; }
 
 .rich-text-content .rich-color-red,
-.rich-color-red { color: #fca5a5; }
+.rich-color-red { color: #dc2626; }
 
 .rich-align-center { text-align: center; }
 .rich-align-right { text-align: right; }

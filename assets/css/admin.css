@@ -493,10 +493,10 @@ input[type="file"]::file-selector-button {
 }
 
 .rich-color-swatch-base { background: #cbd5e1; }
-.rich-color-swatch-blue { background: #93c5fd; }
-.rich-color-swatch-green { background: #86efac; }
-.rich-color-swatch-orange { background: #fdba74; }
-.rich-color-swatch-red { background: #fca5a5; }
+.rich-color-swatch-blue { background: #3b82f6; }
+.rich-color-swatch-green { background: #22c55e; }
+.rich-color-swatch-orange { background: #f59e0b; }
+.rich-color-swatch-red { background: #ef4444; }
 
 .rich-editor-format-select {
   width: auto;
@@ -666,19 +666,19 @@ input[type="file"]::file-selector-button {
 
 .rich-editor-area .rich-color-blue,
 .rich-text-content .rich-color-blue,
-.rich-color-blue { color: #93c5fd; }
+.rich-color-blue { color: #3b82f6; }
 
 .rich-editor-area .rich-color-green,
 .rich-text-content .rich-color-green,
-.rich-color-green { color: #86efac; }
+.rich-color-green { color: #16a34a; }
 
 .rich-editor-area .rich-color-orange,
 .rich-text-content .rich-color-orange,
-.rich-color-orange { color: #fdba74; }
+.rich-color-orange { color: #f59e0b; }
 
 .rich-editor-area .rich-color-red,
 .rich-text-content .rich-color-red,
-.rich-color-red { color: #fca5a5; }
+.rich-color-red { color: #dc2626; }
 
 .rich-align-center { text-align: center; }
 .rich-align-right { text-align: right; }
