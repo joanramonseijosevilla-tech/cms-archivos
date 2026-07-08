@@ -990,6 +990,23 @@ function getBulkToggleStatusLabel(publishedCount, hiddenCount) {
   return parts.join(' y ');
 }
 
+function getBulkCategoryActions(selectedActiveItems) {
+  const safeItems = Array.isArray(selectedActiveItems) ? selectedActiveItems : [];
+
+  return POST_CATEGORIES
+    .map((category) => {
+      const changeCount = safeItems.filter((item) => getItemCategory(item) !== category.value).length;
+
+      if (!changeCount) return null;
+
+      return {
+        value: `category:${category.value}`,
+        label: `Pasar ${changeCount} seleccionada${changeCount === 1 ? '' : 's'} a ${category.label}`
+      };
+    })
+    .filter(Boolean);
+}
+
 function createBulkActionsBar(displayedItems) {
   cleanSelectedPosts();
 
@@ -1026,6 +1043,17 @@ function createBulkActionsBar(displayedItems) {
         value: 'toggle_status',
         label: getBulkToggleStatusLabel(selectedPublishedItems.length, selectedHiddenItems.length)
       });
+
+      const categoryActions = getBulkCategoryActions(selectedActiveItems);
+
+      if (categoryActions.length) {
+        availableActions.push({
+          value: 'category_heading',
+          label: 'Cambiar categoría',
+          disabled: true
+        });
+        availableActions.push(...categoryActions);
+      }
 
       availableActions.push({
         value: 'trash',
@@ -1071,7 +1099,7 @@ function createBulkActionsBar(displayedItems) {
   actionSelect.append(createBulkActionOption('', availableActions.length ? 'Acciones por lote' : 'Sin acciones disponibles'));
 
   availableActions.forEach((action) => {
-    actionSelect.append(createBulkActionOption(action.value, action.label));
+    actionSelect.append(createBulkActionOption(action.value, action.label, Boolean(action.disabled)));
   });
 
   const applyActionButton = document.createElement('button');
@@ -1088,6 +1116,7 @@ function createBulkActionsBar(displayedItems) {
     }
 
     if (action === 'toggle_status') await toggleSelectedPostsStatus();
+    if (action.startsWith('category:')) await setSelectedPostsCategory(action.replace('category:', ''));
     if (action === 'trash') await moveSelectedPostsToTrash();
     if (action === 'restore') await restoreSelectedPosts();
     if (action === 'delete_forever') await deleteSelectedPostsForever();
@@ -2235,6 +2264,71 @@ async function setSelectedPostsStatus(nextStatus) {
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
     showAlert(`${targetItems.length} publicación${targetItems.length === 1 ? '' : 'es'} ${actionPast}${targetItems.length === 1 ? '' : 's'} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
+
+async function setSelectedPostsCategory(nextCategory) {
+  if (blockIfPendingOrder()) return;
+
+  if (!isValidPostCategory(nextCategory)) {
+    showAlert('La categoría seleccionada no es válida.', 'error');
+    return;
+  }
+
+  const categoryLabel = getCategoryLabel(nextCategory);
+
+  if (!confirmAndDiscardFormChangesBeforeBulkAction(`Tienes cambios sin guardar en el formulario. Antes de cambiar la categoría de publicaciones, guarda o descarta esos cambios. ¿Descartarlos ahora?`)) return;
+
+  const selectedItems = getSelectedActiveItems();
+  const targetItems = selectedItems.filter((selectedItem) => getItemCategory(selectedItem) !== nextCategory);
+
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones activas seleccionadas para cambiar de categoría.', 'error');
+    return;
+  }
+
+  if (!targetItems.length) {
+    showAlert(`Las publicaciones seleccionadas ya están en ${categoryLabel}.`);
+    return;
+  }
+
+  const confirmed = window.confirm(`¿Pasar ${targetItems.length} publicación${targetItems.length === 1 ? '' : 'es'} seleccionada${targetItems.length === 1 ? '' : 's'} a ${categoryLabel}?`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(targetItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (!selectedIdSet.has(currentItem.id)) return currentItem;
+        return {
+          ...currentItem,
+          category: nextCategory,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_category',
+      category: nextCategory,
+      ids: [...selectedIdSet]
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${targetItems.length} publicación${targetItems.length === 1 ? '' : 'es'} movida${targetItems.length === 1 ? '' : 's'} a ${categoryLabel}.`);
   } catch (error) {
     showAlert(error.message, 'error');
     console.error(error);
