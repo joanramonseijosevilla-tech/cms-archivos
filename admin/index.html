@@ -6,10 +6,10 @@
   <title>Panel privado | Mini CMS Nexautia</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-22">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-22">
+  <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-23">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-23">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-22"></script>
+  <script defer src="admin.js?v=20260705-23"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -77,10 +77,35 @@
                   </select>
                   <button class="button button-small button-secondary" type="button" data-rich-command="bold" title="Negrita" aria-label="Negrita"><strong>B</strong></button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="italic" title="Cursiva" aria-label="Cursiva"><em>I</em></button>
-                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="blue" title="Color azul" aria-label="Color azul"><span class="rich-color-swatch rich-color-swatch-blue" aria-hidden="true"></span><span class="sr-only">Azul</span></button>
-                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="green" title="Color verde" aria-label="Color verde"><span class="rich-color-swatch rich-color-swatch-green" aria-hidden="true"></span><span class="sr-only">Verde</span></button>
-                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="orange" title="Color naranja" aria-label="Color naranja"><span class="rich-color-swatch rich-color-swatch-orange" aria-hidden="true"></span><span class="sr-only">Naranja</span></button>
-                  <button class="button button-small button-secondary rich-color-button" type="button" data-rich-color="red" title="Color rojo" aria-label="Color rojo"><span class="rich-color-swatch rich-color-swatch-red" aria-hidden="true"></span><span class="sr-only">Rojo</span></button>
+                  <div class="rich-color-picker">
+                    <button id="rich-color-toggle" class="button button-small button-secondary rich-color-toggle" type="button" aria-label="Color de texto" aria-expanded="false" aria-controls="rich-color-menu">
+                      <span id="rich-color-current-swatch" class="rich-color-swatch rich-color-swatch-base" aria-hidden="true"></span>
+                      <span id="rich-color-current-label">Color</span>
+                      <span class="rich-color-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div id="rich-color-menu" class="rich-color-menu hidden" role="menu" aria-label="Colores de texto">
+                      <button class="rich-color-option is-active" type="button" data-rich-color="base" role="menuitem">
+                        <span class="rich-color-swatch rich-color-swatch-base" aria-hidden="true"></span>
+                        <span>Color base</span>
+                      </button>
+                      <button class="rich-color-option" type="button" data-rich-color="blue" role="menuitem">
+                        <span class="rich-color-swatch rich-color-swatch-blue" aria-hidden="true"></span>
+                        <span>Azul</span>
+                      </button>
+                      <button class="rich-color-option" type="button" data-rich-color="green" role="menuitem">
+                        <span class="rich-color-swatch rich-color-swatch-green" aria-hidden="true"></span>
+                        <span>Verde</span>
+                      </button>
+                      <button class="rich-color-option" type="button" data-rich-color="orange" role="menuitem">
+                        <span class="rich-color-swatch rich-color-swatch-orange" aria-hidden="true"></span>
+                        <span>Naranja</span>
+                      </button>
+                      <button class="rich-color-option" type="button" data-rich-color="red" role="menuitem">
+                        <span class="rich-color-swatch rich-color-swatch-red" aria-hidden="true"></span>
+                        <span>Rojo</span>
+                      </button>
+                    </div>
+                  </div>
                   <button class="button button-small button-secondary" type="button" data-rich-command="insertUnorderedList" title="Lista con viñetas" aria-label="Lista con viñetas">•</button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="insertOrderedList" title="Lista numerada" aria-label="Lista numerada">1.</button>
                   <button class="button button-small button-secondary" type="button" data-rich-command="outdent" title="Reducir sangría" aria-label="Reducir sangría">←</button>

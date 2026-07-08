@@ -425,8 +425,62 @@ input[type="file"]::file-selector-button {
   white-space: nowrap;
 }
 
-.rich-color-button {
-  min-width: 42px;
+.rich-color-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.rich-color-toggle {
+  gap: 0.4rem;
+  min-width: 104px;
+}
+
+.rich-color-caret {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.rich-color-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  display: grid;
+  min-width: 168px;
+  padding: 0.35rem;
+  border: 1px solid var(--dark-card-border);
+  border-radius: 14px;
+  background: #0f172a;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.rich-color-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 10px;
+  color: #e2e8f0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rich-color-option:hover,
+.rich-color-option.is-active {
+  background: rgba(96, 165, 250, 0.18);
+}
+
+.rich-color-option.is-active::after {
+  content: '✓';
+  margin-left: auto;
+  color: #bfdbfe;
+  font-weight: 900;
 }
 
 .rich-color-swatch {
@@ -435,8 +489,10 @@ input[type="file"]::file-selector-button {
   border: 2px solid #ffffffb3;
   border-radius: 999px;
   box-shadow: 0 0 0 1px #00000033;
+  flex: 0 0 auto;
 }
 
+.rich-color-swatch-base { background: #cbd5e1; }
 .rich-color-swatch-blue { background: #93c5fd; }
 .rich-color-swatch-green { background: #86efac; }
 .rich-color-swatch-orange { background: #fdba74; }
@@ -604,6 +660,10 @@ input[type="file"]::file-selector-button {
 .rich-size-large { font-size: 1.16em; }
 .rich-size-xlarge { font-size: 1.32em; }
 
+.rich-editor-area .rich-color-base,
+.rich-text-content .rich-color-base,
+.rich-color-base { color: #cbd5e1; }
+
 .rich-editor-area .rich-color-blue,
 .rich-text-content .rich-color-blue,
 .rich-color-blue { color: #93c5fd; }
@@ -681,6 +741,15 @@ input[type="file"]::file-selector-button {
     min-width: 42px;
     flex: 0 0 auto;
     padding: 0 0.65rem;
+  }
+
+  .admin-body .rich-color-toggle {
+    min-width: 92px;
+  }
+
+  .admin-body .rich-color-menu {
+    left: auto;
+    right: 0;
   }
 
   .admin-body .admin-post-actions {

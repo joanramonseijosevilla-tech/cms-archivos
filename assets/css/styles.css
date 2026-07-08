@@ -643,6 +643,9 @@ code {
 .rich-size-large { font-size: 1.16em; }
 .rich-size-xlarge { font-size: 1.32em; }
 
+.rich-text-content .rich-color-base,
+.rich-color-base { color: var(--muted); }
+
 .rich-text-content .rich-color-blue,
 .rich-color-blue { color: #93c5fd; }
 

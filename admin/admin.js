@@ -7,13 +7,15 @@ const POST_CATEGORIES = [
   { value: 'novedades', label: 'Novedades' }
 ];
 const DEFAULT_POST_CATEGORY = 'galeria';
+const RICH_BASE_COLOR = { value: 'base', label: 'Color', className: 'rich-color-base', hex: '#cbd5e1', rgb: [203, 213, 225] };
 const RICH_COLOR_PALETTE = [
-  { value: 'blue', className: 'rich-color-blue', hex: '#93c5fd', rgb: [147, 197, 253] },
-  { value: 'green', className: 'rich-color-green', hex: '#86efac', rgb: [134, 239, 172] },
-  { value: 'orange', className: 'rich-color-orange', hex: '#fdba74', rgb: [253, 186, 116] },
-  { value: 'red', className: 'rich-color-red', hex: '#fca5a5', rgb: [252, 165, 165] }
+  { value: 'blue', label: 'Azul', className: 'rich-color-blue', hex: '#93c5fd', rgb: [147, 197, 253] },
+  { value: 'green', label: 'Verde', className: 'rich-color-green', hex: '#86efac', rgb: [134, 239, 172] },
+  { value: 'orange', label: 'Naranja', className: 'rich-color-orange', hex: '#fdba74', rgb: [253, 186, 116] },
+  { value: 'red', label: 'Rojo', className: 'rich-color-red', hex: '#fca5a5', rgb: [252, 165, 165] }
 ];
-const RICH_COLOR_CLASSES = RICH_COLOR_PALETTE.map((color) => color.className);
+const RICH_COLOR_OPTIONS = [RICH_BASE_COLOR, ...RICH_COLOR_PALETTE];
+const RICH_COLOR_CLASSES = RICH_COLOR_OPTIONS.map((color) => color.className);
 const IMAGE_OUTPUT_MIME_TYPE = 'image/webp';
 const IMAGE_OUTPUT_EXTENSION = 'webp';
 const DEFAULT_IMAGE_MAX_SIDE_PX = 1600;
@@ -45,6 +47,10 @@ const postDescription = document.querySelector('#post-description');
 const postDescriptionEditor = document.querySelector('#post-description-editor');
 const richTextButtons = document.querySelectorAll('[data-rich-command]');
 const richColorButtons = document.querySelectorAll('[data-rich-color]');
+const richColorToggle = document.querySelector('#rich-color-toggle');
+const richColorMenu = document.querySelector('#rich-color-menu');
+const richColorCurrentSwatch = document.querySelector('#rich-color-current-swatch');
+const richColorCurrentLabel = document.querySelector('#rich-color-current-label');
 const richFormatSelect = document.querySelector('#rich-format-select');
 const postImage = document.querySelector('#post-image');
 const postAlt = document.querySelector('#post-alt');
@@ -671,17 +677,87 @@ function applyRichTextBlockFormat(blockTag) {
   updateRichFormatControl();
 }
 
+function getRichColorOption(value) {
+  return RICH_COLOR_OPTIONS.find((item) => item.value === value) || RICH_BASE_COLOR;
+}
+
+function setRichColorMenuOpen(isOpen) {
+  if (!richColorMenu || !richColorToggle) return;
+  richColorMenu.classList.toggle('hidden', !isOpen);
+  richColorToggle.setAttribute('aria-expanded', String(isOpen));
+}
+
+function applyClassToSelectedRichText(className) {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount || !postDescriptionEditor) return false;
+
+  const range = selection.getRangeAt(0);
+  if (!postDescriptionEditor.contains(range.commonAncestorContainer) || range.collapsed) return false;
+
+  const wrapper = document.createElement('span');
+  wrapper.className = className;
+  wrapper.append(range.extractContents());
+  range.insertNode(wrapper);
+
+  const after = document.createRange();
+  after.setStartAfter(wrapper);
+  after.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(after);
+  richEditorSavedRange = after.cloneRange();
+  return true;
+}
+
 function applyRichTextColor(colorValue) {
   if (!postDescriptionEditor) return;
-  const color = RICH_COLOR_PALETTE.find((item) => item.value === colorValue);
-  if (!color) return;
+  const color = getRichColorOption(colorValue);
 
   postDescriptionEditor.focus();
   restoreRichEditorSelection();
-  document.execCommand('foreColor', false, color.hex);
-  syncDescriptionFieldFromEditor();
+
+  const wrappedSelection = applyClassToSelectedRichText(color.className);
+  if (!wrappedSelection) {
+    document.execCommand('foreColor', false, color.hex);
+  }
+
+  setDescriptionEditorContent(getEditorRawHtml());
   updateLivePreview();
   updateRichFormatControl();
+  updateRichColorControl();
+  setRichColorMenuOpen(false);
+}
+
+function getCurrentRichColorValue() {
+  const selection = window.getSelection();
+  if (!selection || !selection.anchorNode || !postDescriptionEditor?.contains(selection.anchorNode)) return 'base';
+
+  let node = selection.anchorNode.nodeType === Node.ELEMENT_NODE ? selection.anchorNode : selection.anchorNode.parentElement;
+  while (node && node !== postDescriptionEditor) {
+    const colorClass = Array.from(node.classList || []).find((className) => RICH_COLOR_CLASSES.includes(className));
+    if (colorClass) {
+      return getRichColorOption(RICH_COLOR_OPTIONS.find((item) => item.className === colorClass)?.value).value;
+    }
+    node = node.parentElement;
+  }
+
+  return 'base';
+}
+
+function updateRichColorControl() {
+  if (!richColorToggle) return;
+  const currentColor = getRichColorOption(getCurrentRichColorValue());
+
+  if (richColorCurrentLabel) {
+    richColorCurrentLabel.textContent = currentColor.value === 'base' ? 'Color' : currentColor.label;
+  }
+
+  if (richColorCurrentSwatch) {
+    richColorCurrentSwatch.className = `rich-color-swatch rich-color-swatch-${currentColor.value}`;
+  }
+
+  richColorButtons.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.richColor === currentColor.value);
+  });
 }
 
 function getCurrentRichBlockTag() {
@@ -699,9 +775,11 @@ function getCurrentRichBlockTag() {
 }
 
 function updateRichFormatControl() {
-  if (!richFormatSelect) return;
-  const currentBlockTag = getCurrentRichBlockTag();
-  if (richFormatSelect.value !== currentBlockTag) richFormatSelect.value = currentBlockTag;
+  if (richFormatSelect) {
+    const currentBlockTag = getCurrentRichBlockTag();
+    if (richFormatSelect.value !== currentBlockTag) richFormatSelect.value = currentBlockTag;
+  }
+  updateRichColorControl();
 }
 
 function normalizeSearchText(text) {
@@ -2050,12 +2128,32 @@ richTextButtons.forEach((button) => {
   button.addEventListener('click', () => runRichTextCommand(button.dataset.richCommand));
 });
 
+if (richColorToggle) {
+  richColorToggle.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+    saveRichEditorSelection();
+  });
+  richColorToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setRichColorMenuOpen(richColorMenu?.classList.contains('hidden'));
+  });
+}
+
 richColorButtons.forEach((button) => {
   button.addEventListener('mousedown', (event) => {
     event.preventDefault();
     saveRichEditorSelection();
   });
-  button.addEventListener('click', () => applyRichTextColor(button.dataset.richColor));
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    applyRichTextColor(button.dataset.richColor);
+  });
+});
+
+document.addEventListener('click', (event) => {
+  if (!richColorMenu || richColorMenu.classList.contains('hidden')) return;
+  if (event.target.closest?.('.rich-color-picker')) return;
+  setRichColorMenuOpen(false);
 });
 
 [postStatus, postCategory]

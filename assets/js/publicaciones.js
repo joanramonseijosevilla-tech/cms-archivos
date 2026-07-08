@@ -7,13 +7,14 @@ const POST_CATEGORIES = [
   { value: 'novedades', label: 'Novedades' }
 ];
 const DEFAULT_POST_CATEGORY = 'galeria';
+const RICH_BASE_COLOR = { value: 'base', className: 'rich-color-base', hex: '#64748b', rgb: [100, 116, 139] };
 const RICH_COLOR_PALETTE = [
   { value: 'blue', className: 'rich-color-blue', hex: '#93c5fd', rgb: [147, 197, 253] },
   { value: 'green', className: 'rich-color-green', hex: '#86efac', rgb: [134, 239, 172] },
   { value: 'orange', className: 'rich-color-orange', hex: '#fdba74', rgb: [253, 186, 116] },
   { value: 'red', className: 'rich-color-red', hex: '#fca5a5', rgb: [252, 165, 165] }
 ];
-const RICH_COLOR_CLASSES = RICH_COLOR_PALETTE.map((color) => color.className);
+const RICH_COLOR_CLASSES = [RICH_BASE_COLOR, ...RICH_COLOR_PALETTE].map((color) => color.className);
 
 const postsGrid = document.querySelector('#posts-grid');
 const postsCategoryFilters = document.querySelector('#posts-category-filters');
