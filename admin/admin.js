@@ -1201,7 +1201,6 @@ function setBulkCategoryDraftForAll(category) {
 function createCategorySelect(value, onChange) {
   const select = document.createElement('select');
   select.className = 'admin-bulk-category-select';
-  select.value = isValidPostCategory(value) ? value : DEFAULT_POST_CATEGORY;
 
   POST_CATEGORIES.forEach((category) => {
     const option = document.createElement('option');
@@ -1210,6 +1209,7 @@ function createCategorySelect(value, onChange) {
     select.append(option);
   });
 
+  select.value = isValidPostCategory(value) ? value : DEFAULT_POST_CATEGORY;
   select.addEventListener('change', () => onChange(select.value));
   return select;
 }
