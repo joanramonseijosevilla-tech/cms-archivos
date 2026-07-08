@@ -85,7 +85,13 @@ function showAlert(message, type = 'success') {
 
 function setBusy(isBusy) {
   saveButton.disabled = isBusy;
-  saveButton.textContent = isBusy ? 'Guardando…' : (postId.value ? 'Guardar cambios' : 'Guardar publicación');
+  saveButton.textContent = isBusy
+    ? 'Guardando…'
+    : postId.value
+      ? 'Guardar cambios'
+      : formTitle.textContent === 'Duplicar publicación'
+        ? 'Guardar copia'
+        : 'Guardar publicación';
 }
 
 function showAdmin() {
@@ -1555,11 +1561,31 @@ function confirmAndDiscardFormChangesBeforeBulkAction(message) {
   return true;
 }
 
+function hasReusableCurrentImage() {
+  return Boolean(currentImagePath.value || currentImageSrc.value);
+}
+
+function getReusableCurrentImage(title, alt) {
+  const imagePath = currentImagePath.value || cleanRelativePath(currentImageSrc.value || '');
+  const imageSrc = currentImageSrc.value || imagePath;
+
+  if (!imagePath && !imageSrc) {
+    throw new Error('La publicación duplicada no tiene imagen reutilizable. Selecciona una imagen nueva.');
+  }
+
+  return {
+    src: imageSrc,
+    path: imagePath || cleanRelativePath(imageSrc),
+    alt: alt || title
+  };
+}
+
 function validateRequiredPostFields(isEdit, file) {
   const title = postTitle.value.trim();
   const description = getCleanDescriptionForSave();
   const descriptionText = richTextToPlainText(description);
   const alt = postAlt.value.trim();
+  const allowMissingImage = isEdit || hasReusableCurrentImage();
 
   if (!title) {
     postTitle.focus();
@@ -1571,7 +1597,7 @@ function validateRequiredPostFields(isEdit, file) {
     throw new Error('La descripción es obligatoria.');
   }
 
-  validateImage(file, isEdit);
+  validateImage(file, allowMissingImage);
 
   return { title, description, alt };
 }
@@ -1811,6 +1837,13 @@ function renderAdminPosts() {
         editButton.textContent = 'Editar';
         editButton.addEventListener('click', () => startEdit(item));
 
+        const duplicateButton = document.createElement('button');
+        duplicateButton.type = 'button';
+        duplicateButton.className = 'button button-secondary';
+        duplicateButton.textContent = 'Duplicar';
+        duplicateButton.title = 'Crear una copia editable de esta publicación';
+        duplicateButton.addEventListener('click', () => startDuplicate(item));
+
         const trashButton = document.createElement('button');
         trashButton.type = 'button';
         trashButton.className = 'button button-danger button-with-icon button-trash';
@@ -1818,7 +1851,7 @@ function renderAdminPosts() {
         trashButton.title = 'Mover a papelera';
         trashButton.addEventListener('click', () => movePostToTrash(item));
 
-        actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, trashButton);
+        actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, duplicateButton, trashButton);
       }
       content.append(selectLabel, title, meta, description, actions);
       card.append(img, content);
@@ -1855,6 +1888,30 @@ function startEdit(item) {
   clearPreviewObjectUrl();
   updateLivePreview();
   updateFormBaseline();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startDuplicate(item) {
+  if (blockIfPendingOrder()) return;
+  if (blockIfUnsavedFormChanges('Tienes cambios sin guardar en el formulario. Si duplicas otra publicación, se perderán. ¿Continuar?')) return;
+
+  postForm.reset();
+  postId.value = '';
+  postTitle.value = `Copia de ${item.title || 'publicación sin título'}`;
+  setDescriptionEditorContent(item.description || '');
+  postAlt.value = item.image?.alt || item.title || '';
+  if (postStatus) postStatus.value = 'hidden';
+  if (postCategory) postCategory.value = getItemCategory(item);
+  currentImagePath.value = item.image?.path || '';
+  currentImageSrc.value = item.image?.src || '';
+  formTitle.textContent = 'Duplicar publicación';
+  saveButton.textContent = 'Guardar copia';
+  cancelEditButton.classList.remove('hidden');
+  postImage.required = false;
+  clearPreviewObjectUrl();
+  updateLivePreview();
+  updateFormBaseline();
+  showAlert('Copia preparada en el formulario. Revisa los cambios y pulsa Guardar copia para crear la nueva publicación.');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2248,17 +2305,27 @@ async function savePost(event) {
     };
 
     if (!isEdit) {
-      const optimizedImage = await optimizeImageForUpload(file, now);
-      const imagePath = optimizedImage.path;
+      let nextImage;
+
+      if (file) {
+        const optimizedImage = await optimizeImageForUpload(file, now);
+        const imagePath = optimizedImage.path;
+        payload.image = optimizedImage;
+        nextImage = {
+          src: imagePath,
+          path: imagePath,
+          alt: alt || title
+        };
+      } else {
+        nextImage = getReusableCurrentImage(title, alt);
+        payload.reusedImage = nextImage;
+      }
+
       const newItem = {
         id: `pub_${buildTimestamp(now)}`,
         title,
         description,
-        image: {
-          src: imagePath,
-          path: imagePath,
-          alt: alt || title
-        },
+        image: nextImage,
         status,
         published: status === 'published',
         category,
@@ -2267,7 +2334,6 @@ async function savePost(event) {
       };
 
       payload.id = newItem.id;
-      payload.image = optimizedImage;
 
       nextPublicacionesJson = {
         version: 1,
