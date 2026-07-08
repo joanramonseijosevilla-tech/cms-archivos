@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T17:17:56.813Z",
+  "updatedAt": "2026-07-08T17:36:09.395Z",
   "items": [
     {
       "id": "pub_20260708054938",
@@ -11,11 +11,12 @@
         "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
         "alt": "Ejemplo Prueba Editor"
       },
-      "status": "hidden",
+      "status": "published",
       "category": "galeria",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T17:17:56.813Z",
-      "order": 0
+      "updatedAt": "2026-07-08T17:36:09.395Z",
+      "order": 0,
+      "published": true
     },
     {
       "id": "pub_20260707030316",
@@ -26,11 +27,12 @@
         "path": "assets/uploads/20260707-030316-efecto-rashomon.webp",
         "alt": "Prueba transformación a formato webp y tamaño"
       },
-      "status": "published",
+      "status": "hidden",
       "category": "proyectos",
       "createdAt": "2026-07-07T01:03:16.370Z",
-      "updatedAt": "2026-07-07T01:03:16.370Z",
-      "order": 1
+      "updatedAt": "2026-07-08T17:36:09.395Z",
+      "order": 1,
+      "published": false
     },
     {
       "id": "pub_20260705130227",
