@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T18:14:20.623Z",
+  "updatedAt": "2026-07-08T18:43:23.444Z",
   "items": [
     {
       "id": "pub_20260708201420",
@@ -13,9 +13,9 @@
       },
       "status": "published",
       "published": true,
-      "category": "galeria",
+      "category": "novedades",
       "createdAt": "2026-07-08T18:14:20.623Z",
-      "updatedAt": "2026-07-08T18:14:20.623Z",
+      "updatedAt": "2026-07-08T18:43:23.444Z",
       "order": 0
     },
     {
@@ -28,9 +28,9 @@
         "alt": "Ejemplo Prueba Editor"
       },
       "status": "published",
-      "category": "proyectos",
+      "category": "novedades",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T18:09:31.457Z",
+      "updatedAt": "2026-07-08T18:43:23.444Z",
       "order": 1,
       "published": true
     }
