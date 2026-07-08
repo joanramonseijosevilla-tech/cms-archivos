@@ -959,6 +959,14 @@ function setVisiblePostsSelection(items, isSelected) {
   renderAdminPosts();
 }
 
+function createBulkActionOption(value, label, disabled = false) {
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = label;
+  option.disabled = disabled;
+  return option;
+}
+
 function createBulkActionsBar(displayedItems) {
   cleanSelectedPosts();
 
@@ -969,6 +977,8 @@ function createBulkActionsBar(displayedItems) {
     .map((item) => item.id)
     .filter(Boolean);
   const visibleSelectedCount = visibleIds.filter((id) => state.selectedIds.has(id)).length;
+  const isTrashContext = getStatusFilter() === 'trash' || (selectedDeletedItems.length > 0 && selectedActiveItems.length === 0);
+  const hasSelection = selectedItems.length > 0;
 
   const bar = document.createElement('div');
   bar.className = 'admin-bulk-actions';
@@ -986,45 +996,68 @@ function createBulkActionsBar(displayedItems) {
   });
 
   const selectionText = document.createElement('span');
-  selectionText.textContent = selectedItems.length
-    ? `${selectedItems.length} seleccionada${selectedItems.length === 1 ? '' : 's'}`
-    : 'Seleccionar visibles';
+  selectionText.textContent = 'Seleccionar mostradas';
 
   selectionLabel.append(selectVisibleCheckbox, selectionText);
 
-  const buttons = document.createElement('div');
-  buttons.className = 'admin-bulk-buttons';
+  const selectionCount = document.createElement('span');
+  selectionCount.className = 'admin-bulk-count';
+  selectionCount.textContent = hasSelection
+    ? `${selectedItems.length} seleccionada${selectedItems.length === 1 ? '' : 's'}`
+    : 'Ninguna seleccionada';
 
-  const trashSelectedButton = document.createElement('button');
-  trashSelectedButton.type = 'button';
-  trashSelectedButton.className = 'button button-small button-danger button-with-icon button-trash';
-  trashSelectedButton.innerHTML = '<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" fill="currentColor"/></svg><span>Mover seleccionadas a papelera</span>';
-  trashSelectedButton.disabled = !selectedActiveItems.length || state.orderDirty;
-  trashSelectedButton.addEventListener('click', moveSelectedPostsToTrash);
+  const controls = document.createElement('div');
+  controls.className = 'admin-bulk-controls';
 
-  const restoreSelectedButton = document.createElement('button');
-  restoreSelectedButton.type = 'button';
-  restoreSelectedButton.className = 'button button-small button-secondary';
-  restoreSelectedButton.textContent = 'Restaurar seleccionadas';
-  restoreSelectedButton.disabled = !selectedDeletedItems.length || state.orderDirty;
-  restoreSelectedButton.addEventListener('click', restoreSelectedPosts);
+  const actionSelect = document.createElement('select');
+  actionSelect.className = 'admin-bulk-action-select';
+  actionSelect.setAttribute('aria-label', 'Acciones por lote');
+  actionSelect.disabled = !hasSelection || state.orderDirty;
 
-  const deleteSelectedButton = document.createElement('button');
-  deleteSelectedButton.type = 'button';
-  deleteSelectedButton.className = 'button button-small button-danger';
-  deleteSelectedButton.textContent = 'Eliminar definitivamente';
-  deleteSelectedButton.disabled = !selectedDeletedItems.length || state.orderDirty;
-  deleteSelectedButton.addEventListener('click', deleteSelectedPostsForever);
+  actionSelect.append(createBulkActionOption('', 'Acciones por lote'));
+
+  if (isTrashContext) {
+    actionSelect.append(
+      createBulkActionOption('restore', 'Restaurar seleccionadas', !selectedDeletedItems.length),
+      createBulkActionOption('delete_forever', 'Eliminar definitivamente', !selectedDeletedItems.length)
+    );
+  } else {
+    actionSelect.append(
+      createBulkActionOption('publish', 'Publicar seleccionadas', !selectedActiveItems.length),
+      createBulkActionOption('hide', 'Ocultar seleccionadas', !selectedActiveItems.length),
+      createBulkActionOption('trash', 'Mover a papelera', !selectedActiveItems.length)
+    );
+  }
+
+  const applyActionButton = document.createElement('button');
+  applyActionButton.type = 'button';
+  applyActionButton.className = 'button button-small';
+  applyActionButton.textContent = 'Aplicar';
+  applyActionButton.disabled = !hasSelection || state.orderDirty;
+  applyActionButton.addEventListener('click', async () => {
+    const action = actionSelect.value;
+
+    if (!action) {
+      showAlert('Elige una acción por lote antes de aplicar.', 'error');
+      return;
+    }
+
+    if (action === 'publish') await setSelectedPostsStatus('published');
+    if (action === 'hide') await setSelectedPostsStatus('hidden');
+    if (action === 'trash') await moveSelectedPostsToTrash();
+    if (action === 'restore') await restoreSelectedPosts();
+    if (action === 'delete_forever') await deleteSelectedPostsForever();
+  });
 
   const clearSelectionButton = document.createElement('button');
   clearSelectionButton.type = 'button';
   clearSelectionButton.className = 'button button-small button-secondary';
   clearSelectionButton.textContent = 'Limpiar selección';
-  clearSelectionButton.disabled = !selectedItems.length;
+  clearSelectionButton.disabled = !hasSelection;
   clearSelectionButton.addEventListener('click', clearPostSelection);
 
-  buttons.append(trashSelectedButton, restoreSelectedButton, deleteSelectedButton, clearSelectionButton);
-  bar.append(selectionLabel, buttons);
+  controls.append(actionSelect, applyActionButton, clearSelectionButton);
+  bar.append(selectionLabel, selectionCount, controls);
 
   return bar;
 }
@@ -2043,6 +2076,67 @@ function cancelManualOrder() {
   showAlert('Cambios de orden cancelados.');
 }
 
+
+async function setSelectedPostsStatus(nextStatus) {
+  if (blockIfPendingOrder()) return;
+  const status = nextStatus === 'hidden' ? 'hidden' : 'published';
+  const actionInfinitive = status === 'hidden' ? 'ocultar' : 'publicar';
+  const actionPast = status === 'hidden' ? 'ocultada' : 'publicada';
+
+  if (!confirmAndDiscardFormChangesBeforeBulkAction(`Tienes cambios sin guardar en el formulario. Antes de ${actionInfinitive} publicaciones, guarda o descarta esos cambios. ¿Descartarlos ahora?`)) return;
+
+  const selectedItems = getSelectedActiveItems();
+  const targetItems = selectedItems.filter((selectedItem) => getItemStatus(selectedItem) !== status);
+
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones activas seleccionadas para cambiar el estado.', 'error');
+    return;
+  }
+
+  if (!targetItems.length) {
+    showAlert(`Las publicaciones seleccionadas ya están ${status === 'hidden' ? 'ocultas' : 'publicadas'}.`);
+    return;
+  }
+
+  const confirmed = window.confirm(`¿${status === 'hidden' ? 'Ocultar' : 'Publicar'} ${targetItems.length} publicación${targetItems.length === 1 ? '' : 'es'} seleccionada${targetItems.length === 1 ? '' : 's'}?`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(targetItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (!selectedIdSet.has(currentItem.id)) return currentItem;
+        return {
+          ...currentItem,
+          status,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_status',
+      status,
+      ids: [...selectedIdSet]
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${targetItems.length} publicación${targetItems.length === 1 ? '' : 'es'} ${actionPast}${targetItems.length === 1 ? '' : 's'} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
 
 async function moveSelectedPostsToTrash() {
   if (blockIfPendingOrder()) return;
