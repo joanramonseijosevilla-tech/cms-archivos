@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T03:49:38.332Z",
+  "updatedAt": "2026-07-08T16:24:19.785Z",
   "items": [
     {
       "id": "pub_20260708054938",
@@ -194,10 +194,12 @@
       "title": "P8",
       "status": "published",
       "createdAt": "2026-07-04T17:38:59.299Z",
-      "updatedAt": "2026-07-04T17:38:59.300Z",
+      "updatedAt": "2026-07-08T16:24:19.785Z",
       "description": "D8",
       "order": 12,
-      "category": "galeria"
+      "category": "galeria",
+      "deleted": true,
+      "deletedAt": "2026-07-08T16:24:19.785Z"
     },
     {
       "id": "pub_20260704191752",
@@ -210,9 +212,11 @@
       },
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
-      "updatedAt": "2026-07-04T17:17:52.708Z",
+      "updatedAt": "2026-07-08T16:24:19.785Z",
       "order": 13,
-      "category": "galeria"
+      "category": "galeria",
+      "deleted": true,
+      "deletedAt": "2026-07-08T16:24:19.785Z"
     },
     {
       "id": "pub_20260705094614",
@@ -225,9 +229,11 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
-      "updatedAt": "2026-07-05T07:46:14.660Z",
+      "updatedAt": "2026-07-08T16:24:19.785Z",
       "order": 14,
-      "category": "galeria"
+      "category": "galeria",
+      "deleted": true,
+      "deletedAt": "2026-07-08T16:24:19.785Z"
     },
     {
       "id": "pub_20260705112131",
@@ -240,9 +246,11 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
-      "updatedAt": "2026-07-05T09:21:31.969Z",
+      "updatedAt": "2026-07-08T16:24:19.785Z",
       "order": 15,
-      "category": "galeria"
+      "category": "galeria",
+      "deleted": true,
+      "deletedAt": "2026-07-08T16:24:19.785Z"
     }
   ]
 }
