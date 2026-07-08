@@ -967,18 +967,62 @@ function createBulkActionOption(value, label, disabled = false) {
   return option;
 }
 
+function getPostCountLabel(count) {
+  return `${count} publicación${count === 1 ? '' : 'es'}`;
+}
+
 function createBulkActionsBar(displayedItems) {
   cleanSelectedPosts();
 
   const selectedItems = getSelectedItems();
   const selectedActiveItems = selectedItems.filter((item) => !isItemDeleted(item));
   const selectedDeletedItems = selectedItems.filter((item) => isItemDeleted(item));
+  const selectedPublishedItems = selectedActiveItems.filter((item) => getItemStatus(item) === 'published');
+  const selectedHiddenItems = selectedActiveItems.filter((item) => getItemStatus(item) === 'hidden');
   const visibleIds = (Array.isArray(displayedItems) ? displayedItems : [])
     .map((item) => item.id)
     .filter(Boolean);
   const visibleSelectedCount = visibleIds.filter((id) => state.selectedIds.has(id)).length;
   const isTrashContext = getStatusFilter() === 'trash' || (selectedDeletedItems.length > 0 && selectedActiveItems.length === 0);
   const hasSelection = selectedItems.length > 0;
+
+  const availableActions = [];
+
+  if (isTrashContext) {
+    if (selectedDeletedItems.length) {
+      availableActions.push(
+        {
+          value: 'restore',
+          label: `Restaurar ${getPostCountLabel(selectedDeletedItems.length)}`
+        },
+        {
+          value: 'delete_forever',
+          label: `Eliminar definitivamente ${getPostCountLabel(selectedDeletedItems.length)}`
+        }
+      );
+    }
+  } else {
+    if (selectedHiddenItems.length) {
+      availableActions.push({
+        value: 'publish',
+        label: `Publicar ${getPostCountLabel(selectedHiddenItems.length)} oculta${selectedHiddenItems.length === 1 ? '' : 's'}`
+      });
+    }
+
+    if (selectedPublishedItems.length) {
+      availableActions.push({
+        value: 'hide',
+        label: `Ocultar ${getPostCountLabel(selectedPublishedItems.length)} publicada${selectedPublishedItems.length === 1 ? '' : 's'}`
+      });
+    }
+
+    if (selectedActiveItems.length) {
+      availableActions.push({
+        value: 'trash',
+        label: `Mover ${getPostCountLabel(selectedActiveItems.length)} a papelera`
+      });
+    }
+  }
 
   const bar = document.createElement('div');
   bar.className = 'admin-bulk-actions';
@@ -1012,28 +1056,19 @@ function createBulkActionsBar(displayedItems) {
   const actionSelect = document.createElement('select');
   actionSelect.className = 'admin-bulk-action-select';
   actionSelect.setAttribute('aria-label', 'Acciones por lote');
-  actionSelect.disabled = !hasSelection || state.orderDirty;
+  actionSelect.disabled = !hasSelection || state.orderDirty || !availableActions.length;
 
-  actionSelect.append(createBulkActionOption('', 'Acciones por lote'));
+  actionSelect.append(createBulkActionOption('', availableActions.length ? 'Acciones por lote' : 'Sin acciones disponibles'));
 
-  if (isTrashContext) {
-    actionSelect.append(
-      createBulkActionOption('restore', 'Restaurar seleccionadas', !selectedDeletedItems.length),
-      createBulkActionOption('delete_forever', 'Eliminar definitivamente', !selectedDeletedItems.length)
-    );
-  } else {
-    actionSelect.append(
-      createBulkActionOption('publish', 'Publicar seleccionadas', !selectedActiveItems.length),
-      createBulkActionOption('hide', 'Ocultar seleccionadas', !selectedActiveItems.length),
-      createBulkActionOption('trash', 'Mover a papelera', !selectedActiveItems.length)
-    );
-  }
+  availableActions.forEach((action) => {
+    actionSelect.append(createBulkActionOption(action.value, action.label));
+  });
 
   const applyActionButton = document.createElement('button');
   applyActionButton.type = 'button';
   applyActionButton.className = 'button button-small';
   applyActionButton.textContent = 'Aplicar';
-  applyActionButton.disabled = !hasSelection || state.orderDirty;
+  applyActionButton.disabled = !hasSelection || state.orderDirty || !availableActions.length;
   applyActionButton.addEventListener('click', async () => {
     const action = actionSelect.value;
 
