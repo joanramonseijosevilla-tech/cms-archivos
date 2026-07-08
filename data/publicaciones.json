@@ -1,7 +1,23 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T17:44:27.719Z",
+  "updatedAt": "2026-07-08T18:14:20.623Z",
   "items": [
+    {
+      "id": "pub_20260708201420",
+      "title": "Proyecto Prueba",
+      "description": "<h2></h2><h2 class=\"rich-align-center\">ESTO ES UNA PRUEBA</h2><div>Esto es una prueba para ver si funciona</div><div><ul><li>Primera</li><li><span class=\"rich-color-green\">Segunda</span></li><li>Tercera</li><li>Cuarto</li></ul></div><p><br></p><p><br></p>",
+      "image": {
+        "src": "assets/uploads/20260708-201420-chatgpt-image-21-de-juny-del-2026-23-25-52.webp",
+        "path": "assets/uploads/20260708-201420-chatgpt-image-21-de-juny-del-2026-23-25-52.webp",
+        "alt": "Mingo Verticales"
+      },
+      "status": "published",
+      "published": true,
+      "category": "galeria",
+      "createdAt": "2026-07-08T18:14:20.623Z",
+      "updatedAt": "2026-07-08T18:14:20.623Z",
+      "order": 0
+    },
     {
       "id": "pub_20260708054938",
       "title": "Ejemplo Prueba Editor",
@@ -12,10 +28,10 @@
         "alt": "Ejemplo Prueba Editor"
       },
       "status": "published",
-      "category": "galeria",
+      "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T17:36:09.395Z",
-      "order": 0,
+      "updatedAt": "2026-07-08T18:09:31.457Z",
+      "order": 1,
       "published": true
     }
   ]
