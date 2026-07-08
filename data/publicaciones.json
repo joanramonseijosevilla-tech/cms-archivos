@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T18:47:47.859Z",
+  "updatedAt": "2026-07-08T18:48:51.716Z",
   "items": [
     {
       "id": "pub_20260708201420",
@@ -11,11 +11,11 @@
         "path": "assets/uploads/20260708-201420-chatgpt-image-21-de-juny-del-2026-23-25-52.webp",
         "alt": "Mingo Verticales"
       },
-      "status": "hidden",
-      "published": false,
+      "status": "published",
+      "published": true,
       "category": "galeria",
       "createdAt": "2026-07-08T18:14:20.623Z",
-      "updatedAt": "2026-07-08T18:47:47.859Z",
+      "updatedAt": "2026-07-08T18:48:51.716Z",
       "order": 0
     },
     {
