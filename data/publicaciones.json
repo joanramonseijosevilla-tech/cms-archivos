@@ -1,7 +1,22 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-07T01:03:16.370Z",
+  "updatedAt": "2026-07-08T03:49:38.332Z",
   "items": [
+    {
+      "id": "pub_20260708054938",
+      "title": "Ejemplo Prueba Editor",
+      "description": "<h2 class=\"rich-align-center\">Titulo Ejemplo</h2><div><span class=\"rich-color-green\">Prueba de colores</span></div><div><ul><li><span class=\"rich-color-orange\">Esto es una prueba</span></li><li><span class=\"rich-color-orange\">Veremos que pasa</span></li><ul><li><span class=\"rich-color-orange\">Esto de momento bien</span></li></ul><li><span class=\"rich-color-blue\">Ahora probaremos color base y pegaremos texto y ejecutaremos Make</span></li></ul><div><h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>La combinación de colores personalizada es ahora la combinación de colores predeterminada. Los colores seleccionados ahora se pueden usar como colores de combinación al seleccionar colores en toda la publicación. Por ejemplo, al seleccionar el color de relleno para celdas de tabla, formas, fondos de página o colores de fuente.</p></div></div></div></div><div><br></div>",
+      "image": {
+        "src": "assets/uploads/20260708-054938-efecto-rashomon.webp",
+        "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
+        "alt": "Ejemplo Prueba Editor"
+      },
+      "status": "published",
+      "category": "galeria",
+      "createdAt": "2026-07-08T03:49:38.332Z",
+      "updatedAt": "2026-07-08T03:49:38.332Z",
+      "order": 0
+    },
     {
       "id": "pub_20260707030316",
       "title": "Prueba transformación a formato webp y tamaño",
@@ -15,7 +30,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-07T01:03:16.370Z",
       "updatedAt": "2026-07-07T01:03:16.370Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260705130227",
@@ -30,7 +45,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-05T11:02:27.844Z",
       "updatedAt": "2026-07-05T11:02:27.844Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260705121737",
@@ -44,7 +59,7 @@
       "status": "published",
       "createdAt": "2026-07-05T10:17:37.398Z",
       "updatedAt": "2026-07-07T00:33:41.884Z",
-      "order": 2,
+      "order": 3,
       "category": "galeria",
       "deleted": true,
       "deletedAt": "2026-07-07T00:33:41.884Z"
@@ -62,7 +77,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-06T03:41:59.968Z",
       "updatedAt": "2026-07-06T19:16:38.599Z",
-      "order": 3
+      "order": 4
     },
     {
       "id": "pub_20260705113558",
@@ -76,7 +91,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:35:58.479Z",
       "updatedAt": "2026-07-05T10:19:28.843Z",
-      "order": 4,
+      "order": 5,
       "category": "galeria"
     },
     {
@@ -91,7 +106,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:58:27.335Z",
       "updatedAt": "2026-07-05T09:40:47.060Z",
-      "order": 5,
+      "order": 6,
       "category": "galeria"
     },
     {
@@ -106,7 +121,7 @@
       "status": "published",
       "createdAt": "2026-07-04T20:03:31.261Z",
       "updatedAt": "2026-07-05T10:01:40.717Z",
-      "order": 6,
+      "order": 7,
       "category": "galeria"
     },
     {
@@ -121,7 +136,7 @@
       "status": "published",
       "createdAt": "2026-07-04T19:14:42.512Z",
       "updatedAt": "2026-07-05T03:42:46.041Z",
-      "order": 7,
+      "order": 8,
       "category": "galeria"
     },
     {
@@ -136,7 +151,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:54:50.573Z",
       "updatedAt": "2026-07-05T06:10:34.592Z",
-      "order": 8,
+      "order": 9,
       "category": "galeria"
     },
     {
@@ -151,7 +166,7 @@
       "status": "published",
       "createdAt": "2026-07-04T18:11:05.861Z",
       "updatedAt": "2026-07-04T18:11:05.861Z",
-      "order": 9,
+      "order": 10,
       "category": "galeria"
     },
     {
@@ -166,7 +181,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:44:30.869Z",
       "updatedAt": "2026-07-04T18:41:28.903Z",
-      "order": 10,
+      "order": 11,
       "category": "galeria"
     },
     {
@@ -181,7 +196,7 @@
       "createdAt": "2026-07-04T17:38:59.299Z",
       "updatedAt": "2026-07-04T17:38:59.300Z",
       "description": "D8",
-      "order": 11,
+      "order": 12,
       "category": "galeria"
     },
     {
@@ -196,7 +211,7 @@
       "status": "published",
       "createdAt": "2026-07-04T17:17:52.708Z",
       "updatedAt": "2026-07-04T17:17:52.708Z",
-      "order": 12,
+      "order": 13,
       "category": "galeria"
     },
     {
@@ -211,7 +226,7 @@
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
       "updatedAt": "2026-07-05T07:46:14.660Z",
-      "order": 13,
+      "order": 14,
       "category": "galeria"
     },
     {
@@ -226,7 +241,7 @@
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
       "updatedAt": "2026-07-05T09:21:31.969Z",
-      "order": 14,
+      "order": 15,
       "category": "galeria"
     }
   ]
