@@ -32,7 +32,8 @@ const state = {
   searchQuery: '',
   statusFilter: 'all',
   categoryFilter: 'all',
-  formBaseline: ''
+  formBaseline: '',
+  selectedIds: new Set()
 };
 
 const loginView = document.querySelector('#login-view');
@@ -906,6 +907,128 @@ function updateSearchControls() {
   clearSearchButton.classList.toggle('hidden', !hasActiveListFilter());
 }
 
+
+function cleanSelectedPosts() {
+  const existingIds = new Set((Array.isArray(state.items) ? state.items : []).map((item) => item.id));
+  state.selectedIds = new Set([...state.selectedIds].filter((id) => existingIds.has(id)));
+}
+
+function getSelectedItems() {
+  cleanSelectedPosts();
+  return getOrderedItems(state.items).filter((item) => state.selectedIds.has(item.id));
+}
+
+function getSelectedActiveItems() {
+  return getSelectedItems().filter((item) => !isItemDeleted(item));
+}
+
+function getSelectedDeletedItems() {
+  return getSelectedItems().filter((item) => isItemDeleted(item));
+}
+
+function clearPostSelection() {
+  state.selectedIds.clear();
+  renderAdminPosts();
+}
+
+function togglePostSelection(id, isSelected) {
+  if (!id) return;
+
+  if (isSelected) {
+    state.selectedIds.add(id);
+  } else {
+    state.selectedIds.delete(id);
+  }
+
+  renderAdminPosts();
+}
+
+function setVisiblePostsSelection(items, isSelected) {
+  const visibleIds = (Array.isArray(items) ? items : [])
+    .map((item) => item.id)
+    .filter(Boolean);
+
+  visibleIds.forEach((id) => {
+    if (isSelected) {
+      state.selectedIds.add(id);
+    } else {
+      state.selectedIds.delete(id);
+    }
+  });
+
+  renderAdminPosts();
+}
+
+function createBulkActionsBar(displayedItems) {
+  cleanSelectedPosts();
+
+  const selectedItems = getSelectedItems();
+  const selectedActiveItems = selectedItems.filter((item) => !isItemDeleted(item));
+  const selectedDeletedItems = selectedItems.filter((item) => isItemDeleted(item));
+  const visibleIds = (Array.isArray(displayedItems) ? displayedItems : [])
+    .map((item) => item.id)
+    .filter(Boolean);
+  const visibleSelectedCount = visibleIds.filter((id) => state.selectedIds.has(id)).length;
+
+  const bar = document.createElement('div');
+  bar.className = 'admin-bulk-actions';
+
+  const selectionLabel = document.createElement('label');
+  selectionLabel.className = 'admin-bulk-selection';
+
+  const selectVisibleCheckbox = document.createElement('input');
+  selectVisibleCheckbox.type = 'checkbox';
+  selectVisibleCheckbox.disabled = !visibleIds.length;
+  selectVisibleCheckbox.checked = visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+  selectVisibleCheckbox.indeterminate = visibleSelectedCount > 0 && visibleSelectedCount < visibleIds.length;
+  selectVisibleCheckbox.addEventListener('change', () => {
+    setVisiblePostsSelection(displayedItems, selectVisibleCheckbox.checked);
+  });
+
+  const selectionText = document.createElement('span');
+  selectionText.textContent = selectedItems.length
+    ? `${selectedItems.length} seleccionada${selectedItems.length === 1 ? '' : 's'}`
+    : 'Seleccionar visibles';
+
+  selectionLabel.append(selectVisibleCheckbox, selectionText);
+
+  const buttons = document.createElement('div');
+  buttons.className = 'admin-bulk-buttons';
+
+  const trashSelectedButton = document.createElement('button');
+  trashSelectedButton.type = 'button';
+  trashSelectedButton.className = 'button button-small button-danger button-with-icon button-trash';
+  trashSelectedButton.innerHTML = '<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-.7 11H7.7L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z" fill="currentColor"/></svg><span>Mover seleccionadas a papelera</span>';
+  trashSelectedButton.disabled = !selectedActiveItems.length || state.orderDirty;
+  trashSelectedButton.addEventListener('click', moveSelectedPostsToTrash);
+
+  const restoreSelectedButton = document.createElement('button');
+  restoreSelectedButton.type = 'button';
+  restoreSelectedButton.className = 'button button-small button-secondary';
+  restoreSelectedButton.textContent = 'Restaurar seleccionadas';
+  restoreSelectedButton.disabled = !selectedDeletedItems.length || state.orderDirty;
+  restoreSelectedButton.addEventListener('click', restoreSelectedPosts);
+
+  const deleteSelectedButton = document.createElement('button');
+  deleteSelectedButton.type = 'button';
+  deleteSelectedButton.className = 'button button-small button-danger';
+  deleteSelectedButton.textContent = 'Eliminar definitivamente';
+  deleteSelectedButton.disabled = !selectedDeletedItems.length || state.orderDirty;
+  deleteSelectedButton.addEventListener('click', deleteSelectedPostsForever);
+
+  const clearSelectionButton = document.createElement('button');
+  clearSelectionButton.type = 'button';
+  clearSelectionButton.className = 'button button-small button-secondary';
+  clearSelectionButton.textContent = 'Limpiar selección';
+  clearSelectionButton.disabled = !selectedItems.length;
+  clearSelectionButton.addEventListener('click', clearPostSelection);
+
+  buttons.append(trashSelectedButton, restoreSelectedButton, deleteSelectedButton, clearSelectionButton);
+  bar.append(selectionLabel, buttons);
+
+  return bar;
+}
+
 function getManualOrderValue(item) {
   const order = Number(item?.order);
   return Number.isFinite(order) ? order : null;
@@ -1008,6 +1131,7 @@ function setStateFromPublicacionesJson(publicacionesJson) {
   const normalized = normalizePublicacionesJson(publicacionesJson);
   state.items = normalized.items;
   state.publicacionesUpdatedAt = normalized.updatedAt;
+  cleanSelectedPosts();
 }
 
 function clearPendingOrder() {
@@ -1058,6 +1182,18 @@ function confirmDiscardFormChanges(message = 'Tienes cambios sin guardar en el f
 function blockIfUnsavedFormChanges(message) {
   if (confirmDiscardFormChanges(message)) return false;
   showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
+  return true;
+}
+
+function confirmAndDiscardFormChangesBeforeBulkAction(message) {
+  if (!hasUnsavedFormChanges()) return true;
+
+  if (!confirmDiscardFormChanges(message)) {
+    showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
+    return false;
+  }
+
+  resetForm();
   return true;
 }
 
@@ -1183,6 +1319,8 @@ function renderAdminPosts() {
 
   const fragment = document.createDocumentFragment();
 
+  cleanSelectedPosts();
+
   if (state.orderDirty) {
     const orderNotice = document.createElement('div');
     orderNotice.className = 'admin-alert';
@@ -1207,6 +1345,8 @@ function renderAdminPosts() {
     fragment.append(orderNotice, orderActions);
   }
 
+  fragment.append(createBulkActionsBar(displayedItems));
+
   displayedItems
     .forEach((item) => {
       const fullIndex = fullOrderedItems.findIndex((orderedItem) => orderedItem.id === item.id);
@@ -1218,7 +1358,24 @@ function renderAdminPosts() {
       img.alt = item.image?.alt || item.title || 'Imagen de publicación';
       img.loading = 'lazy';
 
+      if (state.selectedIds.has(item.id)) {
+        card.classList.add('is-selected');
+      }
+
       const content = document.createElement('div');
+
+      const selectLabel = document.createElement('label');
+      selectLabel.className = 'admin-post-select';
+
+      const selectCheckbox = document.createElement('input');
+      selectCheckbox.type = 'checkbox';
+      selectCheckbox.checked = state.selectedIds.has(item.id);
+      selectCheckbox.addEventListener('change', () => togglePostSelection(item.id, selectCheckbox.checked));
+
+      const selectText = document.createElement('span');
+      selectText.textContent = 'Seleccionar';
+
+      selectLabel.append(selectCheckbox, selectText);
 
       const title = document.createElement('h3');
       title.textContent = item.title || 'Sin título';
@@ -1301,7 +1458,7 @@ function renderAdminPosts() {
 
         actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, trashButton);
       }
-      content.append(title, meta, description, actions);
+      content.append(selectLabel, title, meta, description, actions);
       card.append(img, content);
       fragment.append(card);
     });
@@ -1884,6 +2041,151 @@ function cancelManualOrder() {
   clearPendingOrder();
   renderAdminPosts();
   showAlert('Cambios de orden cancelados.');
+}
+
+
+async function moveSelectedPostsToTrash() {
+  if (blockIfPendingOrder()) return;
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de mover publicaciones a la papelera, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  const selectedItems = getSelectedActiveItems();
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones activas seleccionadas para mover a papelera.', 'error');
+    return;
+  }
+
+  const confirmed = window.confirm(`¿Mover ${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} seleccionada${selectedItems.length === 1 ? '' : 's'} a la papelera? Podrás restaurar después.`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(selectedItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (!selectedIdSet.has(currentItem.id)) return currentItem;
+        return {
+          ...currentItem,
+          deleted: true,
+          deletedAt: nowIso,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_trash',
+      ids: [...selectedIdSet]
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    const editingPostWasSelected = Boolean(postId.value && selectedIdSet.has(postId.value));
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    if (editingPostWasSelected) resetForm();
+    renderAdminPosts();
+    showAlert(`${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} movida${selectedItems.length === 1 ? '' : 's'} a la papelera.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
+
+async function restoreSelectedPosts() {
+  if (blockIfPendingOrder()) return;
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de restaurar publicaciones, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  const selectedItems = getSelectedDeletedItems();
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones de la papelera seleccionadas para restaurar.', 'error');
+    return;
+  }
+
+  const confirmed = window.confirm(`¿Restaurar ${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} seleccionada${selectedItems.length === 1 ? '' : 's'}?`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(selectedItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (!selectedIdSet.has(currentItem.id)) return currentItem;
+        const { deleted, deletedAt, ...restoredItem } = currentItem;
+        return {
+          ...restoredItem,
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_restore',
+      ids: [...selectedIdSet]
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} restaurada${selectedItems.length === 1 ? '' : 's'} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
+
+async function deleteSelectedPostsForever() {
+  if (blockIfPendingOrder()) return;
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de eliminar publicaciones definitivamente, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  const selectedItems = getSelectedDeletedItems();
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones de la papelera seleccionadas para eliminar definitivamente.', 'error');
+    return;
+  }
+
+  const confirmed = window.confirm(`¿Eliminar definitivamente ${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} seleccionada${selectedItems.length === 1 ? '' : 's'}? Esta acción no se puede deshacer.`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(selectedItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.filter((currentItem) => !selectedIdSet.has(currentItem.id)))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_delete_forever',
+      ids: [...selectedIdSet],
+      imagePaths: selectedItems.map((selectedItem) => selectedItem.image?.path).filter(Boolean)
+    }, nextPublicacionesJson);
+
+    await sendToMake('delete', payload);
+
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${selectedItems.length} publicación${selectedItems.length === 1 ? '' : 'es'} eliminada${selectedItems.length === 1 ? '' : 's'} definitivamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
 }
 
 async function togglePostStatus(item) {
