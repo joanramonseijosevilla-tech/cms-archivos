@@ -975,6 +975,21 @@ function getPostCountLabel(count) {
   return `${count} publicación${count === 1 ? '' : 'es'}`;
 }
 
+function getBulkToggleStatusLabel(publishedCount, hiddenCount) {
+  const parts = [];
+
+  if (hiddenCount > 0) {
+    parts.push(`Publicar ${hiddenCount} oculta${hiddenCount === 1 ? '' : 's'}`);
+  }
+
+  if (publishedCount > 0) {
+    parts.push(`ocultar ${publishedCount} publicada${publishedCount === 1 ? '' : 's'}`);
+  }
+
+  if (!parts.length) return 'Cambiar estado de seleccionadas';
+  return parts.join(' y ');
+}
+
 function createBulkActionsBar(displayedItems) {
   cleanSelectedPosts();
 
@@ -1006,21 +1021,12 @@ function createBulkActionsBar(displayedItems) {
       );
     }
   } else {
-    if (selectedHiddenItems.length) {
-      availableActions.push({
-        value: 'publish',
-        label: `Publicar ${selectedHiddenItems.length} oculta${selectedHiddenItems.length === 1 ? '' : 's'} seleccionada${selectedHiddenItems.length === 1 ? '' : 's'}`
-      });
-    }
-
-    if (selectedPublishedItems.length) {
-      availableActions.push({
-        value: 'hide',
-        label: `Ocultar ${selectedPublishedItems.length} publicada${selectedPublishedItems.length === 1 ? '' : 's'} seleccionada${selectedPublishedItems.length === 1 ? '' : 's'}`
-      });
-    }
-
     if (selectedActiveItems.length) {
+      availableActions.push({
+        value: 'toggle_status',
+        label: getBulkToggleStatusLabel(selectedPublishedItems.length, selectedHiddenItems.length)
+      });
+
       availableActions.push({
         value: 'trash',
         label: `Mover ${selectedActiveItems.length} seleccionada${selectedActiveItems.length === 1 ? '' : 's'} a papelera`
@@ -1081,8 +1087,7 @@ function createBulkActionsBar(displayedItems) {
       return;
     }
 
-    if (action === 'publish') await setSelectedPostsStatus('published');
-    if (action === 'hide') await setSelectedPostsStatus('hidden');
+    if (action === 'toggle_status') await toggleSelectedPostsStatus();
     if (action === 'trash') await moveSelectedPostsToTrash();
     if (action === 'restore') await restoreSelectedPosts();
     if (action === 'delete_forever') await deleteSelectedPostsForever();
@@ -2117,6 +2122,62 @@ function cancelManualOrder() {
   showAlert('Cambios de orden cancelados.');
 }
 
+
+async function toggleSelectedPostsStatus() {
+  if (blockIfPendingOrder()) return;
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de cambiar el estado de publicaciones, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  const selectedItems = getSelectedActiveItems();
+  if (!selectedItems.length) {
+    showAlert('No hay publicaciones activas seleccionadas para cambiar el estado.', 'error');
+    return;
+  }
+
+  const selectedPublishedItems = selectedItems.filter((selectedItem) => getItemStatus(selectedItem) === 'published');
+  const selectedHiddenItems = selectedItems.filter((selectedItem) => getItemStatus(selectedItem) === 'hidden');
+  const actionLabel = getBulkToggleStatusLabel(selectedPublishedItems.length, selectedHiddenItems.length);
+  const confirmed = window.confirm(`¿${actionLabel}?`);
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const selectedIdSet = new Set(selectedItems.map((selectedItem) => selectedItem.id));
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
+        if (!selectedIdSet.has(currentItem.id)) return currentItem;
+        const nextStatus = getItemStatus(currentItem) === 'published' ? 'hidden' : 'published';
+        return {
+          ...currentItem,
+          status: nextStatus,
+          published: nextStatus === 'published',
+          updatedAt: nowIso
+        };
+      }))
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'bulk_toggle_status',
+      ids: [...selectedIdSet],
+      publishIds: selectedHiddenItems.map((selectedItem) => selectedItem.id),
+      hideIds: selectedPublishedItems.map((selectedItem) => selectedItem.id)
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    renderAdminPosts();
+    showAlert(`${actionLabel} correctamente.`);
+  } catch (error) {
+    showAlert(error.message, 'error');
+    console.error(error);
+  }
+}
 
 async function setSelectedPostsStatus(nextStatus) {
   if (blockIfPendingOrder()) return;
