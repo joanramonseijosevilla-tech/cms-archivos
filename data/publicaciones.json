@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T16:24:19.785Z",
+  "updatedAt": "2026-07-08T16:28:09.624Z",
   "items": [
     {
       "id": "pub_20260708054938",
@@ -229,11 +229,9 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T07:46:14.660Z",
-      "updatedAt": "2026-07-08T16:24:19.785Z",
+      "updatedAt": "2026-07-08T16:28:09.624Z",
       "order": 14,
-      "category": "galeria",
-      "deleted": true,
-      "deletedAt": "2026-07-08T16:24:19.785Z"
+      "category": "galeria"
     },
     {
       "id": "pub_20260705112131",
@@ -246,11 +244,9 @@
       },
       "status": "published",
       "createdAt": "2026-07-05T09:21:31.969Z",
-      "updatedAt": "2026-07-08T16:24:19.785Z",
+      "updatedAt": "2026-07-08T16:28:09.624Z",
       "order": 15,
-      "category": "galeria",
-      "deleted": true,
-      "deletedAt": "2026-07-08T16:24:19.785Z"
+      "category": "galeria"
     }
   ]
 }
