@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T16:29:27.729Z",
+  "updatedAt": "2026-07-08T17:17:56.813Z",
   "items": [
     {
       "id": "pub_20260708054938",
@@ -11,10 +11,10 @@
         "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
         "alt": "Ejemplo Prueba Editor"
       },
-      "status": "published",
+      "status": "hidden",
       "category": "galeria",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T03:49:38.332Z",
+      "updatedAt": "2026-07-08T17:17:56.813Z",
       "order": 0
     },
     {
