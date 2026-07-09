@@ -339,6 +339,34 @@ input[type="file"]::file-selector-button {
   white-space: pre-line;
 }
 
+.admin-post-description.is-collapsed {
+  position: relative;
+  max-height: 6.6rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
+}
+
+.admin-description-toggle {
+  justify-self: start;
+  margin-top: 0.35rem;
+  border: 0;
+  padding: 0;
+  color: #93c5fd;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-description-toggle:hover,
+.admin-description-toggle:focus-visible {
+  color: #bfdbfe;
+  text-decoration: underline;
+  outline: none;
+}
+
 .admin-post-actions {
   display: flex;
   flex-wrap: wrap;

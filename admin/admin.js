@@ -34,6 +34,7 @@ const state = {
   categoryFilter: 'all',
   formBaseline: '',
   selectedIds: new Set(),
+  expandedDescriptionIds: new Set(),
   bulkCategoryEditorOpen: false,
   bulkCategoryDraft: {},
   lastFeedbackScope: 'global'
@@ -1789,6 +1790,31 @@ async function loadAdminPosts() {
   }
 }
 
+
+function shouldCollapseAdminDescription(value) {
+  const cleanHtml = sanitizeRichText(value || '');
+  if (!cleanHtml) return false;
+
+  const template = document.createElement('template');
+  template.innerHTML = cleanHtml;
+  const plainText = template.content.textContent.trim();
+  const blockCount = template.content.querySelectorAll('p, div, li, h2, h3, h4, ul, ol').length;
+
+  return plainText.length > 260 || blockCount > 4;
+}
+
+function toggleAdminDescription(postId) {
+  if (!postId) return;
+
+  if (state.expandedDescriptionIds.has(postId)) {
+    state.expandedDescriptionIds.delete(postId);
+  } else {
+    state.expandedDescriptionIds.add(postId);
+  }
+
+  renderAdminPosts();
+}
+
 function renderAdminPosts() {
   adminPosts.replaceChildren();
   updateSearchControls();
@@ -1895,6 +1921,20 @@ function renderAdminPosts() {
       description.className = 'admin-post-description rich-text-content';
       renderRichText(description, item.description || '');
 
+      const descriptionNeedsToggle = shouldCollapseAdminDescription(item.description || '');
+      const descriptionExpanded = state.expandedDescriptionIds.has(item.id);
+
+      if (descriptionNeedsToggle && !descriptionExpanded) {
+        description.classList.add('is-collapsed');
+      }
+
+      const descriptionToggle = document.createElement('button');
+      descriptionToggle.type = 'button';
+      descriptionToggle.className = 'admin-description-toggle';
+      descriptionToggle.textContent = descriptionExpanded ? 'Ver menos' : 'Ver más';
+      descriptionToggle.setAttribute('aria-expanded', descriptionExpanded ? 'true' : 'false');
+      descriptionToggle.addEventListener('click', () => toggleAdminDescription(item.id));
+
       const actions = document.createElement('div');
       actions.className = 'admin-post-actions';
 
@@ -1959,7 +1999,13 @@ function renderAdminPosts() {
 
         actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, duplicateButton, trashButton);
       }
-      content.append(selectLabel, title, meta, description, actions);
+      content.append(selectLabel, title, meta, description);
+
+      if (descriptionNeedsToggle) {
+        content.append(descriptionToggle);
+      }
+
+      content.append(actions);
       card.append(img, content);
       fragment.append(card);
     });
