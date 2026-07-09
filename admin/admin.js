@@ -147,6 +147,16 @@ function showAlert(message, type = 'success', options = {}) {
   target.className = `admin-alert admin-inline-alert ${type === 'error' ? 'error' : ''}`.trim();
   target.classList.remove('hidden');
 
+  if (options.scroll === true) {
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+    });
+  }
+
   window.clearTimeout(target._hideTimer);
   target._hideTimer = window.setTimeout(() => target.classList.add('hidden'), type === 'error' ? 9000 : 5600);
 }
@@ -2483,8 +2493,9 @@ async function savePost(event) {
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
-    showAlert(isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.');
+    const successMessage = isEdit ? 'Publicación actualizada correctamente.' : 'Publicación creada correctamente.';
     resetForm();
+    showAlert(successMessage, 'success', { scope: 'form', scroll: true });
 
     if (payload.image?.path) {
       waitForImageReady(payload.image.path).catch((error) => {
