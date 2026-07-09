@@ -21,6 +21,8 @@ const IMAGE_OUTPUT_EXTENSION = 'webp';
 const DEFAULT_IMAGE_MAX_SIDE_PX = 1600;
 const DEFAULT_IMAGE_WEBP_QUALITY = 0.85;
 const DEFAULT_MAX_SOURCE_IMAGE_MB = 20;
+const ADMIN_PAGE_SIZE_OPTIONS = [10, 25, 50];
+const DEFAULT_ADMIN_PAGE_SIZE = 10;
 
 const state = {
   items: [],
@@ -35,6 +37,8 @@ const state = {
   formBaseline: '',
   selectedIds: new Set(),
   expandedDescriptionIds: new Set(),
+  currentPage: 1,
+  pageSize: DEFAULT_ADMIN_PAGE_SIZE,
   bulkCategoryEditorOpen: false,
   bulkCategoryDraft: {},
   lastFeedbackScope: 'global'
@@ -1491,6 +1495,7 @@ async function saveBulkCategoryChanges() {
     state.selectedIds.clear();
     closeBulkCategoryEditor(false);
     setStateFromPublicacionesJson(nextPublicacionesJson);
+    if (!isEdit) resetAdminPagination();
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
     showAlert(`${changes.length} cambio${changes.length === 1 ? '' : 's'} de categoría guardado${changes.length === 1 ? '' : 's'} correctamente.`);
@@ -1815,6 +1820,151 @@ function toggleAdminDescription(postId) {
   renderAdminPosts();
 }
 
+
+function getSafePageSize() {
+  const numericPageSize = Number(state.pageSize);
+  return ADMIN_PAGE_SIZE_OPTIONS.includes(numericPageSize) ? numericPageSize : DEFAULT_ADMIN_PAGE_SIZE;
+}
+
+function getMaxPage(totalItems) {
+  const pageSize = getSafePageSize();
+  return Math.max(1, Math.ceil(Math.max(0, totalItems) / pageSize));
+}
+
+function clampCurrentPage(totalItems) {
+  const maxPage = getMaxPage(totalItems);
+  const numericCurrentPage = Number(state.currentPage);
+  state.currentPage = Number.isFinite(numericCurrentPage)
+    ? Math.min(Math.max(1, Math.floor(numericCurrentPage)), maxPage)
+    : 1;
+  return state.currentPage;
+}
+
+function resetAdminPagination() {
+  state.currentPage = 1;
+}
+
+function getPaginatedItems(items) {
+  const safeItems = Array.isArray(items) ? items : [];
+  const pageSize = getSafePageSize();
+  const currentPage = clampCurrentPage(safeItems.length);
+  const startIndex = (currentPage - 1) * pageSize;
+  return safeItems.slice(startIndex, startIndex + pageSize);
+}
+
+function getPaginationRange(totalItems) {
+  const total = Math.max(0, totalItems);
+  if (!total) {
+    return { start: 0, end: 0, total, currentPage: 1, maxPage: 1 };
+  }
+
+  const pageSize = getSafePageSize();
+  const currentPage = clampCurrentPage(total);
+  const start = ((currentPage - 1) * pageSize) + 1;
+  const end = Math.min(start + pageSize - 1, total);
+  return { start, end, total, currentPage, maxPage: getMaxPage(total) };
+}
+
+function scrollToAdminList() {
+  const target = adminPosts || adminStatus;
+  if (!target) return;
+  setTimeout(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 0);
+}
+
+function setAdminPage(nextPage, shouldScroll = true) {
+  const maxPage = getMaxPage(getFilteredAdminItems().length);
+  const numericNextPage = Number(nextPage);
+  state.currentPage = Number.isFinite(numericNextPage)
+    ? Math.min(Math.max(1, Math.floor(numericNextPage)), maxPage)
+    : 1;
+  renderAdminPosts();
+  if (shouldScroll) scrollToAdminList();
+}
+
+function setAdminPageSize(nextPageSize) {
+  const numericPageSize = Number(nextPageSize);
+  state.pageSize = ADMIN_PAGE_SIZE_OPTIONS.includes(numericPageSize) ? numericPageSize : DEFAULT_ADMIN_PAGE_SIZE;
+  resetAdminPagination();
+  renderAdminPosts();
+  scrollToAdminList();
+}
+
+function getFilteredAdminItems() {
+  const fullOrderedItems = getOrderedItems(state.items);
+  return fullOrderedItems.filter((item) => (
+    itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item) && itemMatchesCategoryFilter(item)
+  ));
+}
+
+function createPaginationControls(totalItems, options = {}) {
+  const range = getPaginationRange(totalItems);
+  const compact = Boolean(options.compact);
+  const pagination = document.createElement('div');
+  pagination.className = `admin-pagination${compact ? ' admin-pagination-compact' : ''}`;
+
+  const info = document.createElement('p');
+  info.className = 'admin-pagination-info';
+  info.textContent = range.total
+    ? `Mostrando ${range.start}–${range.end} de ${range.total}`
+    : 'No hay publicaciones para mostrar.';
+
+  const controls = document.createElement('div');
+  controls.className = 'admin-pagination-controls';
+
+  if (!compact) {
+    const pageSizeLabel = document.createElement('label');
+    pageSizeLabel.className = 'admin-page-size';
+
+    const pageSizeText = document.createElement('span');
+    pageSizeText.textContent = 'Mostrar';
+
+    const pageSizeSelect = document.createElement('select');
+    pageSizeSelect.setAttribute('aria-label', 'Publicaciones por página');
+
+    ADMIN_PAGE_SIZE_OPTIONS.forEach((optionValue) => {
+      const option = document.createElement('option');
+      option.value = String(optionValue);
+      option.textContent = String(optionValue);
+      option.selected = optionValue === getSafePageSize();
+      pageSizeSelect.append(option);
+    });
+
+    pageSizeSelect.addEventListener('change', () => setAdminPageSize(pageSizeSelect.value));
+
+    const pageSizeSuffix = document.createElement('span');
+    pageSizeSuffix.textContent = 'por página';
+
+    pageSizeLabel.append(pageSizeText, pageSizeSelect, pageSizeSuffix);
+    controls.append(pageSizeLabel);
+  }
+
+  const prevButton = document.createElement('button');
+  prevButton.type = 'button';
+  prevButton.className = 'button button-small button-secondary';
+  prevButton.textContent = 'Anterior';
+  prevButton.disabled = range.currentPage <= 1 || !range.total;
+  prevButton.addEventListener('click', () => setAdminPage(range.currentPage - 1));
+
+  const pageLabel = document.createElement('span');
+  pageLabel.className = 'admin-pagination-page';
+  pageLabel.textContent = `Página ${range.currentPage} de ${range.maxPage}`;
+
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.className = 'button button-small button-secondary';
+  nextButton.textContent = 'Siguiente';
+  nextButton.disabled = range.currentPage >= range.maxPage || !range.total;
+  nextButton.addEventListener('click', () => setAdminPage(range.currentPage + 1));
+
+  controls.append(prevButton, pageLabel, nextButton);
+  pagination.append(info, controls);
+
+  return pagination;
+}
+
+
 function renderAdminPosts() {
   adminPosts.replaceChildren();
   updateSearchControls();
@@ -1827,9 +1977,10 @@ function renderAdminPosts() {
   const fullOrderedItems = getOrderedItems(state.items);
   const activeOrderedItems = fullOrderedItems.filter((item) => !isItemDeleted(item));
   const filterActive = hasActiveListFilter();
-  const displayedItems = fullOrderedItems.filter((item) => (
-    itemMatchesSearch(item, state.searchQuery) && itemMatchesStatusFilter(item) && itemMatchesCategoryFilter(item)
-  ));
+  const displayedItems = getFilteredAdminItems();
+
+  clampCurrentPage(displayedItems.length);
+  const paginatedItems = getPaginatedItems(displayedItems);
 
   adminStatus.textContent = buildStatusText(displayedItems.length, fullOrderedItems);
 
@@ -1861,13 +2012,17 @@ function renderAdminPosts() {
     fragment.append(orderNotice, orderActions);
   }
 
-  fragment.append(createBulkActionsBar(displayedItems));
+  if (displayedItems.length) {
+    fragment.append(createPaginationControls(displayedItems.length));
+  }
+
+  fragment.append(createBulkActionsBar(paginatedItems));
 
   if (state.bulkCategoryEditorOpen) {
     fragment.append(createBulkCategoryPanel());
   }
 
-  displayedItems
+  paginatedItems
     .forEach((item) => {
       const fullIndex = fullOrderedItems.findIndex((orderedItem) => orderedItem.id === item.id);
       const card = document.createElement('article');
@@ -2017,6 +2172,10 @@ function renderAdminPosts() {
       ? 'No hay publicaciones que coincidan con la búsqueda o el filtro seleccionado.'
       : 'No hay publicaciones activas. Revisa la papelera si esperabas ver contenido.';
     fragment.append(emptySearch);
+  }
+
+  if (displayedItems.length && getMaxPage(displayedItems.length) > 1) {
+    fragment.append(createPaginationControls(displayedItems.length, { compact: true }));
   }
 
   adminPosts.append(fragment);
@@ -3238,6 +3397,7 @@ document.addEventListener('click', (event) => {
 if (postSearch) {
   postSearch.addEventListener('input', () => {
     state.searchQuery = postSearch.value;
+    resetAdminPagination();
     renderAdminPosts();
   });
 }
@@ -3245,6 +3405,7 @@ if (postSearch) {
 if (postStatusFilter) {
   postStatusFilter.addEventListener('change', () => {
     state.statusFilter = postStatusFilter.value;
+    resetAdminPagination();
     renderAdminPosts();
   });
 }
@@ -3252,6 +3413,7 @@ if (postStatusFilter) {
 if (postCategoryFilter) {
   postCategoryFilter.addEventListener('change', () => {
     state.categoryFilter = postCategoryFilter.value;
+    resetAdminPagination();
     renderAdminPosts();
   });
 }
@@ -3261,6 +3423,7 @@ if (clearSearchButton) {
     state.searchQuery = '';
     state.statusFilter = 'all';
     state.categoryFilter = 'all';
+    resetAdminPagination();
     if (postSearch) postSearch.value = '';
     if (postStatusFilter) postStatusFilter.value = 'all';
     if (postCategoryFilter) postCategoryFilter.value = 'all';
