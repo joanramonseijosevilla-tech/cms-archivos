@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-09T04:33:46.762Z",
+  "updatedAt": "2026-07-09T04:34:22.834Z",
   "items": [
     {
       "id": "pub_20260709063346",
@@ -59,11 +59,11 @@
         "path": "assets/uploads/20260709-061659-chatgpt-image-21-de-juny-del-2026-23-25-52.webp",
         "alt": "PRUEBA 2"
       },
-      "status": "hidden",
-      "published": false,
+      "status": "published",
+      "published": true,
       "category": "novedades",
       "createdAt": "2026-07-09T04:16:59.485Z",
-      "updatedAt": "2026-07-09T04:16:59.485Z",
+      "updatedAt": "2026-07-09T04:34:22.834Z",
       "order": 3
     },
     {
