@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-31">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-35">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-33"></script>
+  <script defer src="admin.js?v=20260705-35"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -153,6 +153,7 @@
               <button id="save-button" class="button" type="submit">Guardar publicación</button>
               <button id="cancel-edit-button" class="button button-secondary hidden" type="button">Cancelar edición</button>
             </div>
+            <div id="form-feedback" class="admin-alert admin-inline-alert hidden" role="status"></div>
           </form>
         </section>
 
@@ -190,6 +191,7 @@
             <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda y filtros</button>
           </div>
           <div id="admin-status" class="status" role="status">Cargando publicaciones…</div>
+          <div id="list-feedback" class="admin-alert admin-inline-alert hidden" role="status"></div>
           <div id="admin-posts" class="admin-posts"></div>
         </section>
       </div>

@@ -253,6 +253,20 @@ input[type="file"]::file-selector-button {
   color: #7f1d1d;
 }
 
+.admin-inline-alert {
+  margin-top: 0.85rem;
+  line-height: 1.45;
+}
+
+#list-feedback.admin-inline-alert {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+#form-feedback.admin-inline-alert {
+  margin-top: 0.2rem;
+}
+
 .admin-posts {
   display: grid;
   gap: 0.85rem;

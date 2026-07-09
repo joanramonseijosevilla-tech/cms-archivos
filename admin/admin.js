@@ -35,7 +35,8 @@ const state = {
   formBaseline: '',
   selectedIds: new Set(),
   bulkCategoryEditorOpen: false,
-  bulkCategoryDraft: {}
+  bulkCategoryDraft: {},
+  lastFeedbackScope: 'global'
 };
 
 const loginView = document.querySelector('#login-view');
@@ -64,6 +65,8 @@ const currentImageSrc = document.querySelector('#current-image-src');
 const adminPosts = document.querySelector('#admin-posts');
 const adminStatus = document.querySelector('#admin-status');
 const adminAlert = document.querySelector('#admin-alert');
+const formFeedback = document.querySelector('#form-feedback');
+const listFeedback = document.querySelector('#list-feedback');
 const formTitle = document.querySelector('#form-title');
 const saveButton = document.querySelector('#save-button');
 const cancelEditButton = document.querySelector('#cancel-edit-button');
@@ -76,11 +79,76 @@ const clearSearchButton = document.querySelector('#clear-search-button');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
 
-function showAlert(message, type = 'success') {
-  adminAlert.textContent = message;
-  adminAlert.className = `admin-alert ${type === 'error' ? 'error' : ''}`;
-  adminAlert.classList.remove('hidden');
-  window.setTimeout(() => adminAlert.classList.add('hidden'), 5200);
+function getFriendlyErrorMessage(message) {
+  const rawMessage = String(message || '').trim();
+
+  if (!rawMessage) {
+    return 'No se ha podido completar la operación. Inténtalo de nuevo. Código técnico: CMS-ERROR-GENERICO.';
+  }
+
+  if (rawMessage.includes('Falta configurar la URL del webhook')) {
+    return 'El panel no está configurado correctamente. Código técnico: CMS-CONFIG-01.';
+  }
+
+  if (rawMessage.includes('Make no confirmó') || rawMessage.includes('Respuesta vacía de Make')) {
+    return 'No se ha podido confirmar el guardado. Revisa la conexión e inténtalo de nuevo. Código técnico: CMS-GUARDADO-01.';
+  }
+
+  if (rawMessage.includes('Make respondió con error')) {
+    const statusMatch = rawMessage.match(/error\s+(\d+)/i);
+    const statusCode = statusMatch?.[1] || 'HTTP';
+    return `No se ha podido completar la operación. Código técnico: CMS-GUARDADO-${statusCode}.`;
+  }
+
+  if (rawMessage.includes('GitHub API') || rawMessage.includes('data/publicaciones.json')) {
+    return 'No se han podido leer los datos publicados. Inténtalo de nuevo en unos segundos. Código técnico: CMS-LECTURA-01.';
+  }
+
+  if (rawMessage.includes('GitHub') && rawMessage.includes('imagen')) {
+    return 'La publicación se ha enviado, pero la imagen todavía no se ha podido comprobar. Código técnico: CMS-IMAGEN-01.';
+  }
+
+  if (rawMessage.includes('Make confirmó la subida') || rawMessage.includes('No se ha podido comprobar la imagen subida')) {
+    return 'La publicación se ha guardado, pero la imagen puede tardar unos segundos en estar disponible. Código técnico: CMS-IMAGEN-02.';
+  }
+
+  return rawMessage;
+}
+
+function getFeedbackElement(scope) {
+  if (scope === 'form' && formFeedback) return formFeedback;
+  if (scope === 'list' && listFeedback) return listFeedback;
+  return adminAlert;
+}
+
+function hideFeedbackElement(element) {
+  if (!element) return;
+  element.classList.add('hidden');
+  element.textContent = '';
+}
+
+function hideOtherFeedbackElements(activeElement) {
+  [adminAlert, formFeedback, listFeedback].forEach((element) => {
+    if (element && element !== activeElement) hideFeedbackElement(element);
+  });
+}
+
+function showAlert(message, type = 'success', options = {}) {
+  const scope = options.scope || state.lastFeedbackScope || 'global';
+  const target = getFeedbackElement(scope);
+  const displayMessage = type === 'error' ? getFriendlyErrorMessage(message) : String(message || '');
+
+  if (type === 'error' && displayMessage !== String(message || '')) {
+    console.warn('Detalle técnico del error CMS:', message);
+  }
+
+  hideOtherFeedbackElements(target);
+  target.textContent = displayMessage;
+  target.className = `admin-alert admin-inline-alert ${type === 'error' ? 'error' : ''}`.trim();
+  target.classList.remove('hidden');
+
+  window.clearTimeout(target._hideTimer);
+  target._hideTimer = window.setTimeout(() => target.classList.add('hidden'), type === 'error' ? 9000 : 5600);
 }
 
 function setBusy(isBusy) {
@@ -104,6 +172,33 @@ function showLogin() {
   adminView.classList.add('hidden');
   loginView.classList.remove('hidden');
 }
+
+function rememberFeedbackScopeFromEvent(event) {
+  if (event.target.closest?.('#post-form')) {
+    state.lastFeedbackScope = 'form';
+    return;
+  }
+
+  if (
+    event.target.closest?.('#admin-posts') ||
+    event.target.closest?.('.admin-bulk-actions') ||
+    event.target.closest?.('.admin-bulk-category-panel') ||
+    event.target.closest?.('#refresh-button') ||
+    event.target.closest?.('#post-search') ||
+    event.target.closest?.('#post-status-filter') ||
+    event.target.closest?.('#post-category-filter') ||
+    event.target.closest?.('#clear-search-button')
+  ) {
+    state.lastFeedbackScope = 'list';
+    return;
+  }
+
+  state.lastFeedbackScope = 'global';
+}
+
+document.addEventListener('click', rememberFeedbackScopeFromEvent, true);
+document.addEventListener('submit', rememberFeedbackScopeFromEvent, true);
+
 
 function cleanRelativePath(src) {
   return String(src || '')
@@ -1111,6 +1206,7 @@ function createBulkActionsBar(displayedItems) {
   applyActionButton.textContent = 'Aplicar';
   applyActionButton.disabled = !hasSelection || state.orderDirty || !availableActions.length;
   applyActionButton.addEventListener('click', async () => {
+    state.lastFeedbackScope = 'list';
     const action = actionSelect.value;
 
     if (!action) {
@@ -2279,6 +2375,7 @@ async function sendToMake(action, payload) {
 
 async function savePost(event) {
   event.preventDefault();
+  state.lastFeedbackScope = 'form';
   if (blockIfPendingOrder()) return;
   setBusy(true);
 
@@ -2979,6 +3076,7 @@ cancelEditButton.addEventListener('click', () => {
   resetForm();
 });
 refreshButton.addEventListener('click', () => {
+  state.lastFeedbackScope = 'list';
   if (hasUnsavedFormChanges()) {
     if (!confirmDiscardFormChanges('Tienes cambios sin guardar. Si actualizas el listado, se perderán. ¿Continuar?')) {
       showAlert('Acción cancelada. Guarda la publicación o cancela los cambios antes de continuar.', 'error');
