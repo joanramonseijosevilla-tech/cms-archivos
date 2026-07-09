@@ -1,7 +1,23 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-08T19:27:15.656Z",
+  "updatedAt": "2026-07-09T04:12:46.197Z",
   "items": [
+    {
+      "id": "pub_20260709061246",
+      "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
+      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO</h2><div>Veamos como funcionan los mensajes de guardado</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
+      "image": {
+        "src": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
+        "path": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
+        "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
+      },
+      "status": "published",
+      "published": true,
+      "category": "novedades",
+      "createdAt": "2026-07-09T04:12:46.197Z",
+      "updatedAt": "2026-07-09T04:12:46.197Z",
+      "order": 0
+    },
     {
       "id": "pub_20260708212715",
       "title": "Copia de Proyecto Prueba",
@@ -16,7 +32,7 @@
       "category": "galeria",
       "createdAt": "2026-07-08T19:27:15.656Z",
       "updatedAt": "2026-07-08T19:27:15.656Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260708201420",
@@ -32,7 +48,7 @@
       "category": "novedades",
       "createdAt": "2026-07-08T18:14:20.623Z",
       "updatedAt": "2026-07-08T19:05:01.869Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260708054938",
@@ -47,7 +63,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
       "updatedAt": "2026-07-08T18:47:47.859Z",
-      "order": 2,
+      "order": 3,
       "published": true
     }
   ]
