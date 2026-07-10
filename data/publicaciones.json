@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-10T14:39:08.344Z",
+  "updatedAt": "2026-07-10T14:39:16.592Z",
   "items": [
     {
       "id": "pub_20260710161115",
@@ -15,10 +15,8 @@
       "published": true,
       "category": "novedades",
       "createdAt": "2026-07-10T14:11:15.827Z",
-      "updatedAt": "2026-07-10T14:38:04.625Z",
-      "order": 0,
-      "deleted": true,
-      "deletedAt": "2026-07-10T14:38:04.625Z"
+      "updatedAt": "2026-07-10T14:39:16.592Z",
+      "order": 0
     },
     {
       "id": "pub_20260710160726",
