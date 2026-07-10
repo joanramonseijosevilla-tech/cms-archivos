@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-10T14:38:04.625Z",
+  "updatedAt": "2026-07-10T14:38:36.483Z",
   "items": [
     {
       "id": "pub_20260710161115",
@@ -176,9 +176,11 @@
       "status": "published",
       "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T18:47:47.859Z",
+      "updatedAt": "2026-07-10T14:38:36.483Z",
       "order": 10,
-      "published": true
+      "published": true,
+      "deleted": true,
+      "deletedAt": "2026-07-10T14:38:36.483Z"
     }
   ]
 }
