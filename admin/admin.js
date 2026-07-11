@@ -42,7 +42,8 @@ const state = {
   pageSize: DEFAULT_ADMIN_PAGE_SIZE,
   bulkCategoryEditorOpen: false,
   bulkCategoryDraft: {},
-  lastFeedbackScope: 'global'
+  lastFeedbackScope: 'global',
+  backupRecovery: null
 };
 
 const loginView = document.querySelector('#login-view');
@@ -89,6 +90,9 @@ const exportBackupButton = document.querySelector('#export-backup-button');
 const verifyBackupFile = document.querySelector('#verify-backup-file');
 const verifyBackupButton = document.querySelector('#verify-backup-button');
 const backupVerifyResult = document.querySelector('#backup-verify-result');
+const recoverBackupFile = document.querySelector('#recover-backup-file');
+const analyzeRecoverBackupButton = document.querySelector('#analyze-recover-backup-button');
+const backupRecoverResult = document.querySelector('#backup-recover-result');
 const toolsFeedback = document.querySelector('#tools-feedback');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
@@ -249,7 +253,11 @@ function rememberFeedbackScopeFromEvent(event) {
     event.target.closest?.('[data-mobile-scroll]') ||
     event.target.closest?.('#mobile-menu-button') ||
     event.target.closest?.('#admin-tools-section') ||
-    event.target.closest?.('#export-backup-button')
+    event.target.closest?.('#export-backup-button') ||
+    event.target.closest?.('#verify-backup-button') ||
+    event.target.closest?.('#recover-backup-file') ||
+    event.target.closest?.('#analyze-recover-backup-button') ||
+    event.target.closest?.('#backup-recover-result')
   ) {
     state.lastFeedbackScope = 'list';
     return;
@@ -1542,7 +1550,7 @@ async function saveBulkCategoryChanges() {
     state.selectedIds.clear();
     closeBulkCategoryEditor(false);
     setStateFromPublicacionesJson(nextPublicacionesJson);
-    if (!isEdit) resetAdminPagination();
+    resetAdminPagination();
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
     showAlert(`${changes.length} cambio${changes.length === 1 ? '' : 's'} de categoría guardado${changes.length === 1 ? '' : 's'} correctamente.`);
@@ -3544,8 +3552,8 @@ function buildBackupReadme(publicacionesJson, imagePaths, missingImages) {
     '- data/publicaciones.json: datos del CMS.',
     '- assets/uploads/: imágenes usadas por las publicaciones.',
     '',
-    'Esta descarga no modifica el panel, GitHub ni Make.',
-    'Para restaurar una copia completa hará falta una función de importación/restauración específica.'
+    'Esta descarga solo guarda una copia; no cambia tus publicaciones.',
+    'Para recuperar publicaciones desde una copia, usa la herramienta de recuperación del panel.'
   ];
 
   if (missingImages.length) {
@@ -3822,6 +3830,329 @@ async function verifyCompleteBackup() {
   }
 }
 
+
+function showBackupRecoverResult(elementOrLines, type = 'success') {
+  if (!backupRecoverResult) return;
+  backupRecoverResult.replaceChildren();
+  backupRecoverResult.className = `backup-recover-result ${type === 'error' ? 'error' : type === 'warning' ? 'warning' : ''}`.trim();
+
+  if (Array.isArray(elementOrLines)) {
+    backupRecoverResult.textContent = elementOrLines.join('\n');
+  } else if (elementOrLines instanceof Node) {
+    backupRecoverResult.append(elementOrLines);
+  } else {
+    backupRecoverResult.textContent = String(elementOrLines || '');
+  }
+
+  backupRecoverResult.classList.remove('hidden');
+}
+
+function getBackupActiveItems(publicacionesJson) {
+  return normalizePublicacionesJson(publicacionesJson).items.filter((item) => item?.id && !isItemDeleted(item));
+}
+
+function getCurrentItemIds() {
+  return new Set((Array.isArray(state.items) ? state.items : []).map((item) => item.id).filter(Boolean));
+}
+
+function hasImageEntryInBackup(entries, item) {
+  const imagePath = getBackupImagePath(item);
+  if (!imagePath) return true;
+  return entries.has(cleanRelativePath(imagePath));
+}
+
+function getRecoverableItemsFromBackup(publicacionesJson, entries) {
+  const currentIds = getCurrentItemIds();
+  return getBackupActiveItems(publicacionesJson)
+    .filter((item) => !currentIds.has(item.id))
+    .map((item) => ({
+      item,
+      imagePath: getBackupImagePath(item),
+      imageIncluded: hasImageEntryInBackup(entries, item)
+    }));
+}
+
+function clearBackupRecoveryResult() {
+  state.backupRecovery = null;
+
+  if (backupRecoverResult) {
+    backupRecoverResult.classList.add('hidden');
+    backupRecoverResult.replaceChildren();
+  }
+}
+
+function setBackupRecoverySelected(id, isSelected) {
+  if (!state.backupRecovery || !id) return;
+
+  if (isSelected) {
+    state.backupRecovery.selectedIds.add(id);
+  } else {
+    state.backupRecovery.selectedIds.delete(id);
+  }
+
+  renderBackupRecoveryPanel();
+}
+
+function setAllBackupRecoverySelected(isSelected) {
+  if (!state.backupRecovery) return;
+
+  state.backupRecovery.selectedIds = isSelected
+    ? new Set(state.backupRecovery.recoverableItems.map(({ item }) => item.id))
+    : new Set();
+
+  renderBackupRecoveryPanel();
+}
+
+function renderBackupRecoveryPanel() {
+  if (!state.backupRecovery) return;
+
+  const { fileName, publicacionesUpdatedAt, recoverableItems, selectedIds } = state.backupRecovery;
+  const selectedCount = selectedIds.size;
+  const missingImageCount = recoverableItems.filter(({ imageIncluded }) => !imageIncluded).length;
+  const panel = document.createElement('div');
+  panel.className = 'backup-recover-panel';
+
+  const title = document.createElement('h4');
+  title.textContent = recoverableItems.length
+    ? `${recoverableItems.length} publicación${recoverableItems.length === 1 ? '' : 'es'} recuperable${recoverableItems.length === 1 ? '' : 's'}`
+    : 'No hay publicaciones eliminadas para recuperar';
+
+  const summary = document.createElement('p');
+  summary.className = 'backup-recover-summary';
+  summary.textContent = recoverableItems.length
+    ? `Copia analizada: ${fileName}${publicacionesUpdatedAt ? ` · Fecha interna: ${publicacionesUpdatedAt}` : ''}`
+    : 'Todas las publicaciones activas de esta copia ya existen actualmente en el panel.';
+
+  panel.append(title, summary);
+
+  if (!recoverableItems.length) {
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'button button-small button-secondary';
+    closeButton.textContent = 'Cerrar resultado';
+    closeButton.addEventListener('click', clearBackupRecoveryResult);
+    panel.append(closeButton);
+    showBackupRecoverResult(panel);
+    return;
+  }
+
+  if (missingImageCount) {
+    const warning = document.createElement('p');
+    warning.className = 'backup-recover-warning';
+    warning.textContent = `${missingImageCount} publicación${missingImageCount === 1 ? '' : 'es'} no tiene su imagen dentro de la copia. Podrás recuperarla, pero revisa la imagen después.`;
+    panel.append(warning);
+  }
+
+  const selectAllLabel = document.createElement('label');
+  selectAllLabel.className = 'backup-recover-select-all';
+
+  const selectAllCheckbox = document.createElement('input');
+  selectAllCheckbox.type = 'checkbox';
+  selectAllCheckbox.checked = selectedCount === recoverableItems.length;
+  selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < recoverableItems.length;
+  selectAllCheckbox.addEventListener('change', () => setAllBackupRecoverySelected(selectAllCheckbox.checked));
+
+  const selectAllText = document.createElement('span');
+  selectAllText.textContent = selectedCount
+    ? `${selectedCount} seleccionada${selectedCount === 1 ? '' : 's'}`
+    : 'Seleccionar recuperables';
+
+  selectAllLabel.append(selectAllCheckbox, selectAllText);
+  panel.append(selectAllLabel);
+
+  const list = document.createElement('div');
+  list.className = 'backup-recover-list';
+
+  recoverableItems.forEach(({ item, imagePath, imageIncluded }) => {
+    const row = document.createElement('label');
+    row.className = 'backup-recover-row';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = selectedIds.has(item.id);
+    checkbox.addEventListener('change', () => setBackupRecoverySelected(item.id, checkbox.checked));
+
+    const text = document.createElement('span');
+    text.className = 'backup-recover-item-text';
+
+    const itemTitle = document.createElement('strong');
+    itemTitle.textContent = item.title || 'Sin título';
+
+    const meta = document.createElement('span');
+    const imageStatus = imagePath
+      ? imageIncluded ? 'imagen incluida' : 'revisar imagen'
+      : 'sin imagen';
+    meta.textContent = `${getCategoryLabel(item)} · ${getStatusLabel(item)} · ${formatDate(item.createdAt) || 'sin fecha'} · ${imageStatus}`;
+
+    text.append(itemTitle, meta);
+    row.append(checkbox, text);
+    list.append(row);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'backup-recover-actions';
+
+  const recoverButton = document.createElement('button');
+  recoverButton.type = 'button';
+  recoverButton.className = 'button';
+  recoverButton.textContent = selectedCount
+    ? `Recuperar ${selectedCount} seleccionada${selectedCount === 1 ? '' : 's'}`
+    : 'Recuperar seleccionadas';
+  recoverButton.disabled = selectedCount === 0;
+  recoverButton.addEventListener('click', recoverSelectedPostsFromBackup);
+
+  const cancelButton = document.createElement('button');
+  cancelButton.type = 'button';
+  cancelButton.className = 'button button-secondary';
+  cancelButton.textContent = 'Cancelar';
+  cancelButton.addEventListener('click', clearBackupRecoveryResult);
+
+  actions.append(recoverButton, cancelButton);
+  panel.append(list, actions);
+  showBackupRecoverResult(panel, missingImageCount ? 'warning' : 'success');
+}
+
+async function analyzeBackupForRecovery() {
+  state.lastFeedbackScope = 'tools';
+
+  const file = recoverBackupFile?.files?.[0];
+
+  if (!file) {
+    showAlert('Selecciona primero un archivo ZIP de copia completa.', 'error', { scope: 'tools', scroll: true });
+    return;
+  }
+
+  try {
+    if (analyzeRecoverBackupButton) {
+      analyzeRecoverBackupButton.disabled = true;
+      analyzeRecoverBackupButton.textContent = 'Analizando…';
+    }
+
+    clearBackupRecoveryResult();
+    showAlert('Buscando publicaciones recuperables…', 'success', { scope: 'tools', scroll: true });
+
+    const entries = parseZipEntries(await file.arrayBuffer());
+    const publicacionesText = readZipTextEntry(entries, 'data/publicaciones.json');
+
+    if (!publicacionesText) {
+      throw new Error('La copia no contiene los datos necesarios para recuperar publicaciones.');
+    }
+
+    let publicacionesJson;
+
+    try {
+      publicacionesJson = JSON.parse(publicacionesText);
+    } catch (error) {
+      throw new Error('Los datos de esta copia no se pueden leer correctamente.');
+    }
+
+    if (!publicacionesJson || !Array.isArray(publicacionesJson.items)) {
+      throw new Error('La copia contiene datos, pero no tienen el formato esperado del panel.');
+    }
+
+    const recoverableItems = getRecoverableItemsFromBackup(publicacionesJson, entries);
+
+    state.backupRecovery = {
+      fileName: file.name,
+      publicacionesUpdatedAt: publicacionesJson.updatedAt || '',
+      recoverableItems,
+      selectedIds: new Set(recoverableItems.map(({ item }) => item.id))
+    };
+
+    renderBackupRecoveryPanel();
+    showAlert(
+      recoverableItems.length
+        ? `Se han encontrado ${recoverableItems.length} publicación${recoverableItems.length === 1 ? '' : 'es'} que puedes recuperar.`
+        : 'No se han encontrado publicaciones eliminadas para recuperar.',
+      'success',
+      { scope: 'tools', scroll: true }
+    );
+  } catch (error) {
+    showBackupRecoverResult([
+      'No se ha podido analizar la copia.',
+      '',
+      error.message || 'El archivo seleccionado no parece una copia válida.'
+    ], 'error');
+    showAlert(error.message || 'No se ha podido analizar la copia.', 'error', { scope: 'tools', scroll: true });
+    console.error(error);
+  } finally {
+    if (analyzeRecoverBackupButton) {
+      analyzeRecoverBackupButton.disabled = false;
+      analyzeRecoverBackupButton.textContent = 'Buscar recuperables';
+    }
+  }
+}
+
+async function recoverSelectedPostsFromBackup() {
+  state.lastFeedbackScope = 'tools';
+  if (blockIfPendingOrder()) return;
+  if (!confirmAndDiscardFormChangesBeforeBulkAction('Tienes cambios sin guardar en el formulario. Antes de recuperar publicaciones, guarda o descarta esos cambios. ¿Descartarlos ahora?')) return;
+
+  if (!state.backupRecovery) {
+    showAlert('Primero analiza una copia completa.', 'error', { scope: 'tools', scroll: true });
+    return;
+  }
+
+  const currentIds = getCurrentItemIds();
+  const selectedIds = new Set(state.backupRecovery.selectedIds || []);
+  const selectedRecoveryItems = state.backupRecovery.recoverableItems
+    .filter(({ item }) => selectedIds.has(item.id) && !currentIds.has(item.id));
+
+  if (!selectedRecoveryItems.length) {
+    showAlert('No hay publicaciones seleccionadas pendientes de recuperar.', 'error', { scope: 'tools', scroll: true });
+    return;
+  }
+
+  const missingImageCount = selectedRecoveryItems.filter(({ imageIncluded }) => !imageIncluded).length;
+  const warningText = missingImageCount
+    ? `\n\nAviso: ${missingImageCount} publicación${missingImageCount === 1 ? '' : 'es'} no tiene su imagen dentro de la copia. Revisa esas publicaciones después de recuperarlas.`
+    : '';
+  const confirmed = window.confirm(`¿Recuperar ${selectedRecoveryItems.length} publicación${selectedRecoveryItems.length === 1 ? '' : 'es'} seleccionada${selectedRecoveryItems.length === 1 ? '' : 's'}? Se añadirán al panel actual y se conservarán las publicaciones que ya tienes.${warningText}`);
+
+  if (!confirmed) return;
+
+  try {
+    const nowIso = new Date().toISOString();
+    const currentItems = normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    );
+    const recoveredItems = selectedRecoveryItems.map(({ item }) => {
+      const { _localPreviewSrc, ...cleanItem } = item;
+      return {
+        ...cleanItem,
+        category: getItemCategory(cleanItem),
+        status: getItemStatus(cleanItem),
+        published: getItemStatus(cleanItem) === 'published',
+        updatedAt: nowIso
+      };
+    });
+    const nextPublicacionesJson = {
+      version: 1,
+      updatedAt: nowIso,
+      items: normalizeItemsWithOrder([...recoveredItems, ...currentItems])
+    };
+    const payload = attachPublicacionesPayload({
+      action: 'recover_from_backup',
+      ids: recoveredItems.map((item) => item.id)
+    }, nextPublicacionesJson);
+
+    await sendToMake('update', payload);
+
+    state.selectedIds.clear();
+    state.backupRecovery = null;
+    if (recoverBackupFile) recoverBackupFile.value = '';
+    setStateFromPublicacionesJson(nextPublicacionesJson);
+    saveLocalSnapshot(nextPublicacionesJson);
+    resetAdminPagination();
+    renderAdminPosts();
+    clearBackupRecoveryResult();
+    showAlert(`${recoveredItems.length} publicación${recoveredItems.length === 1 ? '' : 'es'} recuperada${recoveredItems.length === 1 ? '' : 's'} correctamente.`, 'success', { scope: 'tools', scroll: true });
+  } catch (error) {
+    showAlert(error.message || 'No se han podido recuperar las publicaciones seleccionadas.', 'error', { scope: 'tools', scroll: true });
+    console.error(error);
+  }
+}
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   state.password = loginPassword.value;
@@ -4005,6 +4336,14 @@ if (verifyBackupFile) {
       backupVerifyResult.textContent = '';
     }
   });
+}
+
+if (analyzeRecoverBackupButton) {
+  analyzeRecoverBackupButton.addEventListener('click', analyzeBackupForRecovery);
+}
+
+if (recoverBackupFile) {
+  recoverBackupFile.addEventListener('change', clearBackupRecoveryResult);
 }
 
 if (mobileMenuButton) {
