@@ -1,6 +1,7 @@
 const config = window.CMS_CONFIG;
 const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
 const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
+const RAW_GITHUB_DOWNLOAD_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/HEAD/';
 const POST_CATEGORIES = [
   { value: 'galeria', label: 'Galería' },
   { value: 'proyectos', label: 'Proyectos' },
@@ -84,6 +85,8 @@ const clearSearchButton = document.querySelector('#clear-search-button');
 const mobileMenuButton = document.querySelector('#mobile-menu-button');
 const mobileQuickMenu = document.querySelector('#mobile-quick-menu');
 const mobileNavButtons = document.querySelectorAll('[data-mobile-scroll]');
+const exportBackupButton = document.querySelector('#export-backup-button');
+const toolsFeedback = document.querySelector('#tools-feedback');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
 
@@ -126,6 +129,7 @@ function getFriendlyErrorMessage(message) {
 function getFeedbackElement(scope) {
   if (scope === 'form' && formFeedback) return formFeedback;
   if (scope === 'list' && listFeedback) return listFeedback;
+  if (scope === 'tools' && toolsFeedback) return toolsFeedback;
   return adminAlert;
 }
 
@@ -136,7 +140,7 @@ function hideFeedbackElement(element) {
 }
 
 function hideOtherFeedbackElements(activeElement) {
-  [adminAlert, formFeedback, listFeedback].forEach((element) => {
+  [adminAlert, formFeedback, listFeedback, toolsFeedback].forEach((element) => {
     if (element && element !== activeElement) hideFeedbackElement(element);
   });
 }
@@ -209,6 +213,7 @@ function getMobileScrollTarget(targetName) {
   if (targetName === 'list') return document.querySelector('#admin-list-section') || adminPosts;
   if (targetName === 'filters') return document.querySelector('#admin-list-filters') || postSearch;
   if (targetName === 'bulk') return document.querySelector('.admin-bulk-actions') || document.querySelector('#admin-list-section') || adminPosts;
+  if (targetName === 'tools') return document.querySelector('#admin-tools-section') || document.querySelector('#admin-list-section') || adminPosts;
   return document.querySelector('.admin-topbar') || adminView;
 }
 
@@ -239,7 +244,9 @@ function rememberFeedbackScopeFromEvent(event) {
     event.target.closest?.('#post-category-filter') ||
     event.target.closest?.('#clear-search-button') ||
     event.target.closest?.('[data-mobile-scroll]') ||
-    event.target.closest?.('#mobile-menu-button')
+    event.target.closest?.('#mobile-menu-button') ||
+    event.target.closest?.('#admin-tools-section') ||
+    event.target.closest?.('#export-backup-button')
   ) {
     state.lastFeedbackScope = 'list';
     return;
@@ -3302,6 +3309,323 @@ async function deletePostForever(item) {
   }
 }
 
+
+function encodePathForRawUrl(path) {
+  return cleanRelativePath(path)
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/');
+}
+
+function getBackupImagePath(item) {
+  const image = item?.image || {};
+  const candidates = [image.path, image.src].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const value = String(candidate || '');
+    const uploadIndex = value.indexOf('assets/uploads/');
+    const relativePath = uploadIndex >= 0 ? value.slice(uploadIndex) : cleanRelativePath(value);
+
+    if (isUploadedAssetPath(relativePath)) {
+      return cleanRelativePath(relativePath);
+    }
+  }
+
+  return '';
+}
+
+function getBackupImagePaths(items) {
+  const paths = new Set();
+
+  (Array.isArray(items) ? items : []).forEach((item) => {
+    const imagePath = getBackupImagePath(item);
+    if (imagePath) paths.add(imagePath);
+  });
+
+  return [...paths].sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+function getBackupPublicacionesJson() {
+  return {
+    version: 1,
+    updatedAt: state.publicacionesUpdatedAt || new Date().toISOString(),
+    items: normalizeItemsWithOrder(
+      Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+    )
+  };
+}
+
+function getBackupFileName() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  const stamp = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+    '-',
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds())
+  ].join('');
+
+  return `cms-copia-completa-${stamp}.zip`;
+}
+
+async function fetchBackupImage(path) {
+  const rawUrl = `${RAW_GITHUB_DOWNLOAD_BASE_URL}${encodePathForRawUrl(path)}`;
+  const response = await fetch(addCacheBuster(rawUrl), { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo descargar la imagen ${path} (${response.status}).`);
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+function createTextEntry(name, text) {
+  return {
+    name,
+    data: new TextEncoder().encode(text),
+    lastModified: new Date()
+  };
+}
+
+function createBinaryEntry(name, data) {
+  return {
+    name: cleanRelativePath(name),
+    data,
+    lastModified: new Date()
+  };
+}
+
+let zipCrcTable = null;
+
+function getZipCrcTable() {
+  if (zipCrcTable) return zipCrcTable;
+
+  zipCrcTable = new Uint32Array(256);
+
+  for (let index = 0; index < 256; index += 1) {
+    let value = index;
+
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+    }
+
+    zipCrcTable[index] = value >>> 0;
+  }
+
+  return zipCrcTable;
+}
+
+function getZipCrc32(bytes) {
+  const table = getZipCrcTable();
+  let crc = 0xffffffff;
+
+  for (let index = 0; index < bytes.length; index += 1) {
+    crc = table[(crc ^ bytes[index]) & 0xff] ^ (crc >>> 8);
+  }
+
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function getZipDosDateTime(date = new Date()) {
+  const year = Math.max(1980, date.getFullYear());
+  const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+  const dosDate = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  return { dosTime, dosDate };
+}
+
+function writeZipUint16(view, offset, value) {
+  view.setUint16(offset, value, true);
+}
+
+function writeZipUint32(view, offset, value) {
+  view.setUint32(offset, value >>> 0, true);
+}
+
+function createZipBlob(entries) {
+  const textEncoder = new TextEncoder();
+  const fileParts = [];
+  const centralParts = [];
+  let offset = 0;
+
+  entries.forEach((entry) => {
+    const name = cleanRelativePath(entry.name);
+    const nameBytes = textEncoder.encode(name);
+    const data = entry.data instanceof Uint8Array ? entry.data : new Uint8Array(entry.data || []);
+    const crc = getZipCrc32(data);
+    const size = data.byteLength;
+    const { dosTime, dosDate } = getZipDosDateTime(entry.lastModified || new Date());
+    const generalPurposeFlag = 0x0800;
+
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    const localView = new DataView(localHeader.buffer);
+    writeZipUint32(localView, 0, 0x04034b50);
+    writeZipUint16(localView, 4, 20);
+    writeZipUint16(localView, 6, generalPurposeFlag);
+    writeZipUint16(localView, 8, 0);
+    writeZipUint16(localView, 10, dosTime);
+    writeZipUint16(localView, 12, dosDate);
+    writeZipUint32(localView, 14, crc);
+    writeZipUint32(localView, 18, size);
+    writeZipUint32(localView, 22, size);
+    writeZipUint16(localView, 26, nameBytes.length);
+    writeZipUint16(localView, 28, 0);
+    localHeader.set(nameBytes, 30);
+
+    const centralHeader = new Uint8Array(46 + nameBytes.length);
+    const centralView = new DataView(centralHeader.buffer);
+    writeZipUint32(centralView, 0, 0x02014b50);
+    writeZipUint16(centralView, 4, 20);
+    writeZipUint16(centralView, 6, 20);
+    writeZipUint16(centralView, 8, generalPurposeFlag);
+    writeZipUint16(centralView, 10, 0);
+    writeZipUint16(centralView, 12, dosTime);
+    writeZipUint16(centralView, 14, dosDate);
+    writeZipUint32(centralView, 16, crc);
+    writeZipUint32(centralView, 20, size);
+    writeZipUint32(centralView, 24, size);
+    writeZipUint16(centralView, 28, nameBytes.length);
+    writeZipUint16(centralView, 30, 0);
+    writeZipUint16(centralView, 32, 0);
+    writeZipUint16(centralView, 34, 0);
+    writeZipUint16(centralView, 36, 0);
+    writeZipUint32(centralView, 38, 0);
+    writeZipUint32(centralView, 42, offset);
+    centralHeader.set(nameBytes, 46);
+
+    fileParts.push(localHeader, data);
+    centralParts.push(centralHeader);
+    offset += localHeader.byteLength + size;
+  });
+
+  const centralOffset = offset;
+  const centralSize = centralParts.reduce((total, part) => total + part.byteLength, 0);
+  const endHeader = new Uint8Array(22);
+  const endView = new DataView(endHeader.buffer);
+  writeZipUint32(endView, 0, 0x06054b50);
+  writeZipUint16(endView, 4, 0);
+  writeZipUint16(endView, 6, 0);
+  writeZipUint16(endView, 8, entries.length);
+  writeZipUint16(endView, 10, entries.length);
+  writeZipUint32(endView, 12, centralSize);
+  writeZipUint32(endView, 16, centralOffset);
+  writeZipUint16(endView, 20, 0);
+
+  return new Blob([...fileParts, ...centralParts, endHeader], { type: 'application/zip' });
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1200);
+}
+
+function buildBackupReadme(publicacionesJson, imagePaths, missingImages) {
+  const lines = [
+    'Copia completa del Mini CMS',
+    '=============================',
+    '',
+    `Fecha de exportación: ${new Date().toLocaleString('es-ES')}`,
+    `Publicaciones incluidas: ${publicacionesJson.items.length}`,
+    `Imágenes detectadas: ${imagePaths.length}`,
+    `Imágenes no incluidas por error: ${missingImages.length}`,
+    '',
+    'Contenido del ZIP:',
+    '- data/publicaciones.json: datos del CMS.',
+    '- assets/uploads/: imágenes usadas por las publicaciones.',
+    '',
+    'Esta descarga no modifica el panel, GitHub ni Make.',
+    'Para restaurar una copia completa hará falta una función de importación/restauración específica.'
+  ];
+
+  if (missingImages.length) {
+    lines.push('', 'Avisos:', ...missingImages.map((path) => `- No se pudo incluir: ${path}`));
+  }
+
+  return `${lines.join('\n')}\n`;
+}
+
+async function exportCompleteBackup() {
+  state.lastFeedbackScope = 'tools';
+
+  if (!Array.isArray(state.items)) {
+    showAlert('No hay datos cargados para generar la copia.', 'error', { scope: 'tools', scroll: true });
+    return;
+  }
+
+  const publicacionesJson = getBackupPublicacionesJson();
+  const imagePaths = getBackupImagePaths(publicacionesJson.items);
+  const missingImages = [];
+  const entries = [
+    createTextEntry('data/publicaciones.json', `${JSON.stringify(publicacionesJson, null, 2)}\n`)
+  ];
+
+  try {
+    if (exportBackupButton) {
+      exportBackupButton.disabled = true;
+      exportBackupButton.textContent = 'Preparando copia…';
+    }
+
+    showAlert(
+      imagePaths.length
+        ? `Preparando copia completa. Descargando 0 de ${imagePaths.length} imágenes…`
+        : 'Preparando copia completa de datos. No hay imágenes asociadas.',
+      'success',
+      { scope: 'tools', scroll: true }
+    );
+
+    for (let index = 0; index < imagePaths.length; index += 1) {
+      const imagePath = imagePaths[index];
+
+      try {
+        const imageData = await fetchBackupImage(imagePath);
+        entries.push(createBinaryEntry(imagePath, imageData));
+      } catch (error) {
+        missingImages.push(imagePath);
+        console.warn('No se pudo incluir una imagen en la copia completa:', error);
+      }
+
+      showAlert(
+        `Preparando copia completa. Descargando ${index + 1} de ${imagePaths.length} imágenes…`,
+        'success',
+        { scope: 'tools' }
+      );
+    }
+
+    entries.push(createTextEntry('LEEME-copia-completa.txt', buildBackupReadme(publicacionesJson, imagePaths, missingImages)));
+
+    if (missingImages.length) {
+      entries.push(createTextEntry('imagenes-no-incluidas.txt', `${missingImages.join('\n')}\n`));
+    }
+
+    const backupBlob = createZipBlob(entries);
+    downloadBlob(backupBlob, getBackupFileName());
+
+    showAlert(
+      missingImages.length
+        ? `Copia generada con avisos: ${missingImages.length} imagen${missingImages.length === 1 ? '' : 'es'} no se han podido incluir.`
+        : `Copia completa descargada correctamente. Incluye ${publicacionesJson.items.length} publicación${publicacionesJson.items.length === 1 ? '' : 'es'} y ${imagePaths.length} imagen${imagePaths.length === 1 ? '' : 'es'}.`,
+      'success',
+      { scope: 'tools', scroll: true }
+    );
+  } catch (error) {
+    showAlert(error.message || 'No se ha podido generar la copia completa.', 'error', { scope: 'tools', scroll: true });
+    console.error(error);
+  } finally {
+    if (exportBackupButton) {
+      exportBackupButton.disabled = false;
+      exportBackupButton.textContent = 'Descargar copia completa';
+    }
+  }
+}
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   state.password = loginPassword.value;
@@ -3467,6 +3791,11 @@ if (clearSearchButton) {
     renderAdminPosts();
     postSearch?.focus();
   });
+}
+
+
+if (exportBackupButton) {
+  exportBackupButton.addEventListener('click', exportCompleteBackup);
 }
 
 if (mobileMenuButton) {

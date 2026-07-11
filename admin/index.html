@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-40">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-41">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-40"></script>
+  <script defer src="admin.js?v=20260705-41"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -54,6 +54,7 @@
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="list">Publicaciones</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="filters">Filtros</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="bulk">Lotes</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="tools">Herramientas</button>
       </nav>
 
       <div id="admin-alert" class="admin-alert hidden" role="status"></div>
@@ -204,6 +205,25 @@
           <div id="admin-posts" class="admin-posts"></div>
         </section>
       </div>
+
+      <section id="admin-tools-section" class="admin-card admin-tools-card">
+        <div class="admin-card-header">
+          <p class="eyebrow">Herramientas</p>
+          <h2>Herramientas del CMS</h2>
+          <p>Opciones de mantenimiento y seguridad para trabajar con el contenido del panel.</p>
+        </div>
+        <div class="admin-tools-grid">
+          <article class="admin-tool-box">
+            <div>
+              <h3>Descargar copia completa</h3>
+              <p>Genera un ZIP con <strong>publicaciones.json</strong> y las imágenes usadas por las publicaciones actuales.</p>
+              <p class="form-note">No modifica GitHub, no llama a Make y no cambia ninguna publicación.</p>
+            </div>
+            <button id="export-backup-button" class="button button-secondary" type="button">Descargar copia completa</button>
+          </article>
+        </div>
+        <div id="tools-feedback" class="admin-alert admin-inline-alert hidden" role="status"></div>
+      </section>
 
       <nav id="mobile-bottom-nav" class="admin-mobile-bottom-nav" aria-label="Accesos rápidos del panel">
         <button type="button" data-mobile-scroll="form"><span aria-hidden="true">✎</span><span>Formulario</span></button>
