@@ -1131,3 +1131,109 @@ input[type="file"]::file-selector-button {
     text-align: center;
   }
 }
+
+/* v8.0 — Navegación rápida móvil del panel */
+.admin-mobile-menu-button,
+.admin-mobile-menu,
+.admin-mobile-bottom-nav {
+  display: none;
+}
+
+.admin-mobile-menu {
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--dark-card-border);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 16px 42px #0000002e;
+}
+
+.admin-mobile-menu:not(.hidden) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-mobile-menu .button {
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 0.8rem;
+}
+
+@media (max-width: 760px) {
+  .admin-body {
+    padding-bottom: 86px;
+  }
+
+  .admin-mobile-menu-button {
+    display: inline-flex;
+    justify-content: center;
+  }
+
+  .admin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .admin-actions .admin-mobile-menu-button {
+    grid-column: 1 / -1;
+  }
+
+  .admin-actions .button {
+    width: 100%;
+  }
+
+  .admin-mobile-bottom-nav {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 80;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.45rem;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.94);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-mobile-bottom-nav button {
+    display: grid;
+    justify-items: center;
+    gap: 0.12rem;
+    min-width: 0;
+    min-height: 46px;
+    border: 0;
+    border-radius: 13px;
+    padding: 0.35rem 0.2rem;
+    color: #e2e8f0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.68rem;
+    font-weight: 850;
+    line-height: 1.05;
+    cursor: pointer;
+  }
+
+  .admin-mobile-bottom-nav button span:first-child {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .admin-mobile-bottom-nav button:focus-visible,
+  .admin-mobile-bottom-nav button:hover {
+    color: #fff;
+    background: rgba(59, 130, 246, 0.22);
+    outline: 2px solid rgba(96, 165, 250, 0.55);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-mobile-bottom-nav button {
+    font-size: 0.62rem;
+  }
+}

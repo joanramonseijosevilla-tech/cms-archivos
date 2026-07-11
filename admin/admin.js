@@ -81,6 +81,9 @@ const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
 const postCategoryFilter = document.querySelector('#post-category-filter');
 const clearSearchButton = document.querySelector('#clear-search-button');
+const mobileMenuButton = document.querySelector('#mobile-menu-button');
+const mobileQuickMenu = document.querySelector('#mobile-quick-menu');
+const mobileNavButtons = document.querySelectorAll('[data-mobile-scroll]');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
 
@@ -188,6 +191,38 @@ function showLogin() {
   loginView.classList.remove('hidden');
 }
 
+function closeMobileQuickMenu() {
+  if (!mobileQuickMenu || !mobileMenuButton) return;
+  mobileQuickMenu.classList.add('hidden');
+  mobileMenuButton.setAttribute('aria-expanded', 'false');
+}
+
+function toggleMobileQuickMenu() {
+  if (!mobileQuickMenu || !mobileMenuButton) return;
+  const willOpen = mobileQuickMenu.classList.contains('hidden');
+  mobileQuickMenu.classList.toggle('hidden', !willOpen);
+  mobileMenuButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+
+function getMobileScrollTarget(targetName) {
+  if (targetName === 'form') return document.querySelector('#admin-form-section') || postForm;
+  if (targetName === 'list') return document.querySelector('#admin-list-section') || adminPosts;
+  if (targetName === 'filters') return document.querySelector('#admin-list-filters') || postSearch;
+  if (targetName === 'bulk') return document.querySelector('.admin-bulk-actions') || document.querySelector('#admin-list-section') || adminPosts;
+  return document.querySelector('.admin-topbar') || adminView;
+}
+
+function scrollToAdminArea(targetName) {
+  const target = getMobileScrollTarget(targetName);
+  if (!target) return;
+
+  closeMobileQuickMenu();
+
+  const extraOffset = window.matchMedia?.('(max-width: 760px)').matches ? 76 : 16;
+  const targetTop = target.getBoundingClientRect().top + window.scrollY - extraOffset;
+  window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+}
+
 function rememberFeedbackScopeFromEvent(event) {
   if (event.target.closest?.('#post-form')) {
     state.lastFeedbackScope = 'form';
@@ -202,7 +237,9 @@ function rememberFeedbackScopeFromEvent(event) {
     event.target.closest?.('#post-search') ||
     event.target.closest?.('#post-status-filter') ||
     event.target.closest?.('#post-category-filter') ||
-    event.target.closest?.('#clear-search-button')
+    event.target.closest?.('#clear-search-button') ||
+    event.target.closest?.('[data-mobile-scroll]') ||
+    event.target.closest?.('#mobile-menu-button')
   ) {
     state.lastFeedbackScope = 'list';
     return;
@@ -3431,6 +3468,19 @@ if (clearSearchButton) {
     postSearch?.focus();
   });
 }
+
+if (mobileMenuButton) {
+  mobileMenuButton.addEventListener('click', toggleMobileQuickMenu);
+}
+
+mobileNavButtons.forEach((button) => {
+  button.addEventListener('click', () => scrollToAdminArea(button.dataset.mobileScroll));
+});
+
+window.addEventListener('resize', () => {
+  if (!window.matchMedia?.('(min-width: 761px)').matches) return;
+  closeMobileQuickMenu();
+});
 
 window.addEventListener('beforeunload', (event) => {
   if (!hasUnsavedFormChanges() && !state.orderDirty) return;

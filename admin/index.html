@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-39">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-40">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-39"></script>
+  <script defer src="admin.js?v=20260705-40"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -42,15 +42,24 @@
           </div>
         </div>
         <div class="admin-actions">
+          <button id="mobile-menu-button" class="button button-secondary admin-mobile-menu-button" type="button" aria-expanded="false" aria-controls="mobile-quick-menu">☰ Menú</button>
           <a class="button button-secondary" href="../">Ver web</a>
           <button id="logout-button" class="button button-ghost" type="button">Salir</button>
         </div>
       </header>
 
+      <nav id="mobile-quick-menu" class="admin-mobile-menu hidden" aria-label="Navegación rápida del panel">
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="top">↑ Arriba</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="form">Formulario</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="list">Publicaciones</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="filters">Filtros</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="bulk">Lotes</button>
+      </nav>
+
       <div id="admin-alert" class="admin-alert hidden" role="status"></div>
 
       <div class="admin-grid">
-        <section class="admin-card">
+        <section id="admin-form-section" class="admin-card">
           <div class="admin-card-header">
             <h2 id="form-title">Nueva publicación</h2>
             <p>Sube una imagen, título y descripción. Make guardará el cambio en GitHub cuando esté conectado.</p>
@@ -157,7 +166,7 @@
           </form>
         </section>
 
-        <section class="admin-card">
+        <section id="admin-list-section" class="admin-card">
           <div class="admin-card-header admin-card-header-row">
             <div>
               <h2>Contenido actual</h2>
@@ -165,7 +174,7 @@
             </div>
             <button id="refresh-button" class="button button-small button-secondary" type="button">Actualizar</button>
           </div>
-          <div class="form-grid">
+          <div id="admin-list-filters" class="form-grid">
             <label>
               Buscar publicación
               <input id="post-search" type="search" autocomplete="off" placeholder="Buscar por título o descripción">
@@ -195,6 +204,14 @@
           <div id="admin-posts" class="admin-posts"></div>
         </section>
       </div>
+
+      <nav id="mobile-bottom-nav" class="admin-mobile-bottom-nav" aria-label="Accesos rápidos del panel">
+        <button type="button" data-mobile-scroll="form"><span aria-hidden="true">✎</span><span>Formulario</span></button>
+        <button type="button" data-mobile-scroll="list"><span aria-hidden="true">▦</span><span>Publicaciones</span></button>
+        <button type="button" data-mobile-scroll="filters"><span aria-hidden="true">⌕</span><span>Filtros</span></button>
+        <button type="button" data-mobile-scroll="bulk"><span aria-hidden="true">☑</span><span>Lotes</span></button>
+        <button type="button" data-mobile-scroll="top"><span aria-hidden="true">↑</span><span>Arriba</span></button>
+      </nav>
     </section>
   </main>
 </body>
