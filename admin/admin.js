@@ -88,6 +88,11 @@ const refreshButton = document.querySelector('#refresh-button');
 const orderModeButton = document.querySelector('#order-mode-button');
 const listViewButtons = document.querySelectorAll('[data-list-view]');
 const imagePreview = document.querySelector('#image-preview');
+const imageManagerTitle = document.querySelector('#image-manager-title');
+const imageManagerBadge = document.querySelector('#image-manager-badge');
+const imageManagerStatus = document.querySelector('#image-manager-status');
+const imageFileLabel = document.querySelector('#image-file-label');
+const clearSelectedImageButton = document.querySelector('#clear-selected-image-button');
 const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
 const postCategoryFilter = document.querySelector('#post-category-filter');
@@ -2677,6 +2682,64 @@ function getPreviewImageSrc() {
   return state.previewObjectUrl || currentImageSrc.value || currentImagePath.value || '';
 }
 
+function formatImageFileSize(bytes) {
+  const size = Number(bytes) || 0;
+
+  if (!size) return '';
+
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function updateImageManager() {
+  if (!imageManagerTitle || !imageManagerBadge || !imageManagerStatus || !imageFileLabel) return;
+
+  const file = postImage.files[0];
+  const hasCurrentImage = Boolean(currentImageSrc.value || currentImagePath.value);
+  const isEdit = Boolean(postId.value);
+  const isDuplicate = !isEdit && hasCurrentImage;
+
+  imageManagerBadge.className = 'image-manager-badge';
+  clearSelectedImageButton?.classList.toggle('hidden', !file);
+
+  if (file) {
+    imageManagerTitle.textContent = 'Nueva imagen seleccionada';
+    imageManagerBadge.textContent = 'Se cambiará al guardar';
+    imageManagerBadge.classList.add('is-new');
+    imageFileLabel.textContent = 'Elegir otra imagen';
+
+    const sizeText = formatImageFileSize(file.size);
+    imageManagerStatus.textContent = `Has elegido: ${file.name}${sizeText ? ` (${sizeText})` : ''}. Se aplicará cuando guardes la publicación.`;
+    return;
+  }
+
+  if (hasCurrentImage) {
+    imageManagerTitle.textContent = isDuplicate ? 'Imagen reutilizada' : 'Imagen actual';
+    imageManagerBadge.textContent = 'Se mantiene';
+    imageManagerBadge.classList.add('is-keep');
+    imageFileLabel.textContent = 'Elegir otra imagen';
+    imageManagerStatus.textContent = isDuplicate
+      ? 'La copia usará esta imagen si no eliges otra antes de guardar.'
+      : 'Se mantendrá esta imagen si no eliges otra antes de guardar.';
+    return;
+  }
+
+  imageManagerTitle.textContent = 'Imagen pendiente';
+  imageManagerBadge.textContent = 'Necesaria';
+  imageManagerBadge.classList.add('is-pending');
+  imageFileLabel.textContent = 'Elegir imagen';
+  imageManagerStatus.textContent = 'Selecciona una imagen para poder crear la publicación.';
+}
+
+function clearSelectedImage() {
+  postImage.value = '';
+  clearPreviewObjectUrl();
+  updateLivePreview();
+}
+
 function createPreviewImage(src, alt) {
   const imageWrap = document.createElement('div');
   imageWrap.className = 'post-preview-image-wrap';
@@ -2744,6 +2807,7 @@ function updateLivePreview() {
   card.append(createPreviewImage(imageSrc, alt), body);
   imagePreview.append(heading, card);
   imagePreview.classList.remove('hidden');
+  updateImageManager();
 }
 
 function fileToBase64(file) {
@@ -4580,6 +4644,8 @@ postImage.addEventListener('change', () => {
 
   updateLivePreview();
 });
+
+clearSelectedImageButton?.addEventListener('click', clearSelectedImage);
 
 [postTitle, postAlt, postStatus, postCategory]
   .filter(Boolean)

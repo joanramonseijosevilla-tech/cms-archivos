@@ -179,6 +179,104 @@ input[type="file"]::file-selector-button {
   background: rgba(15, 23, 42, 0.72);
 }
 
+.image-manager {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid var(--dark-card-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.13), rgba(15, 23, 42, 0.72));
+}
+
+.image-manager-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.image-manager-kicker {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--secondary);
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.image-manager h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.image-manager-badge {
+  flex: 0 0 auto;
+  max-width: 48%;
+  border: 1px solid #60a5fa;
+  border-radius: 999px;
+  padding: 0.28rem 0.62rem;
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.image-manager-badge.is-keep {
+  border-color: #86efac;
+  color: #bbf7d0;
+}
+
+.image-manager-badge.is-new {
+  border-color: #facc15;
+  color: #fef3c7;
+}
+
+.image-manager-badge.is-pending {
+  border-color: #fb7185;
+  color: #ffe4e6;
+}
+
+.image-manager-status {
+  margin: 0;
+  color: #dbeafe;
+  font-size: 0.95rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.image-manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.image-file-label {
+  width: fit-content;
+}
+
+.image-file-input {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
+.image-manager-note {
+  margin-top: 0;
+}
+
 .post-live-preview-title {
   margin: 0;
   color: var(--secondary);
@@ -1907,5 +2005,27 @@ input[type="file"]::file-selector-button {
 
   .admin-post-compact .admin-post-actions .button {
     padding: 0 0.52rem;
+  }
+}
+
+
+/* v8.9 — Imagen más clara al crear y editar */
+@media (max-width: 680px) {
+  .admin-body .image-manager-header {
+    display: grid;
+  }
+
+  .admin-body .image-manager-badge {
+    max-width: none;
+    width: fit-content;
+  }
+
+  .admin-body .image-manager-actions {
+    display: grid;
+  }
+
+  .admin-body .image-manager-actions .button,
+  .admin-body .image-file-label {
+    width: 100%;
   }
 }

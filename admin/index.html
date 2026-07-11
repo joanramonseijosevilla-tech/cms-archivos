@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-48">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-49">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-47"></script>
+  <script defer src="admin.js?v=20260705-49"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -125,6 +125,7 @@
             <details class="admin-help-item">
               <summary>Imágenes</summary>
               <p>Al subir una imagen, el panel la optimiza automáticamente para que pese menos y mantenga su proporción.</p>
+              <p>Si estás editando, puedes mantener la imagen actual o elegir otra antes de guardar.</p>
               <p>El texto alternativo ayuda a describir la imagen y mejora la accesibilidad.</p>
             </details>
           </div>
@@ -137,7 +138,7 @@
         <section id="admin-form-section" class="admin-card">
           <div class="admin-card-header">
             <h2 id="form-title">Nueva publicación</h2>
-            <p>Sube una imagen, título y descripción. Make guardará el cambio en GitHub cuando esté conectado.</p>
+            <p>Crea o edita publicaciones. Los cambios se aplicarán cuando pulses guardar.</p>
           </div>
           <form id="post-form" class="form-grid">
             <input id="post-id" type="hidden">
@@ -215,10 +216,25 @@
 
             <div id="image-preview" class="image-preview hidden"></div>
 
-            <label>
-              Fotografía
-              <input id="post-image" type="file" accept="image/jpeg,image/png,image/webp">
-            </label>
+            <section class="image-manager" aria-labelledby="image-manager-title">
+              <div class="image-manager-header">
+                <div>
+                  <span class="image-manager-kicker">Imagen de la publicación</span>
+                  <h3 id="image-manager-title">Selecciona una imagen</h3>
+                </div>
+                <span id="image-manager-badge" class="image-manager-badge">Pendiente</span>
+              </div>
+
+              <p id="image-manager-status" class="image-manager-status">Selecciona una imagen para ver la vista previa.</p>
+
+              <div class="image-manager-actions">
+                <label id="image-file-label" class="button button-secondary image-file-label" for="post-image">Elegir imagen</label>
+                <button id="clear-selected-image-button" class="button button-small button-secondary hidden" type="button">Quitar imagen elegida</button>
+              </div>
+
+              <input id="post-image" class="image-file-input" type="file" accept="image/jpeg,image/png,image/webp">
+              <p class="form-note image-manager-note">La imagen nueva se aplicará al guardar. Puedes usar JPG, PNG o WebP; el panel la optimiza automáticamente.</p>
+            </section>
 
             <label>
               Texto alternativo de la imagen
