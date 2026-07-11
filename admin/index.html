@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-46">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-47">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-46"></script>
+  <script defer src="admin.js?v=20260705-47"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -55,6 +55,8 @@
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="list">Publicaciones</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="filters">Filtros</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="bulk">Lotes</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="order">Ordenar</button>
+        <button class="button button-small button-secondary" type="button" data-mobile-scroll="view">Vista</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="tools">Herramientas</button>
         <button class="button button-small button-secondary admin-mobile-help-link" type="button" data-open-help>Ayuda</button>
       </nav>
@@ -274,7 +276,18 @@
             </label>
             <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda y filtros</button>
           </div>
-          <div class="admin-order-entry" aria-label="Orden de publicaciones">
+          <div id="admin-view-entry" class="admin-view-entry" aria-label="Vista del listado">
+            <div>
+              <strong>Vista del listado</strong>
+              <span>Elige una vista cómoda para revisar las publicaciones.</span>
+            </div>
+            <div class="admin-view-toggle" role="group" aria-label="Cambiar vista del listado">
+              <button id="list-view-complete-button" class="button button-small button-secondary" type="button" data-list-view="complete" aria-pressed="true">Completa</button>
+              <button id="list-view-compact-button" class="button button-small button-secondary" type="button" data-list-view="compact" aria-pressed="false">Compacta</button>
+            </div>
+          </div>
+
+          <div id="admin-order-entry" class="admin-order-entry" aria-label="Orden de publicaciones">
             <div>
               <strong>Orden de publicaciones</strong>
               <span>Reordena todas las publicaciones o solo una categoría.</span>

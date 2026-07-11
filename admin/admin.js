@@ -1,5 +1,6 @@
 const config = window.CMS_CONFIG;
 const ADMIN_LOCAL_SNAPSHOT_KEY = 'cmsPublicacionesSnapshot';
+const ADMIN_LIST_VIEW_MODE_KEY = 'cmsAdminListViewMode';
 const RAW_GITHUB_BASE_URL = 'https://github.com/joanramonseijosevilla-tech/cms-archivos/raw/HEAD/';
 const RAW_GITHUB_DOWNLOAD_BASE_URL = 'https://raw.githubusercontent.com/joanramonseijosevilla-tech/cms-archivos/HEAD/';
 const POST_CATEGORIES = [
@@ -24,6 +25,8 @@ const DEFAULT_IMAGE_WEBP_QUALITY = 0.85;
 const DEFAULT_MAX_SOURCE_IMAGE_MB = 20;
 const ADMIN_PAGE_SIZE_OPTIONS = [10, 25, 50];
 const DEFAULT_ADMIN_PAGE_SIZE = 10;
+const ADMIN_LIST_VIEW_MODES = ['complete', 'compact'];
+const DEFAULT_ADMIN_LIST_VIEW_MODE = 'complete';
 
 const state = {
   items: [],
@@ -40,6 +43,7 @@ const state = {
   expandedDescriptionIds: new Set(),
   currentPage: 1,
   pageSize: DEFAULT_ADMIN_PAGE_SIZE,
+  listViewMode: readInitialListViewMode(),
   orderModeOpen: false,
   orderModeCategory: 'all',
   orderModeFeedback: null,
@@ -82,6 +86,7 @@ const saveButton = document.querySelector('#save-button');
 const cancelEditButton = document.querySelector('#cancel-edit-button');
 const refreshButton = document.querySelector('#refresh-button');
 const orderModeButton = document.querySelector('#order-mode-button');
+const listViewButtons = document.querySelectorAll('[data-list-view]');
 const imagePreview = document.querySelector('#image-preview');
 const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
@@ -243,6 +248,8 @@ function getMobileScrollTarget(targetName) {
   if (targetName === 'list') return document.querySelector('#admin-list-section') || adminPosts;
   if (targetName === 'filters') return document.querySelector('#admin-list-filters') || postSearch;
   if (targetName === 'bulk') return document.querySelector('.admin-bulk-actions') || document.querySelector('#admin-list-section') || adminPosts;
+  if (targetName === 'order') return document.querySelector('#admin-order-entry') || document.querySelector('.admin-order-mode-panel') || document.querySelector('#admin-list-section') || adminPosts;
+  if (targetName === 'view') return document.querySelector('#admin-view-entry') || document.querySelector('#admin-list-section') || adminPosts;
   if (targetName === 'tools') return document.querySelector('#admin-tools-section') || document.querySelector('#admin-list-section') || adminPosts;
   return document.querySelector('.admin-topbar') || adminView;
 }
@@ -273,6 +280,9 @@ function rememberFeedbackScopeFromEvent(event) {
     event.target.closest?.('#post-status-filter') ||
     event.target.closest?.('#post-category-filter') ||
     event.target.closest?.('#clear-search-button') ||
+    event.target.closest?.('[data-list-view]') ||
+    event.target.closest?.('#admin-view-entry') ||
+    event.target.closest?.('#admin-order-entry') ||
     event.target.closest?.('[data-mobile-scroll]') ||
     event.target.closest?.('#mobile-menu-button') ||
     event.target.closest?.('[data-open-help]') ||
@@ -1901,6 +1911,48 @@ function toggleAdminDescription(postId) {
 }
 
 
+
+function readInitialListViewMode() {
+  try {
+    const storedMode = localStorage.getItem(ADMIN_LIST_VIEW_MODE_KEY);
+    return ADMIN_LIST_VIEW_MODES.includes(storedMode) ? storedMode : DEFAULT_ADMIN_LIST_VIEW_MODE;
+  } catch (error) {
+    return DEFAULT_ADMIN_LIST_VIEW_MODE;
+  }
+}
+
+function getSafeListViewMode() {
+  return ADMIN_LIST_VIEW_MODES.includes(state.listViewMode) ? state.listViewMode : DEFAULT_ADMIN_LIST_VIEW_MODE;
+}
+
+function isCompactListView() {
+  return getSafeListViewMode() === 'compact';
+}
+
+function saveListViewMode(mode) {
+  try {
+    localStorage.setItem(ADMIN_LIST_VIEW_MODE_KEY, mode);
+  } catch (error) {
+    console.warn('No se pudo guardar la vista del listado:', error);
+  }
+}
+
+function updateListViewControls() {
+  const currentMode = getSafeListViewMode();
+  listViewButtons.forEach((button) => {
+    const isActive = button.dataset.listView === currentMode;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function setListViewMode(mode) {
+  const nextMode = ADMIN_LIST_VIEW_MODES.includes(mode) ? mode : DEFAULT_ADMIN_LIST_VIEW_MODE;
+  state.listViewMode = nextMode;
+  saveListViewMode(nextMode);
+  renderAdminPosts();
+}
+
 function getSafePageSize() {
   const numericPageSize = Number(state.pageSize);
   return ADMIN_PAGE_SIZE_OPTIONS.includes(numericPageSize) ? numericPageSize : DEFAULT_ADMIN_PAGE_SIZE;
@@ -2318,6 +2370,7 @@ function movePostInOrderMode(item, action) {
 function renderAdminPosts() {
   adminPosts.replaceChildren();
   updateSearchControls();
+  updateListViewControls();
 
   if (!state.items.length) {
     adminStatus.textContent = 'Todavía no hay publicaciones.';
@@ -2331,6 +2384,7 @@ function renderAdminPosts() {
 
   clampCurrentPage(displayedItems.length);
   const paginatedItems = getPaginatedItems(displayedItems);
+  const compactListView = isCompactListView();
 
   adminStatus.textContent = buildStatusText(displayedItems.length, fullOrderedItems);
 
@@ -2382,7 +2436,7 @@ function renderAdminPosts() {
     .forEach((item) => {
       const fullIndex = fullOrderedItems.findIndex((orderedItem) => orderedItem.id === item.id);
       const card = document.createElement('article');
-      card.className = 'admin-post';
+      card.className = `admin-post${compactListView ? ' admin-post-compact' : ''}`;
 
       const img = document.createElement('img');
       setImageSrc(img, item.image?.src);
@@ -2510,10 +2564,14 @@ function renderAdminPosts() {
 
         actions.append(moveUpButton, moveDownButton, toggleStatusButton, editButton, duplicateButton, trashButton);
       }
-      content.append(selectLabel, title, meta, description);
+      content.append(selectLabel, title, meta);
 
-      if (descriptionNeedsToggle) {
-        content.append(descriptionToggle);
+      if (!compactListView) {
+        content.append(description);
+
+        if (descriptionNeedsToggle) {
+          content.append(descriptionToggle);
+        }
       }
 
       content.append(actions);
@@ -4507,6 +4565,10 @@ refreshButton.addEventListener('click', () => {
 if (orderModeButton) {
   orderModeButton.addEventListener('click', toggleOrderMode);
 }
+
+listViewButtons.forEach((button) => {
+  button.addEventListener('click', () => setListViewMode(button.dataset.listView));
+});
 
 postImage.addEventListener('change', () => {
   clearPreviewObjectUrl();
