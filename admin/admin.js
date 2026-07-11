@@ -27,10 +27,18 @@ const ADMIN_PAGE_SIZE_OPTIONS = [10, 25, 50];
 const DEFAULT_ADMIN_PAGE_SIZE = 10;
 const ADMIN_LIST_VIEW_MODES = ['complete', 'compact'];
 const DEFAULT_ADMIN_LIST_VIEW_MODE = 'complete';
+const PANEL_USAGE_MONTHLY_LIMIT = 15;
+const PANEL_USAGE_WARNING_PERCENT = 0.8;
+const PANEL_USAGE_COSTS = {
+  saveWithImage: 5,
+  saveWithoutImage: 4,
+  standardSave: 4
+};
 
 const state = {
   items: [],
   publicacionesUpdatedAt: '',
+  usage: null,
   password: sessionStorage.getItem('cmsPassword') || '',
   orderDirty: false,
   orderOriginalItems: null,
@@ -111,6 +119,12 @@ const recoverBackupFile = document.querySelector('#recover-backup-file');
 const analyzeRecoverBackupButton = document.querySelector('#analyze-recover-backup-button');
 const backupRecoverResult = document.querySelector('#backup-recover-result');
 const toolsFeedback = document.querySelector('#tools-feedback');
+const usagePanel = document.querySelector('#usage-panel');
+const usageBar = document.querySelector('#usage-bar');
+const usageCurrent = document.querySelector('#usage-current');
+const usageLimit = document.querySelector('#usage-limit');
+const usageMonth = document.querySelector('#usage-month');
+const usageStatus = document.querySelector('#usage-status');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
 
@@ -1567,7 +1581,7 @@ async function saveBulkCategoryChanges() {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -1583,9 +1597,10 @@ async function saveBulkCategoryChanges() {
     const payload = attachPublicacionesPayload({
       action: 'bulk_category_editor',
       changes
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     closeBulkCategoryEditor(false);
@@ -1646,10 +1661,95 @@ function normalizeItemsWithOrder(items) {
   }));
 }
 
+
+function getCurrentUsageMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getUsageLimit() {
+  return PANEL_USAGE_MONTHLY_LIMIT;
+}
+
+function normalizeUsage(rawUsage) {
+  const currentMonth = getCurrentUsageMonth();
+  const rawUsed = Number(rawUsage?.used);
+  const rawMonth = String(rawUsage?.month || currentMonth);
+  const used = rawMonth === currentMonth && Number.isFinite(rawUsed) && rawUsed > 0
+    ? Math.floor(rawUsed)
+    : 0;
+
+  return {
+    month: currentMonth,
+    limit: getUsageLimit(),
+    used
+  };
+}
+
+function getCurrentUsage() {
+  return normalizeUsage(state.usage);
+}
+
+function buildUsageLimitMessage(usage, cost) {
+  const remaining = Math.max(0, usage.limit - usage.used);
+  return `Límite mensual del panel alcanzado. Esta acción necesita ${cost} punto${cost === 1 ? '' : 's'} de uso y quedan ${remaining}. No se ha guardado el cambio.`;
+}
+
+function applyUsageCost(publicacionesJson, cost) {
+  const numericCost = Math.max(0, Math.floor(Number(cost) || 0));
+  const normalizedJson = normalizePublicacionesJson(publicacionesJson);
+  const currentUsage = getCurrentUsage();
+
+  if (numericCost > 0 && currentUsage.used + numericCost > currentUsage.limit) {
+    throw new Error(buildUsageLimitMessage(currentUsage, numericCost));
+  }
+
+  normalizedJson.usage = {
+    ...currentUsage,
+    used: currentUsage.used + numericCost
+  };
+
+  return normalizedJson;
+}
+
+function getUsagePercent(usage) {
+  if (!usage?.limit) return 0;
+  return Math.min(100, Math.round((usage.used / usage.limit) * 100));
+}
+
+function updateUsagePanel() {
+  const usage = getCurrentUsage();
+  if (!usagePanel || !usageBar || !usageCurrent || !usageLimit || !usageMonth || !usageStatus) return;
+
+  const percent = getUsagePercent(usage);
+  usagePanel.classList.remove('is-warning', 'is-limit');
+  if (usage.used >= usage.limit) {
+    usagePanel.classList.add('is-limit');
+  } else if (usage.used >= Math.ceil(usage.limit * PANEL_USAGE_WARNING_PERCENT)) {
+    usagePanel.classList.add('is-warning');
+  }
+
+  usageCurrent.textContent = String(usage.used);
+  usageLimit.textContent = String(usage.limit);
+  usageMonth.textContent = usage.month;
+  usageBar.style.setProperty('--usage-percent', `${percent}%`);
+  usageBar.setAttribute('aria-valuenow', String(Math.min(usage.used, usage.limit)));
+  usageBar.setAttribute('aria-valuemax', String(usage.limit));
+
+  if (usage.used >= usage.limit) {
+    usageStatus.textContent = 'Límite mensual alcanzado. Las acciones que guardan cambios quedan bloqueadas hasta el próximo mes.';
+  } else if (usage.used >= Math.ceil(usage.limit * PANEL_USAGE_WARNING_PERCENT)) {
+    usageStatus.textContent = 'Te estás acercando al límite mensual del panel.';
+  } else {
+    usageStatus.textContent = 'Solo se suma cuando una acción se guarda correctamente.';
+  }
+}
+
 function normalizePublicacionesJson(data) {
   return {
     version: data?.version || 1,
     updatedAt: data?.updatedAt || '',
+    usage: normalizeUsage(data?.usage),
     items: normalizeItemsWithOrder(Array.isArray(data?.items) ? data.items : [])
   };
 }
@@ -1702,6 +1802,8 @@ function setStateFromPublicacionesJson(publicacionesJson) {
   const normalized = normalizePublicacionesJson(publicacionesJson);
   state.items = normalized.items;
   state.publicacionesUpdatedAt = normalized.updatedAt;
+  state.usage = normalized.usage;
+  updateUsagePanel();
   cleanSelectedPosts();
 }
 
@@ -3023,9 +3125,10 @@ function encodeJsonToBase64(data) {
   };
 }
 
-function attachPublicacionesPayload(payload, publicacionesJson) {
-  const encoded = encodeJsonToBase64(publicacionesJson);
-  payload.publicacionesJson = publicacionesJson;
+function attachPublicacionesPayload(payload, publicacionesJson, usageCost = PANEL_USAGE_COSTS.standardSave) {
+  const nextPublicacionesJson = applyUsageCost(publicacionesJson, usageCost);
+  const encoded = encodeJsonToBase64(nextPublicacionesJson);
+  payload.publicacionesJson = nextPublicacionesJson;
   payload.publicacionesBase64 = encoded.base64;
   return payload;
 }
@@ -3169,7 +3272,9 @@ async function savePost(event) {
       };
     }
 
-    attachPublicacionesPayload(payload, nextPublicacionesJson);
+    const usageCost = file ? PANEL_USAGE_COSTS.saveWithImage : PANEL_USAGE_COSTS.saveWithoutImage;
+    attachPublicacionesPayload(payload, nextPublicacionesJson, usageCost);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     await sendToMake(isEdit ? 'update' : 'create', payload);
 
@@ -3227,7 +3332,7 @@ async function saveManualOrder() {
     setBusy(true);
     state.orderModeFeedback = null;
     const nowIso = new Date().toISOString();
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(
@@ -3236,9 +3341,10 @@ async function saveManualOrder() {
     };
     const payload = attachPublicacionesPayload({
       action: 'reorder'
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     clearPendingOrder();
@@ -3297,7 +3403,7 @@ async function toggleSelectedPostsStatus() {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3316,9 +3422,10 @@ async function toggleSelectedPostsStatus() {
       ids: [...selectedIdSet],
       publishIds: selectedHiddenItems.map((selectedItem) => selectedItem.id),
       hideIds: selectedPublishedItems.map((selectedItem) => selectedItem.id)
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     setStateFromPublicacionesJson(nextPublicacionesJson);
@@ -3361,7 +3468,7 @@ async function setSelectedPostsStatus(nextStatus) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3378,9 +3485,10 @@ async function setSelectedPostsStatus(nextStatus) {
       action: 'bulk_status',
       status,
       ids: [...selectedIdSet]
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     setStateFromPublicacionesJson(nextPublicacionesJson);
@@ -3427,7 +3535,7 @@ async function setSelectedPostsCategory(nextCategory) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3443,9 +3551,10 @@ async function setSelectedPostsCategory(nextCategory) {
       action: 'bulk_category',
       category: nextCategory,
       ids: [...selectedIdSet]
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     setStateFromPublicacionesJson(nextPublicacionesJson);
@@ -3477,7 +3586,7 @@ async function moveSelectedPostsToTrash() {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3493,9 +3602,10 @@ async function moveSelectedPostsToTrash() {
     const payload = attachPublicacionesPayload({
       action: 'bulk_trash',
       ids: [...selectedIdSet]
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     const editingPostWasSelected = Boolean(postId.value && selectedIdSet.has(postId.value));
     state.selectedIds.clear();
@@ -3529,7 +3639,7 @@ async function restoreSelectedPosts() {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3544,9 +3654,10 @@ async function restoreSelectedPosts() {
     const payload = attachPublicacionesPayload({
       action: 'bulk_restore',
       ids: [...selectedIdSet]
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     setStateFromPublicacionesJson(nextPublicacionesJson);
@@ -3578,7 +3689,7 @@ async function deleteSelectedPostsForever() {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.filter((currentItem) => !selectedIdSet.has(currentItem.id)))
@@ -3587,9 +3698,10 @@ async function deleteSelectedPostsForever() {
       action: 'bulk_delete_forever',
       ids: [...selectedIdSet],
       imagePaths: selectedItems.map((selectedItem) => selectedItem.image?.path).filter(Boolean)
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('delete', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     setStateFromPublicacionesJson(nextPublicacionesJson);
@@ -3612,7 +3724,7 @@ async function togglePostStatus(item) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3628,9 +3740,10 @@ async function togglePostStatus(item) {
     const payload = attachPublicacionesPayload({
       id: item.id,
       status: nextStatus
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
@@ -3652,7 +3765,7 @@ async function movePostToTrash(item) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3668,9 +3781,10 @@ async function movePostToTrash(item) {
     const payload = attachPublicacionesPayload({
       action: 'trash',
       id: item.id
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
@@ -3691,7 +3805,7 @@ async function restorePost(item) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.map((currentItem) => {
@@ -3706,9 +3820,10 @@ async function restorePost(item) {
     const payload = attachPublicacionesPayload({
       action: 'restore',
       id: item.id
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
@@ -3730,7 +3845,7 @@ async function deletePostForever(item) {
     const currentItems = normalizeItemsWithOrder(
       Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
     );
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder(currentItems.filter((currentItem) => currentItem.id !== item.id))
@@ -3739,9 +3854,10 @@ async function deletePostForever(item) {
       action: 'delete_forever',
       id: item.id,
       imagePath: item.image?.path
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('delete', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     saveLocalSnapshot(nextPublicacionesJson);
@@ -4559,7 +4675,7 @@ async function recoverSelectedPostsFromBackup() {
         updatedAt: nowIso
       };
     });
-    const nextPublicacionesJson = {
+    let nextPublicacionesJson = {
       version: 1,
       updatedAt: nowIso,
       items: normalizeItemsWithOrder([...recoveredItems, ...currentItems])
@@ -4567,9 +4683,10 @@ async function recoverSelectedPostsFromBackup() {
     const payload = attachPublicacionesPayload({
       action: 'recover_from_backup',
       ids: recoveredItems.map((item) => item.id)
-    }, nextPublicacionesJson);
+    }, nextPublicacionesJson, PANEL_USAGE_COSTS.standardSave);
 
     await sendToMake('update', payload);
+    nextPublicacionesJson = payload.publicacionesJson;
 
     state.selectedIds.clear();
     state.backupRecovery = null;

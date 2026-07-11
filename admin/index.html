@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-50">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-51">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-50"></script>
+  <script defer src="admin.js?v=20260705-51"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -75,8 +75,8 @@
 
           <div class="admin-manual-intro" aria-label="Resumen del manual">
             <div>
-              <strong>Versión 9.0</strong>
-              <span>Manual actualizado con categorías, papelera, lotes, copias, recuperación, vista compacta, orden por categoría e imágenes más claras.</span>
+              <strong>Versión 9.1</strong>
+              <span>Manual actualizado con categorías, papelera, lotes, copias, recuperación, vista compacta, orden por categoría, imágenes más claras y límite mensual del panel.</span>
             </div>
             <div>
               <strong>Idea clave</strong>
@@ -184,7 +184,14 @@
             </details>
 
             <details class="admin-help-item">
-              <summary>13. Buenas prácticas</summary>
+              <summary>13. Uso mensual del panel</summary>
+              <p>En Herramientas puedes ver el <strong>uso mensual del panel</strong>. Es un límite interno para controlar las acciones que guardan cambios.</p>
+              <p>Buscar, filtrar, cambiar de página, abrir el manual, verificar copias o cambiar de vista no suma uso.</p>
+              <p>Si se alcanza el límite mensual, el panel avisa antes de guardar y no realiza el cambio.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>14. Buenas prácticas</summary>
               <ol>
                 <li>Antes de cambios importantes, descarga una copia completa.</li>
                 <li>Usa <strong>Oculto</strong> para preparar publicaciones antes de enseñarlas en la web.</li>
@@ -388,6 +395,18 @@
           <p>Opciones de mantenimiento y seguridad para trabajar con el contenido del panel.</p>
         </div>
         <div class="admin-tools-grid">
+          <article id="usage-panel" class="admin-tool-box admin-usage-box" aria-label="Uso mensual del panel">
+            <div>
+              <h3>Uso mensual del panel</h3>
+              <p class="admin-usage-main"><strong><span id="usage-current">0</span> / <span id="usage-limit">15</span></strong></p>
+              <div id="usage-bar" class="admin-usage-bar" role="progressbar" aria-valuemin="0" aria-valuenow="0" aria-valuemax="15" aria-label="Uso mensual del panel">
+                <span></span>
+              </div>
+              <p id="usage-status" class="form-note">Solo se suma cuando una acción se guarda correctamente.</p>
+              <p class="form-note">Mes actual: <span id="usage-month">--</span>. Límite de prueba: 15.</p>
+            </div>
+          </article>
+
           <article class="admin-tool-box">
             <div>
               <h3>Descargar copia completa</h3>

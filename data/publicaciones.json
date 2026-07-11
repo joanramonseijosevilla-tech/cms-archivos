@@ -1,6 +1,11 @@
 {
   "version": 1,
   "updatedAt": "2026-07-11T16:04:18.513Z",
+  "usage": {
+    "month": "2026-07",
+    "limit": 15,
+    "used": 0
+  },
   "items": [
     {
       "id": "pub_20260711180418",
