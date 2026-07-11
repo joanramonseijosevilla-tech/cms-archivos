@@ -1,12 +1,28 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-11T17:10:55.108Z",
+  "updatedAt": "2026-07-11T17:14:13.400Z",
   "usage": {
     "month": "2026-07",
     "limit": 15,
-    "used": 10
+    "used": 14
   },
   "items": [
+    {
+      "id": "pub_20260708054938",
+      "title": "Ejemplo Prueba Editor",
+      "description": "<h2 class=\"rich-align-center\">Titulo Ejemplo</h2><div><span class=\"rich-color-green\">Prueba de colores</span></div><div><ul><li><span class=\"rich-color-orange\">Esto es una prueba</span></li><li><span class=\"rich-color-orange\">Veremos que pasa</span></li><ul><li><span class=\"rich-color-orange\">Esto de momento bien</span></li></ul><li><span class=\"rich-color-blue\">Ahora probaremos color base y pegaremos texto y ejecutaremos Make</span></li></ul><div><h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>La combinación de colores personalizada es ahora la combinación de colores predeterminada. Los colores seleccionados ahora se pueden usar como colores de combinación al seleccionar colores en toda la publicación. Por ejemplo, al seleccionar el color de relleno para celdas de tabla, formas, fondos de página o colores de fuente.</p></div></div></div></div><div><br></div>",
+      "image": {
+        "src": "assets/uploads/20260708-054938-efecto-rashomon.webp",
+        "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
+        "alt": "Ejemplo Prueba Editor"
+      },
+      "status": "hidden",
+      "category": "proyectos",
+      "createdAt": "2026-07-08T03:49:38.332Z",
+      "updatedAt": "2026-07-11T08:59:05.799Z",
+      "order": 0,
+      "published": false
+    },
     {
       "id": "pub_20260711191055",
       "title": "Segunda publicación de prueba créditos",
@@ -21,7 +37,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-11T17:10:55.108Z",
       "updatedAt": "2026-07-11T17:10:55.108Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260711190904",
@@ -37,7 +53,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-11T17:09:04.323Z",
       "updatedAt": "2026-07-11T17:09:04.323Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260711180418",
@@ -53,22 +69,6 @@
       "category": "proyectos",
       "createdAt": "2026-07-11T16:04:18.513Z",
       "updatedAt": "2026-07-11T16:04:18.513Z",
-      "order": 2
-    },
-    {
-      "id": "pub_20260709061246",
-      "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
-      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO v.2</h2><div>Veamos como funcionan los mensajes de guardado v2</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
-      "image": {
-        "src": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
-        "path": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
-        "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
-      },
-      "status": "published",
-      "published": true,
-      "category": "proyectos",
-      "createdAt": "2026-07-09T04:12:46.197Z",
-      "updatedAt": "2026-07-11T15:57:20.365Z",
       "order": 3
     },
     {
@@ -200,20 +200,20 @@
       "order": 11
     },
     {
-      "id": "pub_20260708054938",
-      "title": "Ejemplo Prueba Editor",
-      "description": "<h2 class=\"rich-align-center\">Titulo Ejemplo</h2><div><span class=\"rich-color-green\">Prueba de colores</span></div><div><ul><li><span class=\"rich-color-orange\">Esto es una prueba</span></li><li><span class=\"rich-color-orange\">Veremos que pasa</span></li><ul><li><span class=\"rich-color-orange\">Esto de momento bien</span></li></ul><li><span class=\"rich-color-blue\">Ahora probaremos color base y pegaremos texto y ejecutaremos Make</span></li></ul><div><h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>La combinación de colores personalizada es ahora la combinación de colores predeterminada. Los colores seleccionados ahora se pueden usar como colores de combinación al seleccionar colores en toda la publicación. Por ejemplo, al seleccionar el color de relleno para celdas de tabla, formas, fondos de página o colores de fuente.</p></div></div></div></div><div><br></div>",
+      "id": "pub_20260709061246",
+      "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
+      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO v.2</h2><div>Veamos como funcionan los mensajes de guardado v2</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
       "image": {
-        "src": "assets/uploads/20260708-054938-efecto-rashomon.webp",
-        "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
-        "alt": "Ejemplo Prueba Editor"
+        "src": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
+        "path": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
+        "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
       },
-      "status": "hidden",
+      "status": "published",
+      "published": true,
       "category": "proyectos",
-      "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-11T08:59:05.799Z",
-      "order": 12,
-      "published": false
+      "createdAt": "2026-07-09T04:12:46.197Z",
+      "updatedAt": "2026-07-11T15:57:20.365Z",
+      "order": 12
     },
     {
       "id": "pub_20260710161115",
