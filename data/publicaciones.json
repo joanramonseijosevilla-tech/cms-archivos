@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-11T03:35:31.712Z",
+  "updatedAt": "2026-07-11T08:59:05.799Z",
   "items": [
     {
       "id": "pub_20260710160726",
@@ -155,12 +155,12 @@
         "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
         "alt": "Ejemplo Prueba Editor"
       },
-      "status": "published",
+      "status": "hidden",
       "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-10T14:39:08.344Z",
+      "updatedAt": "2026-07-11T08:59:05.799Z",
       "order": 9,
-      "published": true
+      "published": false
     },
     {
       "id": "pub_20260710161115",
