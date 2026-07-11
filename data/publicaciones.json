@@ -1,21 +1,21 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-11T12:52:32.605Z",
+  "updatedAt": "2026-07-11T15:57:20.365Z",
   "items": [
     {
       "id": "pub_20260709061246",
       "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
-      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO</h2><div>Veamos como funcionan los mensajes de guardado</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
+      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO v.2</h2><div>Veamos como funcionan los mensajes de guardado v2</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
       "image": {
-        "src": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
-        "path": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
+        "src": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
+        "path": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
         "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
       },
       "status": "published",
       "published": true,
-      "category": "novedades",
+      "category": "proyectos",
       "createdAt": "2026-07-09T04:12:46.197Z",
-      "updatedAt": "2026-07-09T04:12:46.197Z",
+      "updatedAt": "2026-07-11T15:57:20.365Z",
       "order": 0
     },
     {
