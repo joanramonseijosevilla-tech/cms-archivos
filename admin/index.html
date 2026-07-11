@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-41">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-42">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-41"></script>
+  <script defer src="admin.js?v=20260705-42"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -220,6 +220,22 @@
               <p class="form-note">No modifica GitHub, no llama a Make y no cambia ninguna publicación.</p>
             </div>
             <button id="export-backup-button" class="button button-secondary" type="button">Descargar copia completa</button>
+          </article>
+
+          <article class="admin-tool-box admin-tool-box-stacked">
+            <div>
+              <h3>Verificar copia completa</h3>
+              <p>Selecciona un ZIP descargado desde este panel para comprobar si contiene los datos y las imágenes esperadas.</p>
+              <p class="form-note">No restaura nada y no modifica ninguna publicación.</p>
+            </div>
+            <div class="admin-tool-actions">
+              <label class="admin-file-action">
+                Archivo ZIP
+                <input id="verify-backup-file" type="file" accept=".zip,application/zip,application/x-zip-compressed">
+              </label>
+              <button id="verify-backup-button" class="button button-secondary" type="button">Verificar copia</button>
+            </div>
+            <div id="backup-verify-result" class="backup-verify-result hidden" aria-live="polite"></div>
           </article>
         </div>
         <div id="tools-feedback" class="admin-alert admin-inline-alert hidden" role="status"></div>

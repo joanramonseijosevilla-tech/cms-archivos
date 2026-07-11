@@ -86,6 +86,9 @@ const mobileMenuButton = document.querySelector('#mobile-menu-button');
 const mobileQuickMenu = document.querySelector('#mobile-quick-menu');
 const mobileNavButtons = document.querySelectorAll('[data-mobile-scroll]');
 const exportBackupButton = document.querySelector('#export-backup-button');
+const verifyBackupFile = document.querySelector('#verify-backup-file');
+const verifyBackupButton = document.querySelector('#verify-backup-button');
+const backupVerifyResult = document.querySelector('#backup-verify-result');
 const toolsFeedback = document.querySelector('#tools-feedback');
 let richEditorSavedRange = null;
 let richEditorActiveColorValue = 'base';
@@ -3626,6 +3629,199 @@ async function exportCompleteBackup() {
   }
 }
 
+
+function findZipEndOfCentralDirectory(bytes) {
+  const minOffset = Math.max(0, bytes.length - 0x10000 - 22);
+
+  for (let offset = bytes.length - 22; offset >= minOffset; offset -= 1) {
+    if (
+      bytes[offset] === 0x50 &&
+      bytes[offset + 1] === 0x4b &&
+      bytes[offset + 2] === 0x05 &&
+      bytes[offset + 3] === 0x06
+    ) {
+      return offset;
+    }
+  }
+
+  return -1;
+}
+
+function decodeZipText(bytes) {
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function parseZipEntries(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const view = new DataView(arrayBuffer);
+  const endOffset = findZipEndOfCentralDirectory(bytes);
+
+  if (endOffset < 0) {
+    throw new Error('El archivo seleccionado no parece un ZIP válido.');
+  }
+
+  const totalEntries = view.getUint16(endOffset + 10, true);
+  const centralDirectoryOffset = view.getUint32(endOffset + 16, true);
+  const entries = new Map();
+  let cursor = centralDirectoryOffset;
+
+  for (let index = 0; index < totalEntries; index += 1) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) {
+      throw new Error('No se ha podido leer el índice interno del ZIP.');
+    }
+
+    const compressionMethod = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const uncompressedSize = view.getUint32(cursor + 24, true);
+    const fileNameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localHeaderOffset = view.getUint32(cursor + 42, true);
+    const fileNameBytes = bytes.slice(cursor + 46, cursor + 46 + fileNameLength);
+    const fileName = cleanRelativePath(decodeZipText(fileNameBytes));
+
+    if (!fileName.endsWith('/')) {
+      if (compressionMethod !== 0) {
+        throw new Error('Este verificador solo puede leer copias generadas por este panel. El ZIP está comprimido con otro método.');
+      }
+
+      if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) {
+        throw new Error(`No se ha podido leer el archivo ${fileName} dentro del ZIP.`);
+      }
+
+      const localNameLength = view.getUint16(localHeaderOffset + 26, true);
+      const localExtraLength = view.getUint16(localHeaderOffset + 28, true);
+      const dataOffset = localHeaderOffset + 30 + localNameLength + localExtraLength;
+      const data = bytes.slice(dataOffset, dataOffset + compressedSize);
+
+      entries.set(fileName, {
+        name: fileName,
+        data,
+        size: uncompressedSize
+      });
+    }
+
+    cursor += 46 + fileNameLength + extraLength + commentLength;
+  }
+
+  return entries;
+}
+
+function readZipTextEntry(entries, fileName) {
+  const entry = entries.get(cleanRelativePath(fileName));
+  if (!entry) return '';
+  return new TextDecoder('utf-8').decode(entry.data);
+}
+
+function showBackupVerifyResult(lines, type = 'success') {
+  if (!backupVerifyResult) return;
+  backupVerifyResult.textContent = lines.join('\n');
+  backupVerifyResult.className = `backup-verify-result ${type === 'error' ? 'error' : type === 'warning' ? 'warning' : ''}`.trim();
+  backupVerifyResult.classList.remove('hidden');
+}
+
+function getCurrentBackupExpectedImagePaths(publicacionesJson) {
+  return getBackupImagePaths(Array.isArray(publicacionesJson?.items) ? publicacionesJson.items : []);
+}
+
+async function verifyCompleteBackup() {
+  state.lastFeedbackScope = 'tools';
+
+  const file = verifyBackupFile?.files?.[0];
+
+  if (!file) {
+    showAlert('Selecciona primero un archivo ZIP de copia completa.', 'error', { scope: 'tools', scroll: true });
+    return;
+  }
+
+  try {
+    if (verifyBackupButton) {
+      verifyBackupButton.disabled = true;
+      verifyBackupButton.textContent = 'Verificando…';
+    }
+
+    if (backupVerifyResult) {
+      backupVerifyResult.classList.add('hidden');
+      backupVerifyResult.textContent = '';
+    }
+
+    showAlert('Verificando copia completa…', 'success', { scope: 'tools', scroll: true });
+
+    const entries = parseZipEntries(await file.arrayBuffer());
+    const publicacionesText = readZipTextEntry(entries, 'data/publicaciones.json');
+
+    if (!publicacionesText) {
+      throw new Error('La copia no contiene data/publicaciones.json.');
+    }
+
+    let publicacionesJson;
+
+    try {
+      publicacionesJson = JSON.parse(publicacionesText);
+    } catch (error) {
+      throw new Error('El archivo data/publicaciones.json de la copia no se puede leer correctamente.');
+    }
+
+    if (!publicacionesJson || !Array.isArray(publicacionesJson.items)) {
+      throw new Error('La copia contiene datos, pero no tienen el formato esperado del CMS.');
+    }
+
+    const imagePaths = getCurrentBackupExpectedImagePaths(publicacionesJson);
+    const missingImages = imagePaths.filter((path) => !entries.has(cleanRelativePath(path)));
+    const includedImages = imagePaths.length - missingImages.length;
+    const extraUploadFiles = [...entries.keys()].filter((name) => name.startsWith('assets/uploads/') && !imagePaths.includes(name));
+    const readmeIncluded = entries.has('LEEME-copia-completa.txt');
+    const lines = [
+      missingImages.length ? 'Copia revisada con avisos.' : 'Copia revisada correctamente.',
+      '',
+      `Archivo: ${file.name}`,
+      `Publicaciones encontradas: ${publicacionesJson.items.length}`,
+      `Imágenes esperadas: ${imagePaths.length}`,
+      `Imágenes incluidas: ${includedImages}`,
+      `Imágenes faltantes: ${missingImages.length}`,
+      `Archivo de instrucciones incluido: ${readmeIncluded ? 'sí' : 'no'}`
+    ];
+
+    if (publicacionesJson.updatedAt) {
+      lines.splice(3, 0, `Fecha interna de datos: ${publicacionesJson.updatedAt}`);
+    }
+
+    if (extraUploadFiles.length) {
+      lines.push('', `Aviso: el ZIP incluye ${extraUploadFiles.length} imagen${extraUploadFiles.length === 1 ? '' : 'es'} adicional${extraUploadFiles.length === 1 ? '' : 'es'} no referenciada${extraUploadFiles.length === 1 ? '' : 's'} por publicaciones.json.`);
+    }
+
+    if (missingImages.length) {
+      lines.push('', 'Imágenes que faltan:', ...missingImages.slice(0, 12).map((path) => `- ${path}`));
+
+      if (missingImages.length > 12) {
+        lines.push(`- … y ${missingImages.length - 12} más.`);
+      }
+    }
+
+    showBackupVerifyResult(lines, missingImages.length ? 'warning' : 'success');
+    showAlert(
+      missingImages.length
+        ? `Copia verificada con avisos: faltan ${missingImages.length} imagen${missingImages.length === 1 ? '' : 'es'}.`
+        : 'Copia verificada correctamente. No se han detectado imágenes faltantes.',
+      missingImages.length ? 'error' : 'success',
+      { scope: 'tools', scroll: true }
+    );
+  } catch (error) {
+    showBackupVerifyResult([
+      'No se ha podido verificar la copia.',
+      '',
+      error.message || 'El archivo seleccionado no parece una copia completa válida.'
+    ], 'error');
+    showAlert(error.message || 'No se ha podido verificar la copia.', 'error', { scope: 'tools', scroll: true });
+    console.error(error);
+  } finally {
+    if (verifyBackupButton) {
+      verifyBackupButton.disabled = false;
+      verifyBackupButton.textContent = 'Verificar copia';
+    }
+  }
+}
+
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   state.password = loginPassword.value;
@@ -3796,6 +3992,19 @@ if (clearSearchButton) {
 
 if (exportBackupButton) {
   exportBackupButton.addEventListener('click', exportCompleteBackup);
+}
+
+if (verifyBackupButton) {
+  verifyBackupButton.addEventListener('click', verifyCompleteBackup);
+}
+
+if (verifyBackupFile) {
+  verifyBackupFile.addEventListener('change', () => {
+    if (backupVerifyResult) {
+      backupVerifyResult.classList.add('hidden');
+      backupVerifyResult.textContent = '';
+    }
+  });
 }
 
 if (mobileMenuButton) {

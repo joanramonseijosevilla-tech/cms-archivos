@@ -1278,6 +1278,51 @@ input[type="file"]::file-selector-button {
   white-space: nowrap;
 }
 
+
+.admin-tool-box-stacked {
+  display: grid;
+  align-items: stretch;
+}
+
+.admin-tool-actions {
+  display: grid;
+  gap: 0.75rem;
+  min-width: min(100%, 320px);
+}
+
+.admin-file-action {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.admin-file-action input[type="file"] {
+  width: 100%;
+}
+
+.backup-verify-result {
+  white-space: pre-line;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-radius: var(--radius-md);
+  background: rgba(22, 101, 52, 0.16);
+  color: #dcfce7;
+  line-height: 1.55;
+}
+
+.backup-verify-result.warning {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(146, 64, 14, 0.2);
+  color: #ffedd5;
+}
+
+.backup-verify-result.error {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(127, 29, 29, 0.24);
+  color: #fee2e2;
+}
+
 @media (max-width: 760px) {
   .admin-mobile-menu:not(.hidden) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
