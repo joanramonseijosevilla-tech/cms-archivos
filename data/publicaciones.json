@@ -1,7 +1,23 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-09T04:34:22.834Z",
+  "updatedAt": "2026-07-11T08:59:05.799Z",
   "items": [
+    {
+      "id": "pub_20260710160726",
+      "title": "PRUEBA 12",
+      "description": "<h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><br></p></div></div>",
+      "image": {
+        "src": "assets/uploads/20260710-160726-pancarta-publicitaria-2.webp",
+        "path": "assets/uploads/20260710-160726-pancarta-publicitaria-2.webp",
+        "alt": "PRUEBA 4"
+      },
+      "status": "published",
+      "published": true,
+      "category": "novedades",
+      "createdAt": "2026-07-10T14:07:26.129Z",
+      "updatedAt": "2026-07-10T14:07:26.129Z",
+      "order": 0
+    },
     {
       "id": "pub_20260709063346",
       "title": "PRUEBA 5",
@@ -16,7 +32,7 @@
       "category": "galeria",
       "createdAt": "2026-07-09T04:33:46.762Z",
       "updatedAt": "2026-07-09T04:33:46.762Z",
-      "order": 0
+      "order": 1
     },
     {
       "id": "pub_20260709062122",
@@ -32,7 +48,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:21:22.469Z",
       "updatedAt": "2026-07-09T04:21:22.469Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260709061842",
@@ -48,7 +64,7 @@
       "category": "galeria",
       "createdAt": "2026-07-09T04:18:42.528Z",
       "updatedAt": "2026-07-09T04:18:42.528Z",
-      "order": 2
+      "order": 3
     },
     {
       "id": "pub_20260709061659",
@@ -64,7 +80,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:16:59.485Z",
       "updatedAt": "2026-07-09T04:34:22.834Z",
-      "order": 3
+      "order": 4
     },
     {
       "id": "pub_20260709061349",
@@ -80,7 +96,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:13:49.727Z",
       "updatedAt": "2026-07-09T04:13:49.727Z",
-      "order": 4
+      "order": 5
     },
     {
       "id": "pub_20260709061246",
@@ -96,22 +112,6 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:12:46.197Z",
       "updatedAt": "2026-07-09T04:12:46.197Z",
-      "order": 5
-    },
-    {
-      "id": "pub_20260708212715",
-      "title": "Copia de Proyecto Prueba",
-      "description": "<h2></h2><h2 class=\"rich-align-center\">ESTO ES UNA PRUEBA</h2><div>Esto es una prueba para ver si funciona</div><div><ul><li>Primera</li><li><span class=\"rich-color-green\">Segunda</span></li><li>Tercera</li><li>Cuarto</li><li><span class=\"rich-color-orange\">Quinta</span></li></ul><h3 class=\"rich-align-center\">Titulo 2</h3></div><div>Esto es una prueba de edición</div><h4 class=\"rich-align-center\">Titulo 3</h4><div>Veamos si lo hace bien</div>",
-      "image": {
-        "src": "assets/uploads/20260708-212715-tarjeta-visita-delante.webp",
-        "path": "assets/uploads/20260708-212715-tarjeta-visita-delante.webp",
-        "alt": "Mingo Verticales"
-      },
-      "status": "published",
-      "published": true,
-      "category": "galeria",
-      "createdAt": "2026-07-08T19:27:15.656Z",
-      "updatedAt": "2026-07-08T19:27:15.656Z",
       "order": 6
     },
     {
@@ -131,6 +131,22 @@
       "order": 7
     },
     {
+      "id": "pub_20260708212715",
+      "title": "Copia de Proyecto Prueba",
+      "description": "<h2></h2><h2 class=\"rich-align-center\">ESTO ES UNA PRUEBA</h2><div>Esto es una prueba para ver si funciona</div><div><ul><li>Primera</li><li><span class=\"rich-color-green\">Segunda</span></li><li>Tercera</li><li>Cuarto</li><li><span class=\"rich-color-orange\">Quinta</span></li></ul><h3 class=\"rich-align-center\">Titulo 2</h3></div><div>Esto es una prueba de edición</div><h4 class=\"rich-align-center\">Titulo 3</h4><div>Veamos si lo hace bien</div>",
+      "image": {
+        "src": "assets/uploads/20260708-212715-tarjeta-visita-delante.webp",
+        "path": "assets/uploads/20260708-212715-tarjeta-visita-delante.webp",
+        "alt": "Mingo Verticales"
+      },
+      "status": "published",
+      "published": true,
+      "category": "galeria",
+      "createdAt": "2026-07-08T19:27:15.656Z",
+      "updatedAt": "2026-07-08T19:27:15.656Z",
+      "order": 8
+    },
+    {
       "id": "pub_20260708054938",
       "title": "Ejemplo Prueba Editor",
       "description": "<h2 class=\"rich-align-center\">Titulo Ejemplo</h2><div><span class=\"rich-color-green\">Prueba de colores</span></div><div><ul><li><span class=\"rich-color-orange\">Esto es una prueba</span></li><li><span class=\"rich-color-orange\">Veremos que pasa</span></li><ul><li><span class=\"rich-color-orange\">Esto de momento bien</span></li></ul><li><span class=\"rich-color-blue\">Ahora probaremos color base y pegaremos texto y ejecutaremos Make</span></li></ul><div><h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><strong>Nota</strong></p><p>La combinación de colores personalizada es ahora la combinación de colores predeterminada. Los colores seleccionados ahora se pueden usar como colores de combinación al seleccionar colores en toda la publicación. Por ejemplo, al seleccionar el color de relleno para celdas de tabla, formas, fondos de página o colores de fuente.</p></div></div></div></div><div><br></div>",
@@ -139,12 +155,28 @@
         "path": "assets/uploads/20260708-054938-efecto-rashomon.webp",
         "alt": "Ejemplo Prueba Editor"
       },
-      "status": "published",
+      "status": "hidden",
       "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
-      "updatedAt": "2026-07-08T18:47:47.859Z",
-      "order": 8,
-      "published": true
+      "updatedAt": "2026-07-11T08:59:05.799Z",
+      "order": 9,
+      "published": false
+    },
+    {
+      "id": "pub_20260710161115",
+      "title": "PRUEBA 15",
+      "description": "<h2>Crear y guardar una combinación de colores personalizada</h2><div>Se aplica a<div></div></div><div><div class=\"rich-indent-1\"><p><strong>Importante</strong></p><p>Después de octubre de 2026, Ya no se admitirá Microsoft Publisher. Microsoft 365 suscriptores ya no tendrán acceso. Obtenga más información sobre la&nbsp;retirada de Publisher.</p></div><ol class=\"rich-indent-1\"><li><p>En la pestaña&nbsp;<strong>Diseño de página</strong>&nbsp;, en el grupo&nbsp;<strong>Combinaciones</strong>&nbsp;, haga clic en la flecha&nbsp;<em>Más</em>&nbsp;de la galería de combinaciones de colores.<br></p></li><li><p>Haga clic en&nbsp;<strong>Crear nueva combinación de colores</strong>.</p></li><li><p>En el cuadro de diálogo&nbsp;<strong>Crear nueva combinación de</strong>&nbsp;colores, en&nbsp;<strong>Nuevo</strong>, haga clic en la flecha situada junto a cada color que quiera cambiar y, a continuación, seleccione un color nuevo.</p><ul class=\"rich-indent-1\"><li>Para ver más opciones de color, haga clic en&nbsp;<strong>Más colores</strong>.</li></ul></li><li><p>Escriba un nombre para la combinación de colores personalizada y, a continuación, haga clic en&nbsp;<strong>Guardar</strong>.<br>Todos los objetos de la publicación que se rellenaron con colores de esquema ahora se rellenan con los colores de la combinación de colores personalizada.</p></li></ol><div class=\"rich-indent-1\"><p><br></p></div></div>",
+      "image": {
+        "src": "assets/uploads/20260710-161115-illusorium.webp",
+        "path": "assets/uploads/20260710-161115-illusorium.webp",
+        "alt": "PRUEBA 15"
+      },
+      "status": "published",
+      "published": true,
+      "category": "novedades",
+      "createdAt": "2026-07-10T14:11:15.827Z",
+      "updatedAt": "2026-07-10T14:39:16.592Z",
+      "order": 10
     }
   ]
 }
