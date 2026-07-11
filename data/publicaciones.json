@@ -1,22 +1,38 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-11T12:52:32.605Z",
+  "updatedAt": "2026-07-11T16:04:18.513Z",
   "items": [
     {
-      "id": "pub_20260709061246",
-      "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
-      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO</h2><div>Veamos como funcionan los mensajes de guardado</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
+      "id": "pub_20260711180418",
+      "title": "Copia de PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
+      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO v.3</h2><div>Veamos como funcionan los mensajes de guardado v3</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
       "image": {
-        "src": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
-        "path": "assets/uploads/20260709-061246-ingeniero-pensando-sobre-la-caja-negra.webp",
+        "src": "assets/uploads/20260711-180418-amazon-4.webp",
+        "path": "assets/uploads/20260711-180418-amazon-4.webp",
         "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
       },
       "status": "published",
       "published": true,
-      "category": "novedades",
-      "createdAt": "2026-07-09T04:12:46.197Z",
-      "updatedAt": "2026-07-09T04:12:46.197Z",
+      "category": "proyectos",
+      "createdAt": "2026-07-11T16:04:18.513Z",
+      "updatedAt": "2026-07-11T16:04:18.513Z",
       "order": 0
+    },
+    {
+      "id": "pub_20260709061246",
+      "title": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL",
+      "description": "<h2 class=\"rich-align-center\">ESTO ES UN PRUEBA DE MENSAJES DE GUARDADO v.2</h2><div>Veamos como funcionan los mensajes de guardado v2</div><div><ul><li>Si aparecen en el mismo sitio</li><li>No arriaba</li><li>Dejan mensajes claros</li></ul></div>",
+      "image": {
+        "src": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
+        "path": "assets/uploads/20260711-175720-chatgpt-image-12-de-marc-del-2026-14-25-09.webp",
+        "alt": "PRUEBA DE GUARDADO. MENÚ CONTEXTUAL"
+      },
+      "status": "published",
+      "published": true,
+      "category": "proyectos",
+      "createdAt": "2026-07-09T04:12:46.197Z",
+      "updatedAt": "2026-07-11T15:57:20.365Z",
+      "order": 1
     },
     {
       "id": "pub_20260708212715",
@@ -32,7 +48,7 @@
       "category": "galeria",
       "createdAt": "2026-07-08T19:27:15.656Z",
       "updatedAt": "2026-07-08T19:27:15.656Z",
-      "order": 1
+      "order": 2
     },
     {
       "id": "pub_20260710160726",
@@ -48,7 +64,7 @@
       "category": "novedades",
       "createdAt": "2026-07-10T14:07:26.129Z",
       "updatedAt": "2026-07-11T11:17:32.144Z",
-      "order": 2
+      "order": 3
     },
     {
       "id": "pub_20260709063346",
@@ -64,7 +80,7 @@
       "category": "galeria",
       "createdAt": "2026-07-09T04:33:46.762Z",
       "updatedAt": "2026-07-09T04:33:46.762Z",
-      "order": 3
+      "order": 4
     },
     {
       "id": "pub_20260709062122",
@@ -80,7 +96,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:21:22.469Z",
       "updatedAt": "2026-07-09T04:21:22.469Z",
-      "order": 4
+      "order": 5
     },
     {
       "id": "pub_20260709061659",
@@ -96,7 +112,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:16:59.485Z",
       "updatedAt": "2026-07-09T04:34:22.834Z",
-      "order": 5
+      "order": 6
     },
     {
       "id": "pub_20260709061349",
@@ -112,7 +128,7 @@
       "category": "novedades",
       "createdAt": "2026-07-09T04:13:49.727Z",
       "updatedAt": "2026-07-09T04:13:49.727Z",
-      "order": 6
+      "order": 7
     },
     {
       "id": "pub_20260708201420",
@@ -128,7 +144,7 @@
       "category": "novedades",
       "createdAt": "2026-07-08T18:14:20.623Z",
       "updatedAt": "2026-07-08T19:05:01.869Z",
-      "order": 7
+      "order": 8
     },
     {
       "id": "pub_20260709061842",
@@ -144,7 +160,7 @@
       "category": "galeria",
       "createdAt": "2026-07-09T04:18:42.528Z",
       "updatedAt": "2026-07-09T04:18:42.528Z",
-      "order": 8
+      "order": 9
     },
     {
       "id": "pub_20260708054938",
@@ -159,7 +175,7 @@
       "category": "proyectos",
       "createdAt": "2026-07-08T03:49:38.332Z",
       "updatedAt": "2026-07-11T08:59:05.799Z",
-      "order": 9,
+      "order": 10,
       "published": false
     },
     {
@@ -176,7 +192,7 @@
       "category": "novedades",
       "createdAt": "2026-07-10T14:11:15.827Z",
       "updatedAt": "2026-07-10T14:39:16.592Z",
-      "order": 10
+      "order": 11
     }
   ]
 }
