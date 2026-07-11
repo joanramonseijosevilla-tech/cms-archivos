@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-43">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-44">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-43"></script>
+  <script defer src="admin.js?v=20260705-44"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -44,6 +44,7 @@
         <div class="admin-actions">
           <button id="mobile-menu-button" class="button button-secondary admin-mobile-menu-button" type="button" aria-expanded="false" aria-controls="mobile-quick-menu">☰ Menú</button>
           <a class="button button-secondary" href="../">Ver web</a>
+          <button id="help-button" class="button button-secondary admin-help-open" type="button" data-open-help>Ayuda</button>
           <button id="logout-button" class="button button-ghost" type="button">Salir</button>
         </div>
       </header>
@@ -55,7 +56,78 @@
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="filters">Filtros</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="bulk">Lotes</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="tools">Herramientas</button>
+        <button class="button button-small button-secondary admin-mobile-help-link" type="button" data-open-help>Ayuda</button>
       </nav>
+
+      <section id="admin-help-modal" class="admin-help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-help-title">
+        <div class="admin-help-backdrop" data-help-close></div>
+        <div class="admin-help-panel">
+          <div class="admin-help-header">
+            <div>
+              <p class="eyebrow">Ayuda</p>
+              <h2 id="admin-help-title">Guía rápida del panel</h2>
+              <p>Consulta los pasos básicos para crear, organizar y recuperar publicaciones.</p>
+            </div>
+            <button class="button button-small button-secondary" type="button" data-help-close>Cerrar</button>
+          </div>
+
+          <div class="admin-help-content">
+            <details class="admin-help-item" open>
+              <summary>Crear una publicación</summary>
+              <ol>
+                <li>Escribe el título.</li>
+                <li>Añade la descripción usando el editor.</li>
+                <li>Elige categoría y estado.</li>
+                <li>Selecciona una imagen y completa el texto alternativo.</li>
+                <li>Pulsa <strong>Guardar publicación</strong>.</li>
+              </ol>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Editar o duplicar</summary>
+              <p>Usa <strong>Editar</strong> para modificar una publicación existente. Puedes cambiar textos, categoría, estado o imagen.</p>
+              <p>Usa <strong>Duplicar</strong> para reutilizar una publicación como base. La copia se abre en el formulario y queda oculta hasta que decidas publicarla.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Publicar, ocultar y papelera</summary>
+              <p><strong>Publicado</strong> aparece en la web pública. <strong>Oculto</strong> se conserva en el panel, pero no se muestra en la web.</p>
+              <p><strong>Papelera</strong> sirve para retirar una publicación antes de eliminarla definitivamente.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Ordenar publicaciones</summary>
+              <p>Usa <strong>Subir</strong> y <strong>Bajar</strong> para cambiar el orden en pantalla.</p>
+              <p>Cuando termines, pulsa <strong>Guardar orden</strong>. Si te arrepientes, usa <strong>Cancelar cambios</strong>.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Búsqueda, filtros y paginación</summary>
+              <p>La búsqueda localiza publicaciones por título, descripción o categoría.</p>
+              <p>Los filtros permiten ver publicaciones por estado o categoría. La paginación permite revisar el listado por bloques de 10, 25 o 50.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Acciones por lote</summary>
+              <p>Marca varias publicaciones para publicar/ocultar, mover a papelera o cambiar categoría en una sola acción.</p>
+              <p>Si hay filtros activos, <strong>Seleccionar mostradas</strong> selecciona solo las publicaciones visibles en ese momento.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Copias y recuperación</summary>
+              <p><strong>Descargar copia completa</strong> guarda un ZIP con los datos y las imágenes usadas.</p>
+              <p><strong>Verificar copia</strong> comprueba si el ZIP parece correcto.</p>
+              <p><strong>Recuperar publicaciones eliminadas</strong> busca publicaciones que estaban en la copia y ya no aparecen en el panel.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>Imágenes</summary>
+              <p>Al subir una imagen, el panel la optimiza automáticamente para que pese menos y mantenga su proporción.</p>
+              <p>El texto alternativo ayuda a describir la imagen y mejora la accesibilidad.</p>
+            </details>
+          </div>
+        </div>
+      </section>
 
       <div id="admin-alert" class="admin-alert hidden" role="status"></div>
 

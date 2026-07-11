@@ -86,6 +86,9 @@ const clearSearchButton = document.querySelector('#clear-search-button');
 const mobileMenuButton = document.querySelector('#mobile-menu-button');
 const mobileQuickMenu = document.querySelector('#mobile-quick-menu');
 const mobileNavButtons = document.querySelectorAll('[data-mobile-scroll]');
+const helpOpenButtons = document.querySelectorAll('[data-open-help]');
+const helpModal = document.querySelector('#admin-help-modal');
+const helpCloseButtons = document.querySelectorAll('[data-help-close]');
 const exportBackupButton = document.querySelector('#export-backup-button');
 const verifyBackupFile = document.querySelector('#verify-backup-file');
 const verifyBackupButton = document.querySelector('#verify-backup-button');
@@ -202,6 +205,22 @@ function showLogin() {
   loginView.classList.remove('hidden');
 }
 
+
+function openAdminHelp() {
+  if (!helpModal) return;
+  closeMobileQuickMenu();
+  helpModal.classList.remove('hidden');
+  document.body.classList.add('admin-help-is-open');
+  const firstSummary = helpModal.querySelector('summary');
+  window.setTimeout(() => firstSummary?.focus?.(), 0);
+}
+
+function closeAdminHelp() {
+  if (!helpModal) return;
+  helpModal.classList.add('hidden');
+  document.body.classList.remove('admin-help-is-open');
+}
+
 function closeMobileQuickMenu() {
   if (!mobileQuickMenu || !mobileMenuButton) return;
   mobileQuickMenu.classList.add('hidden');
@@ -252,6 +271,8 @@ function rememberFeedbackScopeFromEvent(event) {
     event.target.closest?.('#clear-search-button') ||
     event.target.closest?.('[data-mobile-scroll]') ||
     event.target.closest?.('#mobile-menu-button') ||
+    event.target.closest?.('[data-open-help]') ||
+    event.target.closest?.('#admin-help-modal') ||
     event.target.closest?.('#admin-tools-section') ||
     event.target.closest?.('#export-backup-button') ||
     event.target.closest?.('#verify-backup-button') ||
@@ -4352,6 +4373,20 @@ if (mobileMenuButton) {
 
 mobileNavButtons.forEach((button) => {
   button.addEventListener('click', () => scrollToAdminArea(button.dataset.mobileScroll));
+});
+
+helpOpenButtons.forEach((button) => {
+  button.addEventListener('click', openAdminHelp);
+});
+
+helpCloseButtons.forEach((button) => {
+  button.addEventListener('click', closeAdminHelp);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && helpModal && !helpModal.classList.contains('hidden')) {
+    closeAdminHelp();
+  }
 });
 
 window.addEventListener('resize', () => {

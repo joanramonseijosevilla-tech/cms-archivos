@@ -1444,3 +1444,137 @@ input[type="file"]::file-selector-button {
     max-height: 420px;
   }
 }
+
+/* v8.4 — Ayuda rápida dentro del panel */
+.admin-help-open {
+  border-color: rgba(147, 197, 253, 0.55);
+}
+
+.admin-mobile-help-link {
+  border-color: rgba(96, 165, 250, 0.7) !important;
+  color: #eff6ff !important;
+  background: rgba(37, 99, 235, 0.22) !important;
+}
+
+.admin-help-is-open {
+  overflow: hidden;
+}
+
+.admin-help-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.admin-help-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(7px);
+}
+
+.admin-help-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 820px);
+  max-height: min(86vh, 780px);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: var(--radius-lg);
+  color: #fff;
+  background: rgba(15, 23, 42, 0.98);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52);
+}
+
+.admin-help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.admin-help-header h2 {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+}
+
+.admin-help-header p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
+.admin-help-content {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-help-item {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.admin-help-item summary {
+  padding: 0.85rem 1rem;
+  color: #f8fafc;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-help-item summary:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.58);
+  outline-offset: 2px;
+}
+
+.admin-help-item p,
+.admin-help-item ol {
+  margin: 0 1rem 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.admin-help-item ol {
+  padding-left: 1.25rem;
+}
+
+.admin-help-item li + li {
+  margin-top: 0.25rem;
+}
+
+.admin-help-item strong {
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .admin-help-panel {
+    max-height: 88vh;
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .admin-help-header {
+    display: grid;
+  }
+
+  .admin-help-header .button {
+    width: 100%;
+  }
+
+  .admin-help-item summary {
+    padding: 0.8rem 0.85rem;
+  }
+
+  .admin-help-item p,
+  .admin-help-item ol {
+    margin-right: 0.85rem;
+    margin-left: 0.85rem;
+  }
+}
