@@ -40,6 +40,8 @@ const state = {
   expandedDescriptionIds: new Set(),
   currentPage: 1,
   pageSize: DEFAULT_ADMIN_PAGE_SIZE,
+  orderModeOpen: false,
+  orderModeCategory: 'all',
   bulkCategoryEditorOpen: false,
   bulkCategoryDraft: {},
   lastFeedbackScope: 'global',
@@ -78,6 +80,7 @@ const formTitle = document.querySelector('#form-title');
 const saveButton = document.querySelector('#save-button');
 const cancelEditButton = document.querySelector('#cancel-edit-button');
 const refreshButton = document.querySelector('#refresh-button');
+const orderModeButton = document.querySelector('#order-mode-button');
 const imagePreview = document.querySelector('#image-preview');
 const postSearch = document.querySelector('#post-search');
 const postStatusFilter = document.querySelector('#post-status-filter');
@@ -2041,6 +2044,252 @@ function createPaginationControls(totalItems, options = {}) {
 }
 
 
+
+function getOrderModeCategory() {
+  const value = String(state.orderModeCategory || 'all');
+  return value === 'all' || isValidPostCategory(value) ? value : 'all';
+}
+
+function getOrderModeCategoryLabel() {
+  const category = getOrderModeCategory();
+  if (category === 'all') return 'Todas';
+  return getCategoryLabel({ category });
+}
+
+function getOrderModeItems() {
+  const category = getOrderModeCategory();
+  const activeItems = getOrderedItems(state.items).filter((item) => !isItemDeleted(item));
+
+  if (category === 'all') return activeItems;
+  return activeItems.filter((item) => getItemCategory(item) === category);
+}
+
+function updateOrderModeButton() {
+  if (!orderModeButton) return;
+  orderModeButton.textContent = state.orderModeOpen ? 'Cerrar orden' : 'Ordenar por sección';
+  orderModeButton.setAttribute('aria-pressed', state.orderModeOpen ? 'true' : 'false');
+}
+
+function toggleOrderMode() {
+  state.orderModeOpen = !state.orderModeOpen;
+  state.selectedIds.clear();
+  closeBulkCategoryEditor(false);
+  updateOrderModeButton();
+  renderAdminPosts();
+  scrollToAdminList();
+}
+
+function setOrderModeCategory(nextCategory) {
+  state.orderModeCategory = nextCategory === 'all' || isValidPostCategory(nextCategory) ? nextCategory : 'all';
+  renderAdminPosts();
+}
+
+function createOrderModePanel() {
+  updateOrderModeButton();
+
+  const panel = document.createElement('section');
+  panel.className = 'admin-order-mode-panel';
+  panel.setAttribute('aria-label', 'Modo ordenar publicaciones');
+
+  const header = document.createElement('div');
+  header.className = 'admin-order-mode-header';
+
+  const titleWrap = document.createElement('div');
+  const eyebrow = document.createElement('p');
+  eyebrow.className = 'eyebrow';
+  eyebrow.textContent = 'Orden manual';
+
+  const title = document.createElement('h3');
+  title.textContent = 'Ordenar publicaciones por sección';
+
+  const intro = document.createElement('p');
+  intro.textContent = 'Elige una sección y mueve sus publicaciones. Nada se guarda hasta pulsar Guardar orden.';
+
+  titleWrap.append(eyebrow, title, intro);
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'button button-small button-secondary';
+  closeButton.textContent = 'Cerrar';
+  closeButton.addEventListener('click', toggleOrderMode);
+
+  header.append(titleWrap, closeButton);
+
+  const controls = document.createElement('div');
+  controls.className = 'admin-order-mode-controls';
+
+  const categoryLabel = document.createElement('label');
+  categoryLabel.className = 'admin-order-mode-select-label';
+
+  const categoryText = document.createElement('span');
+  categoryText.textContent = 'Ordenar sección';
+
+  const categorySelect = document.createElement('select');
+  categorySelect.setAttribute('aria-label', 'Sección para ordenar');
+
+  const allOption = document.createElement('option');
+  allOption.value = 'all';
+  allOption.textContent = 'Todas';
+  allOption.selected = getOrderModeCategory() === 'all';
+  categorySelect.append(allOption);
+
+  POST_CATEGORIES.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.value;
+    option.textContent = category.label;
+    option.selected = getOrderModeCategory() === category.value;
+    categorySelect.append(option);
+  });
+
+  categorySelect.addEventListener('change', () => setOrderModeCategory(categorySelect.value));
+  categoryLabel.append(categoryText, categorySelect);
+
+  const summary = document.createElement('p');
+  summary.className = 'admin-order-mode-summary';
+  const modeItems = getOrderModeItems();
+  summary.textContent = `${modeItems.length} publicación${modeItems.length === 1 ? '' : 'es'} en ${getOrderModeCategoryLabel()}.`;
+
+  controls.append(categoryLabel, summary);
+
+  const list = document.createElement('div');
+  list.className = 'admin-order-list';
+
+  if (!modeItems.length) {
+    const empty = document.createElement('p');
+    empty.className = 'status';
+    empty.textContent = 'No hay publicaciones activas en esta sección.';
+    list.append(empty);
+  } else {
+    modeItems.forEach((item, index) => {
+      const row = document.createElement('article');
+      row.className = 'admin-order-row';
+
+      const position = document.createElement('span');
+      position.className = 'admin-order-position';
+      position.textContent = String(index + 1);
+
+      const img = document.createElement('img');
+      setImageSrc(img, item.image?.src);
+      img.alt = item.image?.alt || item.title || 'Imagen de publicación';
+      img.loading = 'lazy';
+
+      const body = document.createElement('div');
+      body.className = 'admin-order-row-body';
+
+      const rowTitle = document.createElement('h4');
+      rowTitle.textContent = item.title || 'Sin título';
+
+      const meta = document.createElement('p');
+      meta.textContent = `${getStatusLabel(item)} · ${getCategoryLabel(item)}`;
+
+      body.append(rowTitle, meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'admin-order-row-actions';
+
+      actions.append(
+        createOrderMoveButton('Primera', item, 'first', index === 0),
+        createOrderMoveButton('Subir', item, 'up', index === 0),
+        createOrderMoveButton('Bajar', item, 'down', index === modeItems.length - 1),
+        createOrderMoveButton('Última', item, 'last', index === modeItems.length - 1)
+      );
+
+      row.append(position, img, body, actions);
+      list.append(row);
+    });
+  }
+
+  const footer = document.createElement('div');
+  footer.className = 'admin-order-mode-footer';
+
+  const footerText = document.createElement('p');
+  footerText.textContent = state.orderDirty
+    ? 'Hay cambios de orden pendientes.'
+    : 'Mueve publicaciones y guarda cuando el orden esté listo.';
+
+  const footerActions = document.createElement('div');
+  footerActions.className = 'admin-order-mode-footer-actions';
+
+  const saveButton = document.createElement('button');
+  saveButton.type = 'button';
+  saveButton.className = 'button';
+  saveButton.textContent = 'Guardar orden';
+  saveButton.disabled = !state.orderDirty;
+  saveButton.addEventListener('click', saveManualOrder);
+
+  const cancelButton = document.createElement('button');
+  cancelButton.type = 'button';
+  cancelButton.className = 'button button-secondary';
+  cancelButton.textContent = 'Cancelar cambios';
+  cancelButton.disabled = !state.orderDirty;
+  cancelButton.addEventListener('click', cancelManualOrder);
+
+  footerActions.append(saveButton, cancelButton);
+  footer.append(footerText, footerActions);
+
+  panel.append(header, controls, list, footer);
+  return panel;
+}
+
+function createOrderMoveButton(label, item, action, disabled) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'button button-small button-secondary';
+  button.textContent = label;
+  button.disabled = Boolean(disabled);
+  button.addEventListener('click', () => movePostInOrderMode(item, action));
+  return button;
+}
+
+function movePostInOrderMode(item, action) {
+  const currentItems = normalizeItemsWithOrder(
+    Array.isArray(state.items) ? state.items.map(stripPanelOnlyFields) : []
+  );
+  const activeItems = currentItems.filter((currentItem) => !isItemDeleted(currentItem));
+  const deletedItems = currentItems.filter((currentItem) => isItemDeleted(currentItem));
+  const category = getOrderModeCategory();
+  const sectionItems = category === 'all'
+    ? activeItems.slice()
+    : activeItems.filter((currentItem) => getItemCategory(currentItem) === category);
+  const currentIndex = sectionItems.findIndex((currentItem) => currentItem.id === item.id);
+
+  if (currentIndex < 0) return;
+
+  let nextIndex = currentIndex;
+  if (action === 'first') nextIndex = 0;
+  if (action === 'up') nextIndex = currentIndex - 1;
+  if (action === 'down') nextIndex = currentIndex + 1;
+  if (action === 'last') nextIndex = sectionItems.length - 1;
+
+  if (nextIndex < 0 || nextIndex >= sectionItems.length || nextIndex === currentIndex) return;
+
+  if (!state.orderDirty) {
+    state.orderOriginalItems = currentItems.map((currentItem) => ({ ...currentItem }));
+  }
+
+  const reorderedSection = sectionItems.slice();
+  const [movedItem] = reorderedSection.splice(currentIndex, 1);
+  reorderedSection.splice(nextIndex, 0, movedItem);
+
+  let nextActiveItems;
+
+  if (category === 'all') {
+    nextActiveItems = reorderedSection;
+  } else {
+    const reorderedQueue = reorderedSection.slice();
+    nextActiveItems = activeItems.map((currentItem) => (
+      getItemCategory(currentItem) === category ? reorderedQueue.shift() : currentItem
+    ));
+  }
+
+  state.items = [...nextActiveItems, ...deletedItems].map((currentItem, index) => ({
+    ...currentItem,
+    order: index
+  }));
+  state.orderDirty = true;
+  renderAdminPosts();
+}
+
 function renderAdminPosts() {
   adminPosts.replaceChildren();
   updateSearchControls();
@@ -2064,7 +2313,7 @@ function renderAdminPosts() {
 
   cleanSelectedPosts();
 
-  if (state.orderDirty) {
+  if (state.orderDirty && !state.orderModeOpen) {
     const orderNotice = document.createElement('div');
     orderNotice.className = 'admin-alert';
     orderNotice.textContent = 'Orden cambiado en pantalla. Pulsa Guardar orden para publicarlo o Cancelar cambios para deshacerlo.';
@@ -2086,6 +2335,12 @@ function renderAdminPosts() {
 
     orderActions.append(saveOrderButton, cancelOrderButton);
     fragment.append(orderNotice, orderActions);
+  }
+
+  if (state.orderModeOpen) {
+    fragment.append(createOrderModePanel());
+    adminPosts.append(fragment);
+    return;
   }
 
   if (displayedItems.length) {
@@ -4213,6 +4468,10 @@ refreshButton.addEventListener('click', () => {
   if (blockIfPendingOrder()) return;
   loadAdminPosts();
 });
+
+if (orderModeButton) {
+  orderModeButton.addEventListener('click', toggleOrderMode);
+}
 
 postImage.addEventListener('change', () => {
   clearPreviewObjectUrl();

@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-44">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-45">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-44"></script>
+  <script defer src="admin.js?v=20260705-45"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -97,8 +97,8 @@
 
             <details class="admin-help-item">
               <summary>Ordenar publicaciones</summary>
-              <p>Usa <strong>Subir</strong> y <strong>Bajar</strong> para cambiar el orden en pantalla.</p>
-              <p>Cuando termines, pulsa <strong>Guardar orden</strong>. Si te arrepientes, usa <strong>Cancelar cambios</strong>.</p>
+              <p>Usa <strong>Ordenar por sección</strong> para reorganizar todas las publicaciones o solo una categoría.</p>
+              <p>Dentro del modo ordenar puedes mover una publicación una posición, enviarla al principio o al final, y después guardar o cancelar los cambios.</p>
             </details>
 
             <details class="admin-help-item">
@@ -245,7 +245,10 @@
               <h2>Contenido actual</h2>
               <p>Listado leído directamente desde <code>publicaciones.json</code>.</p>
             </div>
-            <button id="refresh-button" class="button button-small button-secondary" type="button">Actualizar</button>
+            <div class="admin-list-header-actions">
+              <button id="order-mode-button" class="button button-small button-secondary" type="button" aria-pressed="false">Ordenar por sección</button>
+              <button id="refresh-button" class="button button-small button-secondary" type="button">Actualizar</button>
+            </div>
           </div>
           <div id="admin-list-filters" class="form-grid">
             <label>
