@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-49">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-50">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-49"></script>
+  <script defer src="admin.js?v=20260705-50"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -44,7 +44,7 @@
         <div class="admin-actions">
           <button id="mobile-menu-button" class="button button-secondary admin-mobile-menu-button" type="button" aria-expanded="false" aria-controls="mobile-quick-menu">☰ Menú</button>
           <a class="button button-secondary" href="../">Ver web</a>
-          <button id="help-button" class="button button-secondary admin-help-open" type="button" data-open-help>Ayuda</button>
+          <button id="help-button" class="button button-secondary admin-help-open" type="button" data-open-help>Manual</button>
           <button id="logout-button" class="button button-ghost" type="button">Salir</button>
         </div>
       </header>
@@ -58,75 +58,140 @@
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="order">Ordenar</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="view">Vista</button>
         <button class="button button-small button-secondary" type="button" data-mobile-scroll="tools">Herramientas</button>
-        <button class="button button-small button-secondary admin-mobile-help-link" type="button" data-open-help>Ayuda</button>
+        <button class="button button-small button-secondary admin-mobile-help-link" type="button" data-open-help>Manual</button>
       </nav>
 
       <section id="admin-help-modal" class="admin-help-modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-help-title">
         <div class="admin-help-backdrop" data-help-close></div>
-        <div class="admin-help-panel">
-          <div class="admin-help-header">
+        <div class="admin-help-panel admin-manual-panel">
+          <div class="admin-help-header admin-manual-header">
             <div>
-              <p class="eyebrow">Ayuda</p>
-              <h2 id="admin-help-title">Guía rápida del panel</h2>
-              <p>Consulta los pasos básicos para crear, organizar y recuperar publicaciones.</p>
+              <p class="eyebrow">Manual de uso</p>
+              <h2 id="admin-help-title">Manual del panel</h2>
+              <p>Guía estable para crear, editar, ordenar, proteger y recuperar publicaciones desde el mini CMS.</p>
             </div>
             <button class="button button-small button-secondary" type="button" data-help-close>Cerrar</button>
           </div>
 
-          <div class="admin-help-content">
+          <div class="admin-manual-intro" aria-label="Resumen del manual">
+            <div>
+              <strong>Versión 9.0</strong>
+              <span>Manual actualizado con categorías, papelera, lotes, copias, recuperación, vista compacta, orden por categoría e imágenes más claras.</span>
+            </div>
+            <div>
+              <strong>Idea clave</strong>
+              <span>Revisa los cambios en pantalla y usa los botones de guardar o confirmar solo cuando quieras aplicarlos.</span>
+            </div>
+          </div>
+
+          <div class="admin-help-content admin-manual-content">
             <details class="admin-help-item" open>
-              <summary>Crear una publicación</summary>
+              <summary>1. Crear una publicación</summary>
               <ol>
-                <li>Escribe el título.</li>
-                <li>Añade la descripción usando el editor.</li>
-                <li>Elige categoría y estado.</li>
-                <li>Selecciona una imagen y completa el texto alternativo.</li>
+                <li>Rellena el <strong>título</strong>.</li>
+                <li>Escribe la <strong>descripción</strong> con el editor.</li>
+                <li>Elige la <strong>categoría</strong>: Galería, Proyectos o Novedades.</li>
+                <li>Elige si empieza como <strong>publicada</strong> u <strong>oculta</strong>.</li>
+                <li>Selecciona una imagen y añade el <strong>texto alternativo</strong>.</li>
                 <li>Pulsa <strong>Guardar publicación</strong>.</li>
+              </ol>
+              <p>Si falta algún dato obligatorio, el panel te avisará antes de guardar.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>2. Imagen de la publicación</summary>
+              <p>La zona de imagen indica si hay una <strong>imagen pendiente</strong>, una <strong>imagen actual</strong>, una <strong>imagen reutilizada</strong> o una <strong>nueva imagen seleccionada</strong>.</p>
+              <ol>
+                <li>Al crear, debes elegir una imagen.</li>
+                <li>Al editar, puedes mantener la imagen actual sin tocar nada.</li>
+                <li>Si eliges una nueva imagen, se aplicará al guardar.</li>
+                <li>Si te equivocas, usa <strong>Quitar imagen elegida</strong> antes de guardar.</li>
+              </ol>
+              <p>El panel optimiza la imagen automáticamente para que pese menos y mantenga su proporción.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>3. Editor de descripción</summary>
+              <p>El editor permite formato básico: títulos, negrita, cursiva, listas, sangría, alineación y colores controlados.</p>
+              <p>Al pegar texto desde otro editor, el panel intenta conservar un formato razonable y limpiar elementos innecesarios.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>4. Editar, duplicar o cancelar</summary>
+              <p><strong>Editar</strong> carga la publicación en el formulario para modificar textos, categoría, estado o imagen.</p>
+              <p><strong>Duplicar</strong> crea una copia como borrador oculto para reutilizar una publicación anterior sin cambiar la original.</p>
+              <p>Si empiezas a cambiar algo y sales, cancelas o intentas editar otra publicación, el panel te avisa si hay cambios sin guardar.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>5. Publicado, oculto y papelera</summary>
+              <p><strong>Publicado</strong> aparece en la web pública. <strong>Oculto</strong> se conserva en el panel, pero no se muestra en la web.</p>
+              <p><strong>Mover a papelera</strong> retira la publicación sin eliminarla del todo.</p>
+              <p>Dentro de la papelera puedes <strong>restaurar</strong> o <strong>eliminar definitivamente</strong>.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>6. Categorías</summary>
+              <p>Las publicaciones se organizan en <strong>Galería</strong>, <strong>Proyectos</strong> y <strong>Novedades</strong>.</p>
+              <p>Las categorías sirven para filtrar el panel y para ordenar mejor lo que después se verá en cada sección de la web pública.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>7. Ordenar publicaciones</summary>
+              <p>Los botones <strong>Subir</strong> y <strong>Bajar</strong> sirven para ajustes rápidos de orden.</p>
+              <p>Usa <strong>Ordenar por categoría</strong> cuando quieras ordenar solo Galería, solo Proyectos o solo Novedades sin ver todo mezclado.</p>
+              <ol>
+                <li>Entra en <strong>Ordenar por categoría</strong>.</li>
+                <li>Elige Todas, Galería, Proyectos o Novedades.</li>
+                <li>Mueve las publicaciones con Primera, Subir, Bajar o Última.</li>
+                <li>Pulsa <strong>Guardar orden</strong> o <strong>Cancelar cambios</strong>.</li>
               </ol>
             </details>
 
             <details class="admin-help-item">
-              <summary>Editar o duplicar</summary>
-              <p>Usa <strong>Editar</strong> para modificar una publicación existente. Puedes cambiar textos, categoría, estado o imagen.</p>
-              <p>Usa <strong>Duplicar</strong> para reutilizar una publicación como base. La copia se abre en el formulario y queda oculta hasta que decidas publicarla.</p>
-            </details>
-
-            <details class="admin-help-item">
-              <summary>Publicar, ocultar y papelera</summary>
-              <p><strong>Publicado</strong> aparece en la web pública. <strong>Oculto</strong> se conserva en el panel, pero no se muestra en la web.</p>
-              <p><strong>Papelera</strong> sirve para retirar una publicación antes de eliminarla definitivamente.</p>
-            </details>
-
-            <details class="admin-help-item">
-              <summary>Ordenar publicaciones</summary>
-              <p>Usa <strong>Ordenar por categoría</strong> para reorganizar todas las publicaciones o solo una categoría.</p>
-              <p>Dentro del modo ordenar puedes mover una publicación una posición, enviarla al principio o al final, y después guardar o cancelar los cambios.</p>
-            </details>
-
-            <details class="admin-help-item">
-              <summary>Búsqueda, filtros y paginación</summary>
+              <summary>8. Búsqueda, filtros y contadores</summary>
               <p>La búsqueda localiza publicaciones por título, descripción o categoría.</p>
-              <p>Los filtros permiten ver publicaciones por estado o categoría. La paginación permite revisar el listado por bloques de 10, 25 o 50.</p>
+              <p>Los filtros permiten ver solo publicadas, ocultas, papelera o una categoría concreta.</p>
+              <p>Los contadores ayudan a saber cuántas publicaciones hay en total, cuántas están publicadas, ocultas o visibles en ese momento.</p>
             </details>
 
             <details class="admin-help-item">
-              <summary>Acciones por lote</summary>
-              <p>Marca varias publicaciones para publicar/ocultar, mover a papelera o cambiar categoría en una sola acción.</p>
+              <summary>9. Paginación y vistas</summary>
+              <p>La paginación permite revisar el listado por bloques de 10, 25 o 50 publicaciones.</p>
+              <p><strong>Vista completa</strong> muestra más información. <strong>Vista compacta</strong> reduce el listado para revisar muchas publicaciones más rápido.</p>
+              <p><strong>Ver más / Ver menos</strong> permite desplegar o recoger descripciones largas.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>10. Acciones por lote</summary>
+              <p>Marca varias publicaciones para aplicar una acción común: publicar, ocultar, mover a papelera, restaurar, eliminar definitivamente o cambiar categoría.</p>
               <p>Si hay filtros activos, <strong>Seleccionar mostradas</strong> selecciona solo las publicaciones visibles en ese momento.</p>
+              <p>Para cambiar categoría en bloque, puedes asignar una misma categoría a todas o revisar una por una antes de guardar.</p>
             </details>
 
             <details class="admin-help-item">
-              <summary>Copias y recuperación</summary>
-              <p><strong>Descargar copia completa</strong> guarda un ZIP con los datos y las imágenes usadas.</p>
-              <p><strong>Verificar copia</strong> comprueba si el ZIP parece correcto.</p>
-              <p><strong>Recuperar publicaciones eliminadas</strong> busca publicaciones que estaban en la copia y ya no aparecen en el panel.</p>
+              <summary>11. Copias y recuperación</summary>
+              <p><strong>Descargar copia completa</strong> genera un ZIP con los datos y las imágenes usadas.</p>
+              <p><strong>Verificar copia</strong> revisa si el ZIP seleccionado parece correcto.</p>
+              <p><strong>Recuperar publicaciones eliminadas</strong> compara una copia con el panel actual y permite recuperar publicaciones que ya no están.</p>
+              <p>La recuperación está pensada para publicaciones eliminadas definitivamente; si una publicación sigue en la papelera, todavía no aparecerá como recuperable.</p>
             </details>
 
             <details class="admin-help-item">
-              <summary>Imágenes</summary>
-              <p>Al subir una imagen, el panel la optimiza automáticamente para que pese menos y mantenga su proporción.</p>
-              <p>Si estás editando, puedes mantener la imagen actual o elegir otra antes de guardar.</p>
-              <p>El texto alternativo ayuda a describir la imagen y mejora la accesibilidad.</p>
+              <summary>12. Uso en móvil</summary>
+              <p>En móvil tienes un menú rápido para saltar a formulario, publicaciones, filtros, lotes, ordenar, vista, herramientas y manual.</p>
+              <p>La barra inferior permite moverse por las zonas principales sin tener que hacer mucho desplazamiento.</p>
+            </details>
+
+            <details class="admin-help-item">
+              <summary>13. Buenas prácticas</summary>
+              <ol>
+                <li>Antes de cambios importantes, descarga una copia completa.</li>
+                <li>Usa <strong>Oculto</strong> para preparar publicaciones antes de enseñarlas en la web.</li>
+                <li>Usa categorías y orden por categoría para mantener la web pública más clara.</li>
+                <li>Escribe textos alternativos sencillos para las imágenes.</li>
+                <li>Después de subir una versión nueva del panel, abre la URL con el número de versión actualizado.</li>
+              </ol>
             </details>
           </div>
         </div>
