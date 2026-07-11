@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="../assets/img/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/css/styles.css?v=20260705-24">
-  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-45">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=20260705-46">
   <script defer src="cms.config.js?v=20260705-21"></script>
-  <script defer src="admin.js?v=20260705-45"></script>
+  <script defer src="admin.js?v=20260705-46"></script>
 </head>
 <body class="admin-body">
   <main class="admin-shell">
@@ -97,7 +97,7 @@
 
             <details class="admin-help-item">
               <summary>Ordenar publicaciones</summary>
-              <p>Usa <strong>Ordenar por sección</strong> para reorganizar todas las publicaciones o solo una categoría.</p>
+              <p>Usa <strong>Ordenar por categoría</strong> para reorganizar todas las publicaciones o solo una categoría.</p>
               <p>Dentro del modo ordenar puedes mover una publicación una posición, enviarla al principio o al final, y después guardar o cancelar los cambios.</p>
             </details>
 
@@ -246,7 +246,6 @@
               <p>Listado leído directamente desde <code>publicaciones.json</code>.</p>
             </div>
             <div class="admin-list-header-actions">
-              <button id="order-mode-button" class="button button-small button-secondary" type="button" aria-pressed="false">Ordenar por sección</button>
               <button id="refresh-button" class="button button-small button-secondary" type="button">Actualizar</button>
             </div>
           </div>
@@ -274,6 +273,13 @@
               </select>
             </label>
             <button id="clear-search-button" class="button button-secondary hidden" type="button">Limpiar búsqueda y filtros</button>
+          </div>
+          <div class="admin-order-entry" aria-label="Orden de publicaciones">
+            <div>
+              <strong>Orden de publicaciones</strong>
+              <span>Reordena todas las publicaciones o solo una categoría.</span>
+            </div>
+            <button id="order-mode-button" class="button button-small button-secondary" type="button" aria-pressed="false">Ordenar por categoría</button>
           </div>
           <div id="admin-status" class="status" role="status">Cargando publicaciones…</div>
           <div id="list-feedback" class="admin-alert admin-inline-alert hidden" role="status"></div>

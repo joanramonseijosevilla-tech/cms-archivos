@@ -42,6 +42,7 @@ const state = {
   pageSize: DEFAULT_ADMIN_PAGE_SIZE,
   orderModeOpen: false,
   orderModeCategory: 'all',
+  orderModeFeedback: null,
   bulkCategoryEditorOpen: false,
   bulkCategoryDraft: {},
   lastFeedbackScope: 'global',
@@ -2066,12 +2067,13 @@ function getOrderModeItems() {
 
 function updateOrderModeButton() {
   if (!orderModeButton) return;
-  orderModeButton.textContent = state.orderModeOpen ? 'Cerrar orden' : 'Ordenar por sección';
+  orderModeButton.textContent = state.orderModeOpen ? 'Cerrar orden' : 'Ordenar por categoría';
   orderModeButton.setAttribute('aria-pressed', state.orderModeOpen ? 'true' : 'false');
 }
 
 function toggleOrderMode() {
   state.orderModeOpen = !state.orderModeOpen;
+  state.orderModeFeedback = null;
   state.selectedIds.clear();
   closeBulkCategoryEditor(false);
   updateOrderModeButton();
@@ -2081,6 +2083,7 @@ function toggleOrderMode() {
 
 function setOrderModeCategory(nextCategory) {
   state.orderModeCategory = nextCategory === 'all' || isValidPostCategory(nextCategory) ? nextCategory : 'all';
+  state.orderModeFeedback = null;
   renderAdminPosts();
 }
 
@@ -2089,7 +2092,7 @@ function createOrderModePanel() {
 
   const panel = document.createElement('section');
   panel.className = 'admin-order-mode-panel';
-  panel.setAttribute('aria-label', 'Modo ordenar publicaciones');
+  panel.setAttribute('aria-label', 'Ordenar publicaciones por categoría');
 
   const header = document.createElement('div');
   header.className = 'admin-order-mode-header';
@@ -2100,10 +2103,10 @@ function createOrderModePanel() {
   eyebrow.textContent = 'Orden manual';
 
   const title = document.createElement('h3');
-  title.textContent = 'Ordenar publicaciones por sección';
+  title.textContent = 'Ordenar publicaciones por categoría';
 
   const intro = document.createElement('p');
-  intro.textContent = 'Elige una sección y mueve sus publicaciones. Nada se guarda hasta pulsar Guardar orden.';
+  intro.textContent = 'Elige todas las publicaciones o una categoría concreta. Nada se guarda hasta pulsar Guardar orden.';
 
   titleWrap.append(eyebrow, title, intro);
 
@@ -2122,7 +2125,7 @@ function createOrderModePanel() {
   categoryLabel.className = 'admin-order-mode-select-label';
 
   const categoryText = document.createElement('span');
-  categoryText.textContent = 'Ordenar sección';
+  categoryText.textContent = 'Ordenar categoría';
 
   const categorySelect = document.createElement('select');
   categorySelect.setAttribute('aria-label', 'Sección para ordenar');
@@ -2228,6 +2231,15 @@ function createOrderModePanel() {
   footer.append(footerText, footerActions);
 
   panel.append(header, controls, list, footer);
+
+  if (state.orderModeFeedback?.message) {
+    const feedback = document.createElement('div');
+    feedback.className = `admin-alert admin-inline-alert admin-order-mode-feedback ${state.orderModeFeedback.type === 'error' ? 'error' : ''}`.trim();
+    feedback.setAttribute('role', 'status');
+    feedback.textContent = state.orderModeFeedback.message;
+    panel.append(feedback);
+  }
+
   return panel;
 }
 
@@ -2239,6 +2251,17 @@ function createOrderMoveButton(label, item, action, disabled) {
   button.disabled = Boolean(disabled);
   button.addEventListener('click', () => movePostInOrderMode(item, action));
   return button;
+}
+
+function scrollToOrderModeFeedback() {
+  window.requestAnimationFrame(() => {
+    const target = document.querySelector('.admin-order-mode-feedback') || document.querySelector('.admin-order-mode-panel');
+    target?.scrollIntoView?.({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest'
+    });
+  });
 }
 
 function movePostInOrderMode(item, action) {
@@ -2262,6 +2285,8 @@ function movePostInOrderMode(item, action) {
   if (action === 'last') nextIndex = sectionItems.length - 1;
 
   if (nextIndex < 0 || nextIndex >= sectionItems.length || nextIndex === currentIndex) return;
+
+  state.orderModeFeedback = null;
 
   if (!state.orderDirty) {
     state.orderOriginalItems = currentItems.map((currentItem) => ({ ...currentItem }));
@@ -3078,6 +3103,7 @@ async function saveManualOrder() {
 
   try {
     setBusy(true);
+    state.orderModeFeedback = null;
     const nowIso = new Date().toISOString();
     const nextPublicacionesJson = {
       version: 1,
@@ -3094,11 +3120,20 @@ async function saveManualOrder() {
 
     setStateFromPublicacionesJson(nextPublicacionesJson);
     clearPendingOrder();
+    state.orderModeFeedback = {
+      type: 'success',
+      message: 'Orden guardado correctamente.'
+    };
     saveLocalSnapshot(nextPublicacionesJson);
     renderAdminPosts();
-    showAlert('Orden guardado correctamente.');
+    scrollToOrderModeFeedback();
   } catch (error) {
-    showAlert(error.message, 'error');
+    state.orderModeFeedback = {
+      type: 'error',
+      message: getFriendlyErrorMessage(error.message)
+    };
+    renderAdminPosts();
+    scrollToOrderModeFeedback();
     console.error(error);
   } finally {
     setBusy(false);
